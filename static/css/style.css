@@ -1946,7 +1946,10 @@ html {
   }
   
   .modal {
-    width: 95%;
+    padding: var(--space-3);
+  }
+  
+  .modal-content {
     max-height: 95vh;
   }
   
