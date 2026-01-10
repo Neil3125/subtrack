@@ -35,11 +35,11 @@ class Settings(BaseSettings):
     database_url: str = get_database_url()
     
     # AI Provider (optional)
-    # Supported providers: "openrouter" (recommended), "gemini", "openai"
-    subtrack_ai_provider: str = "openrouter"
+    # Supported providers: "github_models" (free), "anthropic" (Claude - cheap), "groq", "huggingface", "openrouter", "gemini", "openai"
+    subtrack_ai_provider: str = "github_models"
     subtrack_ai_api_key: Optional[str] = None
-    subtrack_ai_model: str = "google/gemini-2.0-flash-001"
-    subtrack_ai_base_url: str = "https://openrouter.ai/api/v1"
+    subtrack_ai_model: str = "gpt-4o"
+    subtrack_ai_base_url: str = "https://models.github.ai/inference"
     
     # AI Cache Settings
     ai_cache_ttl: int = 86400  # 24 hours in seconds

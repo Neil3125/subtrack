@@ -147,7 +147,28 @@ def get_ai_provider() -> AIProvider:
     if settings.subtrack_ai_api_key:
         provider_type = settings.subtrack_ai_provider.lower()
         
-        if provider_type == "openrouter":
+        if provider_type == "anthropic":
+            from app.ai.anthropic_provider import AnthropicProvider
+            return AnthropicProvider(
+                api_key=settings.subtrack_ai_api_key,
+                model=settings.subtrack_ai_model,
+                base_url=settings.subtrack_ai_base_url
+            )
+        elif provider_type == "groq":
+            from app.ai.groq_provider import GroqProvider
+            return GroqProvider(
+                api_key=settings.subtrack_ai_api_key,
+                model=settings.subtrack_ai_model,
+                base_url=settings.subtrack_ai_base_url
+            )
+        elif provider_type == "huggingface":
+            from app.ai.huggingface_provider import HuggingFaceProvider
+            return HuggingFaceProvider(
+                api_key=settings.subtrack_ai_api_key,
+                model=settings.subtrack_ai_model,
+                base_url=settings.subtrack_ai_base_url
+            )
+        elif provider_type == "openrouter":
             from app.ai.openrouter_provider import OpenRouterProvider
             return OpenRouterProvider(
                 api_key=settings.subtrack_ai_api_key,
@@ -165,10 +186,17 @@ def get_ai_provider() -> AIProvider:
                 model=settings.subtrack_ai_model,
                 base_url=settings.subtrack_ai_base_url
             )
+        elif provider_type == "github_models":
+            from app.ai.github_models_provider import GitHubModelsProvider
+            return GitHubModelsProvider(
+                api_key=settings.subtrack_ai_api_key,
+                model=settings.subtrack_ai_model,
+                base_url=settings.subtrack_ai_base_url
+            )
         else:
-            # Default to OpenRouter if provider not recognized
-            from app.ai.openrouter_provider import OpenRouterProvider
-            return OpenRouterProvider(
+            # Default to GitHub Models if provider not recognized
+            from app.ai.github_models_provider import GitHubModelsProvider
+            return GitHubModelsProvider(
                 api_key=settings.subtrack_ai_api_key,
                 model=settings.subtrack_ai_model,
                 base_url=settings.subtrack_ai_base_url

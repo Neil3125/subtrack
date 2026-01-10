@@ -66,7 +66,30 @@ uvicorn app.main:app --reload
 - **Development**: Uses SQLite by default (`sqlite:///./subtrack.db`)
 - **Production**: Set `DATABASE_URL` to your PostgreSQL connection string
 
-### AI Features (Optional)
+### AI Features (Powered by GitHub Models)
+
+Your app now includes powerful AI features using **GitHub Models** (completely free!):
+- **Smart Link Suggestions**: AI automatically suggests relevant links when adding new subscriptions
+- **AI Insights**: Get intelligent analysis and recommendations about your subscriptions
+- **Natural Language Search**: Search subscriptions using plain English
+- **Data Enrichment**: AI automatically fills in missing details
+
+### Getting Started with AI
+1. Get a GitHub Personal Access Token: https://github.com/settings/tokens
+2. Set `SUBTRACK_AI_API_KEY=github_pat_...` in your `.env` file
+3. AI features will be automatically available!
+
+### Available Models
+- **gpt-4o** (Default, recommended)
+- **gpt-4-turbo**
+- **llama-2-70b**
+- **mistral-large**
+
+**Why GitHub Models?** - Completely free, powered by GitHub, includes access to premium models like GPT-4o, and unlimited requests with a GitHub token.
+
+---
+
+## AI Features (Optional)
 
 The app works perfectly without AI configured - it will use deterministic heuristics.
 
