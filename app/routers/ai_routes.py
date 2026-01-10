@@ -675,10 +675,16 @@ async def clear_ai_expired_cache(db: Session = Depends(get_db)):
 @router.get("/test-ai-direct")
 async def test_ai_direct():
     """Direct test of AI API - bypasses cache and shows real usage."""
-    from app.ai.provider import get_ai_provider
+    from app.config import settings
+    from app.ai.openrouter_provider import OpenRouterProvider
     import time
     
-    provider = get_ai_provider()
+    # Force use OpenRouter with settings from .env (ignore any cached providers)
+    provider = OpenRouterProvider(
+        api_key=settings.subtrack_ai_api_key or "",
+        model=settings.subtrack_ai_model,
+        base_url=settings.subtrack_ai_base_url
+    )
     
     result = {
         "provider_type": type(provider).__name__,

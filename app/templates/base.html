@@ -706,14 +706,16 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">API Key</label>
-                    <input type="password" id="ai-api-key" class="form-input" placeholder="Enter your Gemini API key">
-                    <small class="text-secondary">Get your free API key from <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
+                    <input type="password" id="ai-api-key" class="form-input" placeholder="Enter your OpenRouter API key">
+                    <small class="text-secondary">Get your free API key from <a href="https://openrouter.ai/keys" target="_blank">OpenRouter</a> (50 free requests/day)</small>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Model</label>
                     <select id="ai-model" class="form-select">
-                        <option value="gemini-pro">Gemini Pro</option>
-                        <option value="gemini-pro-vision">Gemini Pro Vision</option>
+                        <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash (Recommended)</option>
+                        <option value="google/gemma-2-9b-it:free">Gemma 2 9B (Free)</option>
+                        <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
+                        <option value="openai/gpt-3.5-turbo">GPT-3.5 Turbo</option>
                     </select>
                 </div>
                 <div class="form-group">

@@ -1870,7 +1870,7 @@ window.saveAIConfig = function() {
 // Load AI config when modal opens
 window.loadAIConfig = function() {
   const apiKey = localStorage.getItem('ai-api-key') || '';
-  const model = localStorage.getItem('ai-model') || 'gemini-pro';
+  const model = localStorage.getItem('ai-model') || 'google/gemini-2.0-flash-001';
   const enabled = localStorage.getItem('ai-enabled') === 'true';
   
   const apiKeyInput = document.getElementById('ai-api-key');
