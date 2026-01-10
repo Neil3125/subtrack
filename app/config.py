@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     # Supported providers: "openrouter" (recommended), "gemini", "openai"
     subtrack_ai_provider: str = "openrouter"
     subtrack_ai_api_key: Optional[str] = None
-    subtrack_ai_model: str = "google/gemini-2.0-flash-exp:free"
+    subtrack_ai_model: str = "google/gemini-2.0-flash-001"
     subtrack_ai_base_url: str = "https://openrouter.ai/api/v1"
     
     # AI Cache Settings

@@ -34,7 +34,7 @@ class OpenRouterProvider(AIProvider):
     def __init__(
         self, 
         api_key: str, 
-        model: str = "google/gemini-2.0-flash-001:free",
+        model: str = "google/gemini-2.0-flash-001",
         base_url: str = "https://openrouter.ai/api/v1"
     ):
         self.api_key = api_key

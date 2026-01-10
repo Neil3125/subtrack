@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from app.models import Category, Group, Customer, Subscription
 from app.models.subscription import SubscriptionStatus
 from app.ai.provider import AIProvider
+from app.ai.json_parser import safe_json_parse
 
 
 class InsightsAnalyzer:
@@ -157,10 +158,12 @@ Provide 3-5 specific, actionable recommendations as a JSON array of strings."""
             )
             
             # Try to parse JSON, fallback to plain text
-            try:
-                import json
-                recommendations = json.loads(recommendations_text)
-            except:
+            parsed = safe_json_parse(recommendations_text, None)
+            if isinstance(parsed, list):
+                recommendations = parsed
+            elif isinstance(parsed, dict) and 'recommendations' in parsed:
+                recommendations = parsed['recommendations']
+            else:
                 # If not valid JSON, split by newlines
                 recommendations = [r.strip() for r in recommendations_text.split('\n') if r.strip()]
             

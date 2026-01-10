@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import date, timedelta
 from app.models import Subscription, Customer, Category, Group
 from app.ai.provider import get_ai_provider
+from app.ai.json_parser import safe_json_parse
 import json
 
 
@@ -42,9 +43,8 @@ Respond with JSON only:
 }}"""
             
             response = await self.provider.generate_completion(prompt, max_tokens=200)
-            return json.loads(response)
-        except json.JSONDecodeError:
-            return {"suggested_category": "Uncategorized", "confidence": 0, "reasoning": "Failed to parse AI response"}
+            fallback = {"suggested_category": "Uncategorized", "confidence": 0, "reasoning": "Failed to parse AI response"}
+            return safe_json_parse(response, fallback)
         except Exception as e:
             return {"suggested_category": "Uncategorized", "confidence": 0, "reasoning": f"Error: {str(e)}"}
     
@@ -104,16 +104,15 @@ Respond with JSON only:
 }}"""
             
             response = await self.provider.generate_completion(prompt, max_tokens=800)
-            result = json.loads(response)
-            result["current_monthly_total"] = total_monthly
-            return result
-        except json.JSONDecodeError:
-            return {
+            fallback = {
                 "potential_savings": 0,
                 "suggestions": [],
-                "current_monthly_total": total_monthly if 'total_monthly' in locals() else 0,
+                "current_monthly_total": total_monthly,
                 "error": "Failed to parse AI response"
             }
+            result = safe_json_parse(response, fallback)
+            result["current_monthly_total"] = total_monthly
+            return result
         except Exception as e:
             return {
                 "potential_savings": 0,
@@ -171,9 +170,10 @@ Respond with JSON only:
 }}"""
                         
                         response = await self.provider.generate_completion(prompt, max_tokens=300)
-                        ai_reminder = json.loads(response)
+                        ai_reminder = safe_json_parse(response, {})
                         # Merge AI data with basic data
-                        basic_reminder.update(ai_reminder)
+                        if ai_reminder:
+                            basic_reminder.update(ai_reminder)
                     except:
                         pass  # Use basic reminder
                 
@@ -223,7 +223,8 @@ Respond with JSON only:
 }}"""
             
             response = await self.provider.generate_completion(prompt, max_tokens=600)
-            return json.loads(response)["duplicates"]
+            result = safe_json_parse(response, {"duplicates": []})
+            return result.get("duplicates", [])
         except Exception:
             return []
     
@@ -281,7 +282,7 @@ Respond with JSON only:
 }}"""
             
             response = await self.provider.generate_completion(prompt, max_tokens=500)
-            result = json.loads(response)
+            result = safe_json_parse(response, base_result)
             result["total_monthly_cost"] = total_monthly
             result["active_count"] = active_count
             return result
@@ -359,7 +360,7 @@ Respond with JSON only:
 }}"""
             
             response = await self.provider.generate_completion(prompt, max_tokens=800)
-            result = json.loads(response)
+            result = safe_json_parse(response, fallback_result)
             result["current_monthly_baseline"] = monthly_base
             return result
         except Exception:
@@ -410,7 +411,8 @@ Respond with JSON only:
 }}"""
             
             response = await self.provider.generate_completion(prompt, max_tokens=200)
-            return json.loads(response)["tags"]
+            result = safe_json_parse(response, {"tags": basic_tags})
+            return result.get("tags", basic_tags)
         except Exception:
             return basic_tags if 'basic_tags' in locals() else ["subscription"]
     
@@ -478,10 +480,11 @@ Respond with JSON only:
 }}"""
             
             response = await self.provider.generate_completion(prompt, max_tokens=600)
-            result = json.loads(response)
+            fallback = {"matches": [], "query_interpretation": query}
+            result = safe_json_parse(response, fallback)
             # Enhance with full subscription data
-            for match in result["matches"]:
-                sub = next((s for s in all_subs if s.id == match["subscription_id"]), None)
+            for match in result.get("matches", []):
+                sub = next((s for s in all_subs if s.id == match.get("subscription_id")), None)
                 if sub:
                     match["vendor"] = sub.vendor_name
                     match["cost"] = sub.cost
@@ -548,7 +551,7 @@ Respond with JSON only:
 }}"""
             
             response = await self.provider.generate_completion(prompt, max_tokens=500)
-            return json.loads(response)
+            return safe_json_parse(response, fallback_result)
         except Exception:
             return fallback_result if 'fallback_result' in locals() else {
                 "health_score": 70,
