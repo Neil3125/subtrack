@@ -1,0 +1,233 @@
+<!-- AI Result Templates - These are returned by HTMX calls -->
+
+<!-- Template for Link Intelligence Results -->
+{% macro link_extract_result(data) %}
+<div class="ai-result {% if data.error %}ai-result-error{% else %}ai-result-success{% endif %}">
+    {% if data.error %}
+        <div class="ai-error">
+            <span class="ai-error-icon">⚠️</span>
+            <div>
+                <strong>{{ data.error }}</strong>
+                {% if data.fallback %}
+                <p class="text-sm text-secondary">{{ data.fallback }}</p>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="ai-success">
+            <div class="ai-result-header">
+                <span class="ai-confidence-badge confidence-{{ 'high' if data.confidence > 80 else 'medium' if data.confidence > 50 else 'low' }}">
+                    {{ data.confidence }}% confidence
+                </span>
+                {% if data.cached %}
+                <span class="ai-cached-badge">⚡ Cached</span>
+                {% endif %}
+            </div>
+            
+            <div class="ai-extracted-data">
+                <div class="ai-data-row">
+                    <span class="ai-data-label">Vendor:</span>
+                    <span class="ai-data-value">{{ data.vendor_name or 'Unknown' }}</span>
+                </div>
+                <div class="ai-data-row">
+                    <span class="ai-data-label">Plan:</span>
+                    <span class="ai-data-value">{{ data.plan_name or 'Standard' }}</span>
+                </div>
+                <div class="ai-data-row">
+                    <span class="ai-data-label">Cost:</span>
+                    <span class="ai-data-value">${{ data.cost or '0' }} {{ data.currency or 'USD' }}</span>
+                </div>
+                <div class="ai-data-row">
+                    <span class="ai-data-label">Billing:</span>
+                    <span class="ai-data-value">{{ data.billing_cycle or 'monthly' }}</span>
+                </div>
+                {% if data.notes %}
+                <div class="ai-data-row">
+                    <span class="ai-data-label">Notes:</span>
+                    <span class="ai-data-value text-secondary">{{ data.notes }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <button class="btn btn-primary btn-sm mt-3" onclick="applyExtractedData({{ data|tojson }})">
+                ✓ Use These Details
+            </button>
+        </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+<!-- Template for Budget Surgeon Results -->
+{% macro budget_surgeon_result(data) %}
+<div class="ai-result {% if data.error %}ai-result-error{% else %}ai-result-success{% endif %}">
+    {% if data.error %}
+        <div class="ai-error">
+            <span class="ai-error-icon">⚠️</span>
+            <div>
+                <strong>{{ data.error }}</strong>
+                {% if data.message %}
+                <p class="text-sm text-secondary">{{ data.message }}</p>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="ai-success">
+            <div class="ai-result-header">
+                <div class="ai-savings-highlight">
+                    <span class="ai-savings-amount">${{ "%.2f"|format(data.total_potential_savings or 0) }}</span>
+                    <span class="ai-savings-label">potential monthly savings</span>
+                </div>
+                {% if data.cached %}
+                <span class="ai-cached-badge">⚡ Cached</span>
+                {% endif %}
+            </div>
+            
+            <div class="ai-summary mb-3">
+                <p><strong>Current Monthly:</strong> ${{ "%.2f"|format(data.current_monthly_total or 0) }}</p>
+                {% if data.summary %}
+                <p class="text-secondary">{{ data.summary }}</p>
+                {% endif %}
+            </div>
+            
+            {% if data.duplicates and data.duplicates|length > 0 %}
+            <div class="ai-recommendations">
+                <h5>Recommendations:</h5>
+                {% for item in data.duplicates %}
+                <div class="ai-recommendation-card priority-{{ item.priority or 'medium' }}">
+                    <div class="ai-rec-header">
+                        <span class="ai-rec-type">{{ item.type|replace('_', ' ')|title }}</span>
+                        <span class="ai-rec-savings">${{ "%.2f"|format(item.potential_savings or 0) }}/mo</span>
+                    </div>
+                    <p class="ai-rec-action">{{ item.recommendation }}</p>
+                    <p class="ai-rec-reason text-sm text-secondary">{{ item.reasoning }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="ai-no-issues">
+                <span class="ai-success-icon">✅</span>
+                <p>No duplicate or redundant subscriptions found. Your subscription portfolio looks optimized!</p>
+            </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+<!-- Template for Renewal Forecast Results -->
+{% macro forecast_result(data) %}
+<div class="ai-result {% if data.error %}ai-result-error{% else %}ai-result-success{% endif %}">
+    {% if data.error %}
+        <div class="ai-error">
+            <span class="ai-error-icon">⚠️</span>
+            <div>
+                <strong>{{ data.error }}</strong>
+            </div>
+        </div>
+    {% else %}
+        <div class="ai-success">
+            <div class="ai-forecast-summary">
+                <div class="ai-forecast-stat">
+                    <span class="ai-forecast-value">${{ "%.2f"|format(data.total_yearly_cost or 0) }}</span>
+                    <span class="ai-forecast-label">Yearly Total</span>
+                </div>
+                <div class="ai-forecast-stat">
+                    <span class="ai-forecast-value">${{ "%.2f"|format(data.average_monthly_cost or 0) }}</span>
+                    <span class="ai-forecast-label">Avg Monthly</span>
+                </div>
+                <div class="ai-forecast-stat">
+                    <span class="ai-forecast-value">{{ data.subscription_count or 0 }}</span>
+                    <span class="ai-forecast-label">Subscriptions</span>
+                </div>
+            </div>
+            
+            {% if data.peak_spending %}
+            <div class="ai-peak-info">
+                <p>📈 <strong>Peak:</strong> {{ data.peak_spending.month }} (${{ "%.2f"|format(data.peak_spending.amount) }})</p>
+                <p>📉 <strong>Lowest:</strong> {{ data.lowest_spending.month }} (${{ "%.2f"|format(data.lowest_spending.amount) }})</p>
+            </div>
+            {% endif %}
+            
+            {% if data.forecast and data.forecast|length > 0 %}
+            <div class="ai-forecast-chart">
+                <h5>12-Month Forecast:</h5>
+                <div class="forecast-bars">
+                    {% for month in data.forecast[:12] %}
+                    <div class="forecast-bar-container" title="{{ month.month_name }}: ${{ '%.2f'|format(month.cost) }}">
+                        <div class="forecast-bar" style="height: {{ (month.cost / (data.peak_spending.amount or 1) * 100)|int }}%;"></div>
+                        <span class="forecast-month">{{ month.month[-2:] }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if data.ai_insights %}
+            <div class="ai-insights-section">
+                <h5>🤖 AI Insights:</h5>
+                {% if data.ai_insights.insights %}
+                <ul class="ai-insights-list">
+                    {% for insight in data.ai_insights.insights %}
+                    <li>{{ insight }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if data.ai_insights.optimization_tip %}
+                <div class="ai-tip">
+                    <strong>💡 Tip:</strong> {{ data.ai_insights.optimization_tip }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+<!-- Template for Auto-Categorizer Results -->
+{% macro categorize_result(data) %}
+<div class="ai-result {% if data.error and not data.suggested_category %}ai-result-error{% else %}ai-result-success{% endif %}">
+    {% if data.error and not data.suggested_category %}
+        <div class="ai-error">
+            <span class="ai-error-icon">⚠️</span>
+            <div>
+                <strong>{{ data.error }}</strong>
+            </div>
+        </div>
+    {% else %}
+        <div class="ai-success">
+            <div class="ai-result-header">
+                <span class="ai-confidence-badge confidence-{{ 'high' if data.confidence > 80 else 'medium' if data.confidence > 50 else 'low' }}">
+                    {{ data.confidence }}% confidence
+                </span>
+                {% if data.cached %}
+                <span class="ai-cached-badge">⚡ Cached</span>
+                {% endif %}
+            </div>
+            
+            <div class="ai-category-suggestion">
+                <div class="ai-suggested-category">
+                    <span class="ai-category-icon">📁</span>
+                    <span class="ai-category-name">{{ data.suggested_category }}</span>
+                </div>
+                {% if data.reasoning %}
+                <p class="ai-reasoning text-secondary">{{ data.reasoning }}</p>
+                {% endif %}
+            </div>
+            
+            {% if data.alternatives and data.alternatives|length > 0 %}
+            <div class="ai-alternatives">
+                <p class="text-sm text-secondary mb-1">Alternatives:</p>
+                {% for alt in data.alternatives %}
+                <span class="ai-alt-badge">{{ alt.category }} ({{ alt.confidence }}%)</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <button class="btn btn-primary btn-sm mt-3" onclick="applyCategorySuggestion('{{ data.suggested_category }}', {{ data.suggested_category_id or 'null' }})">
+                ✓ Use This Category
+            </button>
+        </div>
+    {% endif %}
+</div>
+{% endmacro %}

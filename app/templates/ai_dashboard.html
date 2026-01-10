@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}AI Features - SubTrack{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1>🤖 AI Features</h1>
+            <p class="text-secondary">Powered by OpenRouter (Google Gemini 2.0 Flash)</p>
+        </div>
+        <div id="ai-status-container">
+            <!-- AI Status loads here via HTMX -->
+            <div hx-get="/api/ai/status" 
+                 hx-trigger="load"
+                 hx-swap="innerHTML"
+                 class="ai-status-badge">
+                <span class="loading-spinner"></span> Checking AI status...
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Features Grid -->
+    <div class="ai-features-grid">
+        
+        <!-- Smart Link Intelligence -->
+        <div class="ai-feature-card">
+            <div class="ai-feature-header">
+                <span class="ai-feature-icon">🔗</span>
+                <h4>Smart Link Intelligence</h4>
+            </div>
+            <p class="ai-feature-desc">Paste a subscription URL to automatically extract vendor, pricing, and plan details.</p>
+            
+            <form id="link-extract-form">
+                <div class="input-group">
+                    <input type="url" 
+                           id="extract-url-input"
+                           placeholder="https://example.com/pricing" 
+                           class="input"
+                           required>
+                    <button type="submit" 
+                            class="btn btn-primary"
+                            hx-post="/api/ai/extract-from-url"
+                            hx-target="#link-extract-result"
+                            hx-indicator="#link-extract-loading"
+                            hx-include="#extract-url-input"
+                            hx-vals='js:{url: document.getElementById("extract-url-input").value}'>
+                        <span id="link-extract-loading" class="htmx-indicator">
+                            <span class="loading-spinner"></span>
+                        </span>
+                        <span class="btn-text">Extract</span>
+                    </button>
+                </div>
+            </form>
+            
+            <div id="link-extract-result" class="ai-result-container"></div>
+        </div>
+
+        <!-- Budget Surgeon -->
+        <div class="ai-feature-card">
+            <div class="ai-feature-header">
+                <span class="ai-feature-icon">🔪</span>
+                <h4>Budget Surgeon</h4>
+            </div>
+            <p class="ai-feature-desc">Analyze all subscriptions to find duplicates, redundant services, and potential savings.</p>
+            
+            <button hx-post="/api/ai/budget-surgeon"
+                    hx-target="#budget-surgeon-result"
+                    hx-indicator="#budget-surgeon-loading"
+                    class="btn btn-secondary w-full">
+                <span id="budget-surgeon-loading" class="htmx-indicator">
+                    <span class="loading-spinner"></span>
+                </span>
+                <span class="btn-text">🔍 Find Savings</span>
+            </button>
+            
+            <div id="budget-surgeon-result" class="ai-result-container"></div>
+        </div>
+
+        <!-- Renewal Forecaster -->
+        <div class="ai-feature-card">
+            <div class="ai-feature-header">
+                <span class="ai-feature-icon">📅</span>
+                <h4>Renewal Forecaster</h4>
+            </div>
+            <p class="ai-feature-desc">Predict your subscription costs for the next 12 months with AI-powered insights.</p>
+            
+            <button hx-post="/api/ai/renewal-forecast"
+                    hx-target="#forecast-result"
+                    hx-indicator="#forecast-loading"
+                    class="btn btn-secondary w-full">
+                <span id="forecast-loading" class="htmx-indicator">
+                    <span class="loading-spinner"></span>
+                </span>
+                <span class="btn-text">📊 Generate Forecast</span>
+            </button>
+            
+            <div id="forecast-result" class="ai-result-container"></div>
+        </div>
+
+        <!-- Auto-Categorizer -->
+        <div class="ai-feature-card">
+            <div class="ai-feature-header">
+                <span class="ai-feature-icon">📁</span>
+                <h4>Auto-Categorizer</h4>
+            </div>
+            <p class="ai-feature-desc">Get AI-suggested categories for any subscription vendor.</p>
+            
+            <form id="categorize-form">
+                <div class="input-group mb-2">
+                    <input type="text" 
+                           id="categorize-vendor-input"
+                           placeholder="Vendor name (e.g., Adobe)" 
+                           class="input"
+                           required>
+                </div>
+                <div class="input-group">
+                    <input type="text" 
+                           id="categorize-plan-input"
+                           placeholder="Plan name (optional)" 
+                           class="input">
+                    <button type="submit" 
+                            class="btn btn-primary"
+                            hx-post="/api/ai/categorize-subscription"
+                            hx-target="#categorize-result"
+                            hx-indicator="#categorize-loading"
+                            hx-vals='js:{vendor_name: document.getElementById("categorize-vendor-input").value, plan_name: document.getElementById("categorize-plan-input").value}'>
+                        <span id="categorize-loading" class="htmx-indicator">
+                            <span class="loading-spinner"></span>
+                        </span>
+                        <span class="btn-text">Suggest</span>
+                    </button>
+                </div>
+            </form>
+            
+            <div id="categorize-result" class="ai-result-container"></div>
+        </div>
+    </div>
+
+    <!-- Cache Stats Section -->
+    <div class="card mt-8">
+        <div class="flex items-center justify-between mb-4">
+            <h3>📊 AI Cache Statistics</h3>
+            <button hx-post="/api/ai/cache/clear-expired"
+                    hx-target="#cache-stats"
+                    hx-swap="outerHTML"
+                    class="btn btn-secondary btn-sm">
+                🧹 Clear Expired
+            </button>
+        </div>
+        <div id="cache-stats" 
+             hx-get="/api/ai/cache/stats" 
+             hx-trigger="load"
+             hx-swap="innerHTML">
+            <span class="loading-spinner"></span> Loading cache stats...
+        </div>
+    </div>
+
+    <!-- Usage Tips -->
+    <div class="card mt-8">
+        <h3>💡 Tips for Using AI Features</h3>
+        <div class="grid grid-cols-2 gap-4 mt-4">
+            <div>
+                <h4 class="text-primary">🔗 Link Intelligence</h4>
+                <ul class="text-secondary text-sm">
+                    <li>Paste pricing page URLs for best results</li>
+                    <li>Works great with popular SaaS products</li>
+                    <li>Results are cached for 24 hours</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-primary">🔪 Budget Surgeon</h4>
+                <ul class="text-secondary text-sm">
+                    <li>Analyzes all active subscriptions</li>
+                    <li>Finds overlapping services automatically</li>
+                    <li>Suggests specific cost-cutting actions</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-primary">📅 Renewal Forecaster</h4>
+                <ul class="text-secondary text-sm">
+                    <li>Predicts costs 12 months ahead</li>
+                    <li>Identifies peak spending months</li>
+                    <li>Helps with budget planning</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-primary">📁 Auto-Categorizer</h4>
+                <ul class="text-secondary text-sm">
+                    <li>Suggests categories with confidence %</li>
+                    <li>Shows alternative options</li>
+                    <li>Learn from your existing categories</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Free Tier Info -->
+    <div class="card mt-8" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); border-color: var(--color-primary);">
+        <div class="flex items-center gap-4">
+            <span style="font-size: 2rem;">🎁</span>
+            <div>
+                <h4 class="text-primary mb-1">Free Tier: 50 Requests/Day</h4>
+                <p class="text-secondary text-sm mb-0">
+                    You're using OpenRouter's free tier with Google Gemini 2.0 Flash. 
+                    Responses are cached for 24 hours to maximize your daily quota.
+                    Most users hit cache 80%+ of the time after the first day!
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Handle form submissions
+document.getElementById('link-extract-form')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+});
+
+document.getElementById('categorize-form')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+});
+
+// Apply extracted data to subscription form (if available)
+function applyExtractedData(data) {
+    // Store in sessionStorage for use in subscription form
+    sessionStorage.setItem('ai_extracted_data', JSON.stringify(data));
+    
+    // Show success message
+    alert('Data saved! Go to Add Subscription to use these details.');
+}
+
+// Apply category suggestion
+function applyCategorySuggestion(categoryName, categoryId) {
+    sessionStorage.setItem('ai_suggested_category', JSON.stringify({
+        name: categoryName,
+        id: categoryId
+    }));
+    
+    alert('Category saved! This will be pre-selected when adding subscriptions.');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,131 @@
+<!-- AI Features Components for SubTrack -->
+<!-- These components use HTMX for seamless AI interactions -->
+
+<!-- AI Status Indicator -->
+<div id="ai-status" class="ai-status-badge" 
+     hx-get="/api/ai/status" 
+     hx-trigger="load"
+     hx-swap="innerHTML">
+    <span class="loading-spinner"></span> Checking AI...
+</div>
+
+<!-- ============================================== -->
+<!-- SMART LINK INTELLIGENCE - URL Extractor       -->
+<!-- ============================================== -->
+<div id="ai-link-extractor" class="ai-feature-card">
+    <div class="ai-feature-header">
+        <span class="ai-feature-icon">🔗</span>
+        <h4>Smart Link Intelligence</h4>
+    </div>
+    <p class="ai-feature-desc">Paste a subscription URL to auto-fill details</p>
+    
+    <form hx-post="/api/ai/extract-from-url" 
+          hx-target="#link-extract-result"
+          hx-indicator="#link-extract-loading"
+          hx-swap="innerHTML">
+        <div class="input-group">
+            <input type="url" 
+                   name="url" 
+                   id="extract-url-input"
+                   placeholder="https://example.com/pricing" 
+                   class="input"
+                   required>
+            <button type="submit" class="btn btn-primary">
+                <span id="link-extract-loading" class="htmx-indicator">
+                    <span class="loading-spinner"></span>
+                </span>
+                <span class="btn-text">Extract</span>
+            </button>
+        </div>
+    </form>
+    
+    <div id="link-extract-result" class="ai-result-container"></div>
+</div>
+
+<!-- ============================================== -->
+<!-- BUDGET SURGEON - Cost Analysis                -->
+<!-- ============================================== -->
+<div id="ai-budget-surgeon" class="ai-feature-card">
+    <div class="ai-feature-header">
+        <span class="ai-feature-icon">🔪</span>
+        <h4>Budget Surgeon</h4>
+    </div>
+    <p class="ai-feature-desc">Find duplicate subscriptions and savings opportunities</p>
+    
+    <button hx-post="/api/ai/budget-surgeon"
+            hx-target="#budget-surgeon-result"
+            hx-indicator="#budget-surgeon-loading"
+            hx-swap="innerHTML"
+            class="btn btn-secondary w-full">
+        <span id="budget-surgeon-loading" class="htmx-indicator">
+            <span class="loading-spinner"></span>
+        </span>
+        <span class="btn-text">🔍 Find Savings</span>
+    </button>
+    
+    <div id="budget-surgeon-result" class="ai-result-container"></div>
+</div>
+
+<!-- ============================================== -->
+<!-- RENEWAL FORECASTER - Cash Flow Prediction     -->
+<!-- ============================================== -->
+<div id="ai-renewal-forecaster" class="ai-feature-card">
+    <div class="ai-feature-header">
+        <span class="ai-feature-icon">📅</span>
+        <h4>Renewal Forecaster</h4>
+    </div>
+    <p class="ai-feature-desc">Predict your subscription costs for the next 12 months</p>
+    
+    <button hx-post="/api/ai/renewal-forecast"
+            hx-target="#forecast-result"
+            hx-indicator="#forecast-loading"
+            hx-swap="innerHTML"
+            class="btn btn-secondary w-full">
+        <span id="forecast-loading" class="htmx-indicator">
+            <span class="loading-spinner"></span>
+        </span>
+        <span class="btn-text">📊 Generate Forecast</span>
+    </button>
+    
+    <div id="forecast-result" class="ai-result-container"></div>
+</div>
+
+<!-- ============================================== -->
+<!-- AUTO-CATEGORIZER - Category Suggestions       -->
+<!-- ============================================== -->
+<div id="ai-auto-categorizer" class="ai-feature-card">
+    <div class="ai-feature-header">
+        <span class="ai-feature-icon">📁</span>
+        <h4>Auto-Categorizer</h4>
+    </div>
+    <p class="ai-feature-desc">Get AI-suggested categories for subscriptions</p>
+    
+    <form hx-post="/api/ai/categorize-subscription"
+          hx-target="#categorize-result"
+          hx-indicator="#categorize-loading"
+          hx-swap="innerHTML">
+        <div class="input-group mb-2">
+            <input type="text" 
+                   name="vendor_name" 
+                   id="categorize-vendor-input"
+                   placeholder="Vendor name (e.g., Adobe)" 
+                   class="input"
+                   required>
+        </div>
+        <div class="input-group">
+            <input type="text" 
+                   name="plan_name" 
+                   id="categorize-plan-input"
+                   placeholder="Plan name (optional)" 
+                   class="input">
+            <button type="submit" class="btn btn-primary">
+                <span id="categorize-loading" class="htmx-indicator">
+                    <span class="loading-spinner"></span>
+                </span>
+                <span class="btn-text">Suggest</span>
+            </button>
+        </div>
+    </form>
+    
+    <div id="categorize-result" class="ai-result-container"></div>
+</div>

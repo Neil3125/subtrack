@@ -8,6 +8,8 @@ from app.ai.provider import get_ai_provider
 from app.ai.insights import InsightsAnalyzer
 from app.ai.link_intelligence import LinkAnalyzer
 from app.ai.features import AIFeatures
+from app.ai.smart_features import SmartAIFeatures
+from app.ai.cache import get_cache_stats, clear_expired_cache
 from app.models import Link
 from app.models.link import UserDecision
 from app.schemas import LinkResponse, LinkDecision
@@ -224,3 +226,169 @@ async def subscription_health(subscription_id: int, db: Session = Depends(get_db
     ai_features = AIFeatures(db)
     health = await ai_features.subscription_health_score(subscription_id)
     return health
+
+
+# ==================== NEW SMART AI FEATURES (OpenRouter) ====================
+
+class ExtractURLRequest(BaseModel):
+    """Request schema for URL extraction."""
+    url: str
+
+
+class BudgetSurgeonRequest(BaseModel):
+    """Request schema for budget analysis."""
+    customer_id: Optional[int] = None
+
+
+class RenewalForecastRequest(BaseModel):
+    """Request schema for renewal forecast."""
+    months_ahead: int = 12
+
+
+class AutoCategorizeRequest(BaseModel):
+    """Request schema for auto-categorization."""
+    vendor_name: str
+    plan_name: Optional[str] = None
+
+
+@router.post("/extract-from-url")
+async def extract_from_url(request: ExtractURLRequest, db: Session = Depends(get_db)):
+    """
+    🔗 Smart Link Intelligence
+    
+    Extract subscription details from a URL automatically.
+    
+    Example:
+        POST /api/ai/extract-from-url
+        {"url": "https://figma.com/pricing"}
+        
+    Returns:
+        Extracted vendor name, cost, billing cycle, plan name, confidence score
+    """
+    smart_features = SmartAIFeatures(db)
+    result = await smart_features.extract_from_url(request.url)
+    return result
+
+
+@router.post("/budget-surgeon")
+async def budget_surgeon(
+    request: BudgetSurgeonRequest = None, 
+    db: Session = Depends(get_db)
+):
+    """
+    🔪 Budget Surgeon
+    
+    Identify duplicate or redundant spending across subscriptions.
+    
+    Example:
+        POST /api/ai/budget-surgeon
+        {"customer_id": null}  # null for all customers
+        
+    Returns:
+        List of duplicates, potential savings, recommendations
+    """
+    if request is None:
+        request = BudgetSurgeonRequest()
+    
+    smart_features = SmartAIFeatures(db)
+    result = await smart_features.analyze_budget(request.customer_id)
+    return result
+
+
+@router.post("/renewal-forecast")
+async def renewal_forecast(
+    request: RenewalForecastRequest = None,
+    db: Session = Depends(get_db)
+):
+    """
+    📅 Renewal Forecaster
+    
+    Predict upcoming subscription costs for the next N months.
+    
+    Example:
+        POST /api/ai/renewal-forecast
+        {"months_ahead": 12}
+        
+    Returns:
+        Month-by-month forecast, peak spending, AI insights
+    """
+    if request is None:
+        request = RenewalForecastRequest()
+    
+    smart_features = SmartAIFeatures(db)
+    result = await smart_features.forecast_renewals(request.months_ahead)
+    return result
+
+
+@router.post("/categorize-subscription")
+async def categorize_subscription(
+    request: AutoCategorizeRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    📁 Auto-Categorizer
+    
+    Suggest the best category for a subscription.
+    
+    Example:
+        POST /api/ai/categorize-subscription
+        {"vendor_name": "Adobe Acrobat", "plan_name": "Annual"}
+        
+    Returns:
+        Suggested category, confidence score, reasoning, alternatives
+    """
+    smart_features = SmartAIFeatures(db)
+    result = await smart_features.suggest_category(
+        request.vendor_name,
+        request.plan_name
+    )
+    return result
+
+
+# ==================== CACHE MANAGEMENT ====================
+
+@router.get("/cache/stats")
+async def get_ai_cache_stats(db: Session = Depends(get_db)):
+    """
+    Get AI cache statistics.
+    
+    Returns cache hit rates, entry counts, and usage by feature type.
+    """
+    stats = get_cache_stats(db)
+    return stats
+
+
+@router.post("/cache/clear-expired")
+async def clear_ai_expired_cache(db: Session = Depends(get_db)):
+    """
+    Clear expired cache entries.
+    
+    This frees up database space without affecting active cache entries.
+    """
+    deleted = clear_expired_cache(db)
+    return {"deleted_entries": deleted, "message": f"Cleared {deleted} expired cache entries"}
+
+
+@router.get("/status")
+async def get_ai_status(db: Session = Depends(get_db)):
+    """
+    Get AI provider status and configuration.
+    
+    Returns:
+        Provider type, model, availability, cache stats
+    """
+    from app.config import settings
+    from app.ai.provider import get_ai_provider
+    
+    provider = get_ai_provider()
+    cache_stats = get_cache_stats(db)
+    
+    return {
+        "provider": settings.subtrack_ai_provider,
+        "model": settings.subtrack_ai_model,
+        "available": provider.is_available(),
+        "daily_limit": settings.ai_daily_limit,
+        "cache_ttl_hours": settings.ai_cache_ttl / 3600,
+        "request_timeout": settings.ai_request_timeout,
+        "cache_stats": cache_stats
+    }

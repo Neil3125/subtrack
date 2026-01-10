@@ -34,6 +34,7 @@
     <link rel="stylesheet" href="/static/css/enhancements.css">
     <link rel="stylesheet" href="/static/css/themes.css">
     <link rel="stylesheet" href="/static/css/animations.css">
+    <link rel="stylesheet" href="/static/css/ai_features.css">
     <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
     {% block extra_head %}{% endblock %}
 </head>
@@ -196,6 +197,11 @@
                     <li class="sidebar-nav-item">
                         <a href="/links" class="sidebar-nav-link {% if '/links' in request.path %}active{% endif %}">
                             🔗 Links
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="/ai" class="sidebar-nav-link {% if '/ai' in request.path %}active{% endif %}">
+                            🤖 AI Features
                         </a>
                     </li>
                     <li class="sidebar-nav-item">

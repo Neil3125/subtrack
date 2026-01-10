@@ -529,3 +529,16 @@ async def users_page(request: Request, db: Session = Depends(get_db)):
 
 
 # Integrations page removed - was non-functional
+
+
+@router.get("/ai", response_class=HTMLResponse)
+async def ai_dashboard(request: Request, db: Session = Depends(get_db)):
+    """Render AI features dashboard."""
+    categories = db.query(Category).all()
+    current_user = get_current_user(request, db)
+    
+    return templates.TemplateResponse("ai_dashboard.html", {
+        "request": request,
+        "categories": categories,
+        "current_user": current_user
+    })

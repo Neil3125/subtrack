@@ -35,10 +35,17 @@ class Settings(BaseSettings):
     database_url: str = get_database_url()
     
     # AI Provider (optional)
-    subtrack_ai_provider: str = "gemini"  # "gemini" or "openai"
+    # Supported providers: "openrouter" (recommended), "gemini", "openai"
+    subtrack_ai_provider: str = "openrouter"
     subtrack_ai_api_key: Optional[str] = None
-    subtrack_ai_model: str = "gemini-pro"  # gemini-pro for Gemini, gpt-4 for OpenAI
-    subtrack_ai_base_url: str = "https://api.openai.com/v1"  # Only used for OpenAI
+    subtrack_ai_model: str = "google/gemini-2.0-flash-exp:free"
+    subtrack_ai_base_url: str = "https://openrouter.ai/api/v1"
+    
+    # AI Cache Settings
+    ai_cache_ttl: int = 86400  # 24 hours in seconds
+    ai_request_timeout: int = 30  # seconds
+    ai_max_retries: int = 2
+    ai_daily_limit: int = 50  # OpenRouter free tier daily limit
     
     # App
     debug: bool = True

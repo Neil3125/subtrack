@@ -147,7 +147,14 @@ def get_ai_provider() -> AIProvider:
     if settings.subtrack_ai_api_key:
         provider_type = settings.subtrack_ai_provider.lower()
         
-        if provider_type == "gemini":
+        if provider_type == "openrouter":
+            from app.ai.openrouter_provider import OpenRouterProvider
+            return OpenRouterProvider(
+                api_key=settings.subtrack_ai_api_key,
+                model=settings.subtrack_ai_model,
+                base_url=settings.subtrack_ai_base_url
+            )
+        elif provider_type == "gemini":
             return GeminiProvider(
                 api_key=settings.subtrack_ai_api_key,
                 model=settings.subtrack_ai_model
@@ -159,9 +166,11 @@ def get_ai_provider() -> AIProvider:
                 base_url=settings.subtrack_ai_base_url
             )
         else:
-            # Default to Gemini if provider not recognized
-            return GeminiProvider(
+            # Default to OpenRouter if provider not recognized
+            from app.ai.openrouter_provider import OpenRouterProvider
+            return OpenRouterProvider(
                 api_key=settings.subtrack_ai_api_key,
-                model=settings.subtrack_ai_model
+                model=settings.subtrack_ai_model,
+                base_url=settings.subtrack_ai_base_url
             )
     return DummyAIProvider()
