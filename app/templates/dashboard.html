@@ -75,7 +75,7 @@
             <h2 class="modal-title">📋 Active Subscriptions ({{ stats.total_active }})</h2>
             <button class="modal-close" onclick="closeModal('activeSubscriptionsModal')">×</button>
         </div>
-        <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+        <div class="modal-body">
             {% if all_active %}
             <table class="table">
                 <thead>
@@ -115,7 +115,7 @@
             <h2 class="modal-title">💰 Monthly Cost Breakdown</h2>
             <button class="modal-close" onclick="closeModal('monthlyCostModal')">×</button>
         </div>
-        <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+        <div class="modal-body">
             <div class="mb-4">
                 <div class="text-2xl font-bold text-success">${{ "%.2f"|format(stats.monthly_cost|default(0)) }}</div>
                 <div class="text-secondary">Total Monthly Cost</div>
@@ -169,7 +169,7 @@
             <h2 class="modal-title">⚠️ Expiring Soon</h2>
             <button class="modal-close" onclick="closeModal('expiringSoonModal')">×</button>
         </div>
-        <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+        <div class="modal-body">
             <div class="form-group mb-4">
                 <label class="form-label">Filter by Days</label>
                 <select class="form-select" id="expiring-days-filter" onchange="filterExpiringSubscriptions()">
@@ -223,7 +223,7 @@
             <h2 class="modal-title">🚨 Overdue Subscriptions ({{ stats.overdue }})</h2>
             <button class="modal-close" onclick="closeModal('overdueModal')">×</button>
         </div>
-        <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+        <div class="modal-body">
             {% if overdue %}
             <table class="table">
                 <thead>
