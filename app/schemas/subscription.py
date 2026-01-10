@@ -15,6 +15,7 @@ class SubscriptionBase(BaseModel):
     start_date: date
     next_renewal_date: date
     status: SubscriptionStatus = SubscriptionStatus.ACTIVE
+    country: Optional[str] = None
     notes: Optional[str] = None
 
 
@@ -34,6 +35,7 @@ class SubscriptionUpdate(BaseModel):
     start_date: Optional[date] = None
     next_renewal_date: Optional[date] = None
     status: Optional[SubscriptionStatus] = None
+    country: Optional[str] = None
     notes: Optional[str] = None
     customer_id: Optional[int] = None
     category_id: Optional[int] = None

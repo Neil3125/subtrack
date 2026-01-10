@@ -152,11 +152,18 @@ async def group_detail(group_id: int, request: Request, db: Session = Depends(ge
     categories = db.query(Category).all()
     customers = db.query(Customer).filter(Customer.group_id == group_id).all()
     
+    # Get available customers (same category, not in any group or in a different group)
+    available_customers = db.query(Customer).filter(
+        Customer.category_id == group.category_id,
+        Customer.group_id != group_id
+    ).all()
+    
     return templates.TemplateResponse("group_detail.html", {
         "request": request,
         "categories": categories,
         "group": group,
-        "customers": customers
+        "customers": customers,
+        "available_customers": available_customers
     })
 
 

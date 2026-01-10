@@ -23,8 +23,11 @@
             <button class="btn btn-secondary btn-sm" onclick="loadEditData('group', {{ group.id }})">
                 ✏️ Edit Group
             </button>
+            <button class="btn btn-secondary" onclick="openModal('addExistingCustomerModal')">
+                👥 Add Existing Customer
+            </button>
             <button class="btn btn-primary" onclick="openModal('customerModal')">
-                ➕ Add Customer
+                ➕ New Customer
             </button>
         </div>
     </div>
@@ -89,4 +92,79 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Add Existing Customer to Group Modal -->
+<div id="addExistingCustomerModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">👥 Add Existing Customer to Group</h2>
+            <button class="modal-close" onclick="closeModal('addExistingCustomerModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Select Customer</label>
+                <select id="existingCustomerSelect" class="form-select" multiple style="min-height: 200px;">
+                    {% for customer in available_customers %}
+                    <option value="{{ customer.id }}">{{ customer.name }} {% if customer.email %}({{ customer.email }}){% endif %}</option>
+                    {% endfor %}
+                </select>
+                <small class="text-secondary">Hold Ctrl/Cmd to select multiple customers</small>
+            </div>
+            {% if not available_customers %}
+            <div class="info-box info-box-info">
+                <strong>ℹ️ No available customers</strong><br>
+                All customers in this category are already in a group, or there are no customers yet.
+            </div>
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('addExistingCustomerModal')">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="addExistingCustomersToGroup({{ group.id }})" {% if not available_customers %}disabled{% endif %}>Add to Group</button>
+        </div>
+    </div>
+</div>
+
+<script>
+async function addExistingCustomersToGroup(groupId) {
+    const select = document.getElementById('existingCustomerSelect');
+    const selectedOptions = Array.from(select.selectedOptions);
+    
+    if (selectedOptions.length === 0) {
+        showToast('Please select at least one customer', 'error');
+        return;
+    }
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    for (const option of selectedOptions) {
+        const customerId = option.value;
+        try {
+            const response = await fetch(`/api/customers/${customerId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ group_id: groupId })
+            });
+            
+            if (response.ok) {
+                successCount++;
+            } else {
+                errorCount++;
+            }
+        } catch (error) {
+            errorCount++;
+        }
+    }
+    
+    closeModal('addExistingCustomerModal');
+    
+    if (successCount > 0) {
+        showToast(`Added ${successCount} customer(s) to group`, 'success');
+        setTimeout(() => window.location.reload(), 500);
+    }
+    if (errorCount > 0) {
+        showToast(`Failed to add ${errorCount} customer(s)`, 'error');
+    }
+}
+</script>
 {% endblock %}

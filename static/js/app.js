@@ -555,6 +555,7 @@ window.createSubscription = function(formData) {
       start_date: formData.start_date,
       next_renewal_date: formData.next_renewal_date,
       status: formData.status || 'active',
+      country: formData.country || null,
       customer_id: parseInt(formData.customer_id),
       category_id: parseInt(formData.category_id),
       notes: formData.notes || null
@@ -666,6 +667,7 @@ window.updateSubscription = function(formData, id) {
       start_date: formData.start_date,
       next_renewal_date: formData.next_renewal_date,
       status: formData.status || 'active',
+      country: formData.country || null,
       customer_id: parseInt(formData.customer_id),
       category_id: parseInt(formData.category_id),
       notes: formData.notes || null

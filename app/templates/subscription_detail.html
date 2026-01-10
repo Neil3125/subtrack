@@ -92,6 +92,16 @@
                         </a>
                     </div>
                 </div>
+                <div>
+                    <div class="text-sm text-secondary mb-1">Country</div>
+                    <div>
+                        {% if subscription.country %}
+                        <span class="badge badge-info">🌍 {{ subscription.country }}</span>
+                        {% else %}
+                        <span class="text-secondary">Not specified</span>
+                        {% endif %}
+                    </div>
+                </div>
                 <div style="grid-column: span 2;">
                     <div class="text-sm text-secondary mb-1">Notes</div>
                     <div>{{ subscription.notes or 'No notes' }}</div>

@@ -39,6 +39,7 @@ class Subscription(Base):
     start_date = Column(Date, nullable=False, default=date.today)
     next_renewal_date = Column(Date, nullable=False, index=True)
     status = Column(Enum(SubscriptionStatus), nullable=False, default=SubscriptionStatus.ACTIVE, index=True)
+    country = Column(String(100), nullable=True, index=True)
     notes = Column(Text, nullable=True)
     
     # Relationships

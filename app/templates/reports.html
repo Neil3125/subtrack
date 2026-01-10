@@ -44,6 +44,36 @@
         </div>
     </div>
 
+    <!-- Outstanding & Country Reports -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="card card-glass card-hover" onclick="generateReport('outstanding')">
+            <div class="text-center p-4">
+                <div class="text-5xl mb-4">⚠️</div>
+                <h3 class="font-semibold mb-2">Outstanding Subscriptions</h3>
+                <p class="text-sm text-secondary mb-4">Overdue and expiring subscriptions report</p>
+                <button class="btn btn-warning btn-sm w-full">Generate Report</button>
+            </div>
+        </div>
+        
+        <div class="card card-glass card-hover" onclick="generateReport('country-count')">
+            <div class="text-center p-4">
+                <div class="text-5xl mb-4">🌍</div>
+                <h3 class="font-semibold mb-2">Subscriptions by Country</h3>
+                <p class="text-sm text-secondary mb-4">Count of subscriptions in each country</p>
+                <button class="btn btn-primary btn-sm w-full">Generate Report</button>
+            </div>
+        </div>
+        
+        <div class="card card-glass card-hover" onclick="generateReport('country-revenue')">
+            <div class="text-center p-4">
+                <div class="text-5xl mb-4">💵</div>
+                <h3 class="font-semibold mb-2">Revenue by Country</h3>
+                <p class="text-sm text-secondary mb-4">Total subscription revenue per country</p>
+                <button class="btn btn-success btn-sm w-full">Generate Report</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Custom Report Builder -->
     <div class="card card-glass mb-8">
         <div class="card-header">
@@ -192,6 +222,12 @@ function generateReport(type) {
     let url = '/api/export/subscriptions/excel';
     if (type === 'expense-breakdown' || type === 'renewal-forecast') {
         url = '/api/export/analytics/excel';
+    } else if (type === 'outstanding') {
+        url = '/api/export/outstanding/excel';
+    } else if (type === 'country-count') {
+        url = '/api/export/country-count/excel';
+    } else if (type === 'country-revenue') {
+        url = '/api/export/country-revenue/excel';
     }
     
     setTimeout(() => {
