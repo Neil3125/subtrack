@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.name }} - SubTrack Web{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <nav class="breadcrumbs" style="margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+        <a href="/" style="color: var(--color-text-secondary);">Dashboard</a>
+        <span style="margin: 0 var(--space-2); color: var(--color-text-tertiary);">/</span>
+        <a href="/categories/{{ customer.category.id }}" style="color: var(--color-text-secondary);">{{ customer.category.name }}</a>
+        <span style="margin: 0 var(--space-2); color: var(--color-text-tertiary);">/</span>
+        <span style="color: var(--color-text);">{{ customer.name }}</span>
+    </nav>
+    
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1>{{ customer.name }}</h1>
+            <p class="text-secondary">
+                <a href="/categories/{{ customer.category.id }}">{{ customer.category.name }}</a>
+                {% if customer.group %}
+                / <a href="/groups/{{ customer.group.id }}">{{ customer.group.name }}</a>
+                {% endif %}
+            </p>
+        </div>
+        <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm" onclick="loadEditData('customer', {{ customer.id }})">
+                ✏️ Edit Customer
+            </button>
+            <button class="btn btn-primary" onclick="openModal('subscriptionModal')">
+                ➕ New Subscription
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6">
+        <!-- Customer Info -->
+        <div class="card" style="grid-column: span 2;">
+            <div class="card-header">
+                <h2 class="card-title">Customer Information</h2>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="text-sm text-secondary mb-1">Email</div>
+                    <div class="font-medium">{{ customer.email or 'Not provided' }}</div>
+                </div>
+                <div>
+                    <div class="text-sm text-secondary mb-1">Phone</div>
+                    <div class="font-medium">{{ customer.phone or 'Not provided' }}</div>
+                </div>
+                <div>
+                    <div class="text-sm text-secondary mb-1">Tags</div>
+                    <div>
+                        {% if customer.tags %}
+                        {% for tag in customer.tags.split(',') %}
+                        <span class="badge badge-primary">{{ tag.strip() }}</span>
+                        {% endfor %}
+                        {% else %}
+                        No tags
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm text-secondary mb-1">Notes</div>
+                    <div>{{ customer.notes or 'No notes' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="flex flex-col gap-4">
+            <div class="card">
+                <div class="text-sm text-secondary mb-2">Total Subscriptions</div>
+                <div class="text-3xl font-bold text-primary">{{ subscriptions|length }}</div>
+            </div>
+            <div class="card">
+                <div class="text-sm text-secondary mb-2">Monthly Spend</div>
+                <div class="text-3xl font-bold text-success">
+                    ${{ "%.2f"|format(subscriptions|sum(attribute='cost')) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connections -->
+    <div class="grid grid-cols-1 gap-6 mt-6">
+        <!-- Connections Panel -->
+        <div class="card" id="connections-panel">
+            <div class="card-header">
+                <h2 class="card-title">🔗 Connections</h2>
+                <button class="btn btn-secondary btn-sm"
+                        hx-get="/api/ai/links?source_type=customer&source_id={{ customer.id }}"
+                        hx-target="#connections-content">
+                    Refresh
+                </button>
+            </div>
+            <div id="connections-content">
+                <div class="empty-state" style="padding: var(--space-8);">
+                    <div class="empty-state-icon">🔗</div>
+                    <p class="empty-state-text">No connections found yet. Click Refresh to discover relationships with other customers.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscriptions -->
+    {% if subscriptions %}
+    <div class="card mt-6">
+        <div class="card-header">
+            <h2 class="card-title">📋 Subscriptions</h2>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Vendor</th>
+                        <th>Plan</th>
+                        <th>Cost</th>
+                        <th>Billing Cycle</th>
+                        <th>Next Renewal</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in subscriptions %}
+                    <tr>
+                        <td class="font-medium">{{ sub.vendor_name }}</td>
+                        <td>{{ sub.plan_name or '-' }}</td>
+                        <td>${{ "%.2f"|format(sub.cost) }} {{ sub.currency }}</td>
+                        <td>{{ sub.billing_cycle.value }}</td>
+                        <td>
+                            {% set days = sub.days_until_renewal() %}
+                            {% if days < 0 %}
+                            <span class="badge badge-danger">{{ -days }} days overdue</span>
+                            {% elif days <= 7 %}
+                            <span class="badge badge-danger">{{ days }} days</span>
+                            {% elif days <= 30 %}
+                            <span class="badge badge-warning">{{ days }} days</span>
+                            {% else %}
+                            <span class="badge badge-success">{{ days }} days</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ 'success' if sub.status.value == 'active' else 'secondary' }}">
+                                {{ sub.status.value }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card mt-6">
+        <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <h3 class="empty-state-title">No subscriptions yet</h3>
+            <p class="empty-state-text">Add the first subscription for this customer.</p>
+            <button class="btn btn-primary" onclick="window.location.href='/subscriptions/new?customer_id={{ customer.id }}'">
+                Add Subscription
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,464 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - SubTrack Web{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="mb-8">
+        <h1>⚙️ Settings</h1>
+        <p class="text-secondary">Customize your SubTrack experience</p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-6">
+        <!-- Appearance Settings -->
+        <div class="card card-hover">
+            <div class="card-header">
+                <h2 class="card-title">🎨 Appearance</h2>
+            </div>
+            <div class="card-body">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <div class="font-medium">Theme</div>
+                        <div class="text-sm text-secondary">Choose between light and dark mode</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="toggleTheme()">
+                        <span id="theme-text">Switch Theme</span>
+                    </button>
+                </div>
+                
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <div class="font-medium">Animations</div>
+                        <div class="text-sm text-secondary">Enable smooth animations and transitions</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="animations-toggle" checked onchange="toggleAnimations(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium">Compact Mode</div>
+                        <div class="text-sm text-secondary">Reduce spacing for more content</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="compact-toggle" onchange="toggleCompactMode(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Settings -->
+        <div class="card card-hover">
+            <div class="card-header">
+                <h2 class="card-title">📊 Dashboard</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Default View</label>
+                    <select class="form-select" id="default-view" onchange="saveSettings()">
+                        <option value="dashboard">Dashboard</option>
+                        <option value="categories">Categories</option>
+                        <option value="subscriptions">All Subscriptions</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Items Per Page</label>
+                    <select class="form-select" id="items-per-page" onchange="saveSettings()">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium">Show Empty Categories</div>
+                        <div class="text-sm text-secondary">Display categories with no subscriptions</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="show-empty" checked onchange="saveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI & Intelligence Settings -->
+        <div class="card card-hover">
+            <div class="card-header">
+                <h2 class="card-title">🤖 AI & Intelligence</h2>
+            </div>
+            <div class="card-body">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <div class="font-medium">Auto-Analyze Links</div>
+                        <div class="text-sm text-secondary">Automatically analyze relationships between items</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="auto-analyze" checked onchange="saveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <div class="font-medium">Show Confidence Scores</div>
+                        <div class="text-sm text-secondary">Display AI confidence levels on links</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="show-confidence" checked onchange="saveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Link Confidence Threshold</label>
+                    <input type="range" class="form-input" id="confidence-threshold" min="0" max="100" value="40" 
+                           onchange="saveSettings(); document.getElementById('confidence-value').textContent = this.value + '%'">
+                    <small id="confidence-value">40%</small>
+                    <div class="text-sm text-secondary">Minimum confidence to show suggested links</div>
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-primary" onclick="openModal('aiConfigModal'); loadAIConfig();">
+                        🤖 Configure AI Provider
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="card card-hover">
+            <div class="card-header">
+                <h2 class="card-title">🔔 Notifications</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Renewal Reminder (Days Before)</label>
+                    <input type="number" class="form-input" id="reminder-days" value="30" min="1" max="365" onchange="saveSettings()">
+                </div>
+
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <div class="font-medium">Email Notifications</div>
+                        <div class="text-sm text-secondary">Receive email alerts for renewals</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="email-notifications" onchange="saveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <div class="font-medium">Desktop Notifications</div>
+                        <div class="text-sm text-secondary">Show browser notifications</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="desktop-notifications" onchange="toggleDesktopNotifications(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium">Sound Alerts</div>
+                        <div class="text-sm text-secondary">Play sound for important alerts</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="sound-alerts" onchange="saveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Management -->
+        <div class="card card-hover">
+            <div class="card-header">
+                <h2 class="card-title">💾 Data Management</h2>
+            </div>
+            <div class="card-body">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <div class="font-medium">Auto-Save</div>
+                        <div class="text-sm text-secondary">Automatically save changes</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="auto-save" checked onchange="saveSettings()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="flex gap-3 mb-4">
+                    <button class="btn btn-secondary" onclick="exportData()">
+                        📥 Export Data
+                    </button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">
+                        📤 Import Data
+                    </button>
+                    <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importData(this.files[0])">
+                </div>
+
+                <div class="flex gap-3">
+                    <button class="btn btn-warning" onclick="clearCache()">
+                        🗑️ Clear Cache
+                    </button>
+                    <button class="btn btn-danger" onclick="resetSettings()">
+                        ⚠️ Reset Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Info -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">ℹ️ System Information</h2>
+            </div>
+            <div class="card-body">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-sm text-secondary">Version</div>
+                        <div class="font-medium">1.0.0</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-secondary">Database</div>
+                        <div class="font-medium">SQLite</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-secondary">Theme</div>
+                        <div class="font-medium" id="current-theme">Light</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-secondary">AI Status</div>
+                        <div class="font-medium">Deterministic Mode</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-bg-tertiary);
+    transition: 0.3s;
+    border-radius: 24px;
+    border: 1px solid var(--color-border);
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--color-primary);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(26px);
+}
+
+/* Range Slider */
+.form-range {
+    width: 100%;
+    height: 8px;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-full);
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.form-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--color-primary);
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+.form-range::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--color-primary);
+    cursor: pointer;
+    border-radius: 50%;
+    border: none;
+}
+</style>
+
+<script>
+// Load settings on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadSettings();
+    updateCurrentTheme();
+});
+
+function loadSettings() {
+    const settings = JSON.parse(localStorage.getItem('subtrack_settings') || '{}');
+    
+    // Apply saved settings
+    if (settings.defaultView) document.getElementById('default-view').value = settings.defaultView;
+    if (settings.itemsPerPage) document.getElementById('items-per-page').value = settings.itemsPerPage;
+    if (settings.reminderDays) document.getElementById('reminder-days').value = settings.reminderDays;
+    // Apply toggle states
+    if (settings.animations !== undefined) document.getElementById('animations-toggle').checked = settings.animations;
+    if (settings.compactMode !== undefined) document.getElementById('compact-toggle').checked = settings.compactMode;
+    if (settings.showEmpty !== undefined) document.getElementById('show-empty').checked = settings.showEmpty;
+}
+
+function saveSettings() {
+    const settings = {
+        defaultView: document.getElementById('default-view').value,
+        itemsPerPage: document.getElementById('items-per-page').value,
+        reminderDays: document.getElementById('reminder-days').value,
+        animations: document.getElementById('animations-toggle').checked,
+        compactMode: document.getElementById('compact-toggle').checked,
+        showEmpty: document.getElementById('show-empty').checked,
+        emailNotifications: document.getElementById('email-notifications').checked,
+        desktopNotifications: document.getElementById('desktop-notifications').checked,
+        soundAlerts: document.getElementById('sound-alerts').checked,
+        autoSave: document.getElementById('auto-save').checked
+    };
+    
+    localStorage.setItem('subtrack_settings', JSON.stringify(settings));
+    showToast('Settings saved', 'success');
+}
+
+function updateThresholdLabel(value) {
+    document.getElementById('threshold-value').textContent = value + '%';
+}
+
+function toggleAnimations(enabled) {
+    document.documentElement.style.setProperty('--transition-fast', enabled ? '150ms' : '0ms');
+    document.documentElement.style.setProperty('--transition-base', enabled ? '250ms' : '0ms');
+    document.documentElement.style.setProperty('--transition-slow', enabled ? '350ms' : '0ms');
+    saveSettings();
+    showToast(`Animations ${enabled ? 'enabled' : 'disabled'}`, 'success');
+}
+
+function toggleCompactMode(enabled) {
+    if (enabled) {
+        document.documentElement.style.setProperty('--space-4', '0.75rem');
+        document.documentElement.style.setProperty('--space-6', '1rem');
+        document.documentElement.style.setProperty('--space-8', '1.5rem');
+    } else {
+        document.documentElement.style.setProperty('--space-4', '1rem');
+        document.documentElement.style.setProperty('--space-6', '1.5rem');
+        document.documentElement.style.setProperty('--space-8', '2rem');
+    }
+    saveSettings();
+    showToast(`Compact mode ${enabled ? 'enabled' : 'disabled'}`, 'success');
+}
+
+function toggleDesktopNotifications(enabled) {
+    if (enabled && 'Notification' in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                showToast('Desktop notifications enabled', 'success');
+                new Notification('SubTrack', {
+                    body: 'You will now receive desktop notifications',
+                    icon: '/static/favicon.ico'
+                });
+            }
+        });
+    }
+    saveSettings();
+}
+
+function updateCurrentTheme() {
+    const theme = document.documentElement.getAttribute('data-theme');
+    document.getElementById('current-theme').textContent = theme === 'dark' ? 'Dark' : 'Light';
+}
+
+// Override toggleTheme to update settings page
+const originalToggleTheme = window.toggleTheme;
+window.toggleTheme = function() {
+    originalToggleTheme();
+    updateCurrentTheme();
+};
+
+function exportData() {
+    showToast('Exporting data...', 'info');
+    fetch('/api/export')
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `subtrack_export_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            showToast('Data exported successfully', 'success');
+        })
+        .catch(error => {
+            showToast('Export failed', 'error');
+        });
+}
+
+function importData(file) {
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            // Send to import endpoint
+            showToast('Import functionality coming soon', 'info');
+        } catch (error) {
+            showToast('Invalid file format', 'error');
+        }
+    };
+    reader.readAsText(file);
+}
+
+function clearCache() {
+    if (confirm('Clear all cached data? This will not delete your subscriptions.')) {
+        localStorage.removeItem('subtrack_cache');
+        showToast('Cache cleared', 'success');
+    }
+}
+
+function resetSettings() {
+    if (confirm('Reset all settings to default? This cannot be undone.')) {
+        localStorage.removeItem('subtrack_settings');
+        location.reload();
+    }
+}
+</script>
+{% endblock %}

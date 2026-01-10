@@ -1,0 +1,389 @@
+/* SubTrack - Smooth Animations & Performance Optimization */
+
+/* ==================== Performance Optimizations ==================== */
+html {
+    /* Enable hardware acceleration for better performance */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* 
+ * OPTIMIZATION: Removed blanket will-change declarations.
+ * will-change should only be applied right before an animation starts,
+ * not permanently, as it consumes GPU memory.
+ * Using transform: translateZ(0) for GPU acceleration only where needed.
+ */
+
+/* ==================== Card Hover Animations - FAST & SMOOTH ==================== */
+.card-hover {
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+    transform: translateY(0);
+}
+
+.card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.12), 0 6px 8px -4px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card {
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+    transform: translateY(0);
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px -8px rgba(59, 130, 246, 0.2), 0 6px 12px -6px rgba(0, 0, 0, 0.08);
+}
+
+/* ==================== Table Row Animations - FAST ==================== */
+.table tbody tr {
+    transition: background-color 0.1s ease-out, box-shadow 0.1s ease-out;
+}
+
+.table tbody tr:hover {
+    background-color: var(--color-bg-secondary);
+    box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+/* ==================== Button Animations - OPTIMIZED ==================== */
+.btn {
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, background-color 0.15s ease-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.12);
+}
+
+.btn:active {
+    transform: translateY(0) scale(0.98);
+    transition-duration: 0.05s;
+}
+
+/* ==================== Sidebar Navigation - OPTIMIZED ==================== */
+.sidebar-nav-link {
+    transition: background-color 0.15s ease-out, color 0.15s ease-out, padding-left 0.15s ease-out;
+    position: relative;
+}
+
+.sidebar-nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 0;
+    background: var(--color-primary);
+    transition: height 0.15s ease-out;
+    border-radius: 0 2px 2px 0;
+}
+
+.sidebar-nav-link:hover {
+    padding-left: calc(var(--space-4, 1rem) + 4px);
+    background: var(--color-bg-secondary);
+    color: var(--color-primary);
+}
+
+.sidebar-nav-link:hover::before {
+    height: 70%;
+}
+
+.sidebar-nav-link.active {
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+    font-weight: 600;
+    padding-left: calc(var(--space-4, 1rem) + 4px);
+}
+
+.sidebar-nav-link.active::before {
+    height: 70%;
+}
+
+/* ==================== Dropdown Animations - OPTIMIZED ==================== */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out, visibility 0.2s;
+    pointer-events: none;
+}
+
+.dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: all;
+}
+
+.dropdown-item {
+    transition: background-color 0.15s ease-out, padding-left 0.15s ease-out;
+}
+
+.dropdown-item:hover {
+    background: var(--color-bg-secondary);
+    padding-left: calc(var(--space-4, 1rem) + 4px);
+    color: var(--color-primary);
+}
+
+/* ==================== Modal Animations - OPTIMIZED ==================== */
+.modal {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-out, visibility 0.2s;
+}
+
+.modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    transform: scale(0.95) translateY(10px);
+    opacity: 0;
+    transition: transform 0.25s ease-out, opacity 0.2s ease-out;
+}
+
+.modal.show .modal-content {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+/* ==================== Page Animations - FAST ==================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.25s ease-out forwards;
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+.animate-slide-up {
+    animation: slideUp 0.3s ease-out forwards;
+}
+
+/* ==================== Progress Bar Animation ==================== */
+.progress-bar {
+    transition: width 0.4s ease-out;
+}
+
+/* ==================== Badge Animations ==================== */
+.badge {
+    transition: transform 0.12s ease-out;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* ==================== Notification Badge Pulse ==================== */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+.notification-badge {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* ==================== Input Focus Animations ==================== */
+.form-input, .form-select, .form-textarea, .search-input {
+    transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus, .search-input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* ==================== Floating Action Button - OPTIMIZED ==================== */
+.fab {
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 20px -4px rgba(59, 130, 246, 0.35);
+}
+
+.fab:active {
+    transform: scale(1.02);
+}
+
+/* ==================== Loading Skeleton Animation ==================== */
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+.skeleton {
+    animation: shimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    background: linear-gradient(
+        90deg,
+        var(--color-bg-secondary) 0%,
+        var(--color-bg-tertiary) 50%,
+        var(--color-bg-secondary) 100%
+    );
+    background-size: 1000px 100%;
+}
+
+/* ==================== Toast Animations ==================== */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
+
+.toast {
+    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==================== Smooth Scrolling ==================== */
+html {
+    scroll-behavior: smooth;
+}
+
+/* ==================== Reduce Motion for Accessibility ==================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ==================== Particle Animations - Optimized ==================== */
+.particle {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==================== Empty State Animation ==================== */
+.empty-state {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.empty-state-icon {
+    animation: slideUp 0.3s ease-out 0.05s backwards;
+}
+
+/* ==================== Search Results Animation ==================== */
+.search-results {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: top;
+}
+
+.search-result-item {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(0);
+}
+
+.search-result-item:hover {
+    background: var(--color-bg-secondary);
+    transform: translateX(4px);
+}
+
+/* ==================== Command Palette Animation ==================== */
+.command-palette {
+    animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.command-palette-container {
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.command-item {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.command-item:hover, .command-item.selected {
+    background: var(--color-primary-bg);
+    transform: translateX(4px);
+}
+
+/* ==================== Link Cards Animation ==================== */
+.link-card {
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+.link-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* ==================== Chart Animation ==================== */
+.chart-container {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* ==================== Performance: Disable animations on low-end devices ==================== */
+@media (max-width: 768px) {
+    /* Reduce animation complexity on mobile */
+    .stat-card:hover,
+    .card-hover:hover {
+        transform: translateY(-2px) scale(1);
+    }
+}

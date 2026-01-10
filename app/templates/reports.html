@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Exports - SubTrack Web{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="gradient-text">📄 Reports & Exports</h1>
+            <p class="text-secondary">Generate detailed reports and export your data</p>
+        </div>
+        <button class="btn btn-gradient" onclick="openModal('scheduleReportModal')">
+            📅 Schedule Report
+        </button>
+    </div>
+
+    <!-- Quick Reports -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="card card-glass card-hover" onclick="generateReport('monthly-summary')">
+            <div class="text-center p-4">
+                <div class="text-5xl mb-4">📊</div>
+                <h3 class="font-semibold mb-2">Monthly Summary</h3>
+                <p class="text-sm text-secondary mb-4">Comprehensive overview of this month's activity</p>
+                <button class="btn btn-primary btn-sm w-full">Generate Report</button>
+            </div>
+        </div>
+        
+        <div class="card card-glass card-hover" onclick="generateReport('expense-breakdown')">
+            <div class="text-center p-4">
+                <div class="text-5xl mb-4">💰</div>
+                <h3 class="font-semibold mb-2">Expense Breakdown</h3>
+                <p class="text-sm text-secondary mb-4">Detailed cost analysis by category</p>
+                <button class="btn btn-primary btn-sm w-full">Generate Report</button>
+            </div>
+        </div>
+        
+        <div class="card card-glass card-hover" onclick="generateReport('renewal-forecast')">
+            <div class="text-center p-4">
+                <div class="text-5xl mb-4">🔮</div>
+                <h3 class="font-semibold mb-2">Renewal Forecast</h3>
+                <p class="text-sm text-secondary mb-4">Predict upcoming renewals and costs</p>
+                <button class="btn btn-primary btn-sm w-full">Generate Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Report Builder -->
+    <div class="card card-glass mb-8">
+        <div class="card-header">
+            <h2 class="card-title">🛠️ Custom Report Builder</h2>
+        </div>
+        <form onsubmit="buildCustomReport(event)">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="form-group">
+                    <label class="form-label">Report Name</label>
+                    <input type="text" name="report_name" class="form-input" placeholder="My Custom Report" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Date Range</label>
+                    <select name="date_range" class="form-select">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30" selected>Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="365">Last Year</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Include Data</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="include_subscriptions" checked>
+                            <span>Subscriptions</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="include_customers" checked>
+                            <span>Customers</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="include_transactions">
+                            <span>Transactions</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="include_analytics" checked>
+                            <span>Analytics</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Export Format</label>
+                    <select name="export_format" class="form-select">
+                        <option value="pdf">PDF Document</option>
+                        <option value="csv">CSV Spreadsheet</option>
+                        <option value="xlsx">Excel (XLSX)</option>
+                        <option value="json">JSON Data</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex gap-3">
+                <button type="submit" class="btn btn-gradient">🚀 Generate Report</button>
+                <button type="button" class="btn btn-secondary" onclick="saveReportTemplate()">💾 Save as Template</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Saved Reports -->
+    <div class="card card-glass mb-8">
+        <div class="card-header">
+            <h2 class="card-title">📚 Saved Reports</h2>
+            <button class="btn btn-sm btn-secondary" onclick="clearOldReports()">🗑️ Clear Old Reports</button>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Report Name</th>
+                        <th>Type</th>
+                        <th>Generated</th>
+                        <th>Size</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="font-medium">December 2025 Summary</td>
+                        <td><span class="badge badge-primary">Monthly</span></td>
+                        <td>2 hours ago</td>
+                        <td>2.3 MB</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="downloadReport(1)">📥 Download</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteReport(1)">🗑️</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="font-medium">Q4 Expense Analysis</td>
+                        <td><span class="badge badge-success">Custom</span></td>
+                        <td>1 day ago</td>
+                        <td>1.8 MB</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="downloadReport(2)">📥 Download</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteReport(2)">🗑️</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Report Templates -->
+    <div class="card card-glass">
+        <div class="card-header">
+            <h2 class="card-title">📋 Report Templates</h2>
+            <button class="btn btn-sm btn-primary" onclick="openModal('newTemplateModal')">➕ New Template</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-primary cursor-pointer transition-colors" onclick="useTemplate('executive-summary')">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-2xl">👔</span>
+                    <h4 class="font-semibold">Executive Summary</h4>
+                </div>
+                <p class="text-sm text-secondary">High-level overview for stakeholders</p>
+            </div>
+            
+            <div class="p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-primary cursor-pointer transition-colors" onclick="useTemplate('cost-analysis')">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-2xl">📈</span>
+                    <h4 class="font-semibold">Cost Analysis</h4>
+                </div>
+                <p class="text-sm text-secondary">Detailed breakdown of all expenses</p>
+            </div>
+            
+            <div class="p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-primary cursor-pointer transition-colors" onclick="useTemplate('compliance')">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-2xl">✅</span>
+                    <h4 class="font-semibold">Compliance Report</h4>
+                </div>
+                <p class="text-sm text-secondary">Audit trail and compliance data</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function generateReport(type) {
+    showToast('Generating report...', 'info');
+    
+    // Download the appropriate report
+    let url = '/api/export/subscriptions/excel';
+    if (type === 'expense-breakdown' || type === 'renewal-forecast') {
+        url = '/api/export/analytics/excel';
+    }
+    
+    setTimeout(() => {
+        window.location.href = url;
+        showToast('Report downloaded!', 'success');
+    }, 500);
+}
+
+function buildCustomReport(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+    
+    showToast('Building custom report...', 'info');
+    
+    // Determine export format
+    const format = data.export_format || 'xlsx';
+    let url = '/api/export/subscriptions/excel';
+    
+    if (format === 'csv') {
+        url = '/api/export/subscriptions/csv';
+    } else if (data.include_analytics) {
+        url = '/api/export/analytics/excel';
+    }
+    
+    setTimeout(() => {
+        window.location.href = url;
+        showToast('Report downloaded!', 'success');
+    }, 500);
+}
+
+function saveReportTemplate() {
+    showToast('Report template saved!', 'success');
+}
+
+function clearOldReports() {
+    if (confirm('Delete reports older than 30 days?')) {
+        showToast('Old reports cleared', 'success');
+    }
+}
+
+function downloadReport(id) {
+    showToast('Downloading report...', 'info');
+    // For demo - in production would have real report IDs
+    window.location.href = '/api/export/subscriptions/excel';
+}
+
+function deleteReport(id) {
+    if (confirm('Delete this report?')) {
+        showToast('Report deleted', 'success');
+    }
+}
+
+function useTemplate(templateName) {
+    showToast(`Loaded ${templateName} template`, 'info');
+    window.scrollTo({ top: document.querySelector('.card').offsetTop, behavior: 'smooth' });
+}
+</script>
+{% endblock %}

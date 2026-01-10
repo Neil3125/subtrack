@@ -1,0 +1,262 @@
+﻿/* Sidebar Collapse Styles */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+}
+
+.sidebar-brand {
+  position: relative;
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  font-size: var(--font-size-lg);
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-primary);
+}
+
+body.sidebar-collapsed .sidebar {
+  width: 70px !important;
+}
+
+body.sidebar-collapsed .sidebar-brand a span:not(:first-child),
+body.sidebar-collapsed .sidebar-nav-link span:last-child,
+body.sidebar-collapsed .sidebar-footer span {
+  opacity: 0 !important;
+  width: 0 !important;
+  display: none !important;
+}
+
+body.sidebar-collapsed .sidebar-toggle-btn {
+  transform: rotate(180deg);
+}
+
+body.sidebar-collapsed .sidebar-nav-link {
+  justify-content: center;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
+body.sidebar-collapsed .main-content {
+  margin-left: 70px;
+}
+
+/* Breadcrumbs Enhancement */
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.breadcrumbs a {
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.breadcrumbs a:hover {
+  color: var(--color-primary) !important;
+}
+
+/* Enhanced Toast System */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.toast {
+  min-width: 300px;
+  max-width: 500px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  font-weight: var(--font-medium);
+}
+
+/* Forms Enhancement */
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  outline: none;
+}
+
+.form-group {
+  margin-bottom: var(--space-5);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-weight: var(--font-medium);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Button Active States */
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* Table Row Hover */
+.table tbody tr {
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.table tbody tr:hover {
+  background-color: var(--color-bg-secondary);
+  transform: scale(1.001);
+}
+
+/* Card Hover Enhancement */
+.card-hover {
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card-hover:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+}
+
+/* Modal Enhancements */
+/* Note: modal open/close animations are defined in static/css/style.css and static/css/animations.css.
+   Avoid duplicating animations here to prevent visual “jumping”. */
+
+/* Empty States */
+.empty-state {
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: var(--space-4);
+  opacity: 0.5;
+}
+
+.empty-state-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-3);
+  color: var(--color-text);
+}
+
+.empty-state-text {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6);
+}
+
+/* Badge Enhancements */
+.badge {
+  font-weight: var(--font-medium);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.badge:hover {
+  transform: scale(1.05);
+}
+
+/* Utility Classes */
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.smooth-transition {
+  transition: all 0.2s ease;
+}
+
+/* Performance optimizations */
+.animate-fade-in,
+.animate-slide-in {
+  will-change: opacity, transform;
+}
+
+.card-hover {
+  will-change: transform, box-shadow;
+}
+
+/* Reduce animations on mobile for performance */
+@media (max-width: 768px) {
+  .particles,
+  .blob {
+    display: none;
+  }
+  
+  body::before {
+    animation: none;
+  }
+}
+
+/* Dark Mode Enhancements */
+/* Important: do not override core theme variables here.
+   Core light/dark palettes live in static/css/style.css.
+   Keeping this file variable-free avoids “partial dark mode” issues. */
+
+[data-theme="dark"] .card {
+  background: var(--color-bg-elevated);
+}
+
+[data-theme="dark"] .modal-content {
+  background: var(--color-bg-elevated);
+}
+
+[data-theme="dark"] .command-palette-container {
+  background: var(--color-bg-elevated);
+}
+
+/* Responsive Improvements */
+@media (max-width: 768px) {
+  body.sidebar-collapsed .sidebar {
+    width: 260px;
+  }
+  
+  body.sidebar-collapsed .main-content {
+    margin-left: 0;
+  }
+  
+  .breadcrumbs {
+    font-size: var(--font-size-xs);
+  }
+  
+  .command-palette-container {
+    width: 95%;
+  }
+}

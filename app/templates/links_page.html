@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Links & Relationships - SubTrack Web{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1>🔗 Links & Relationships</h1>
+            <p class="text-secondary">Discover and manage connections between your subscriptions, customers, and categories</p>
+        </div>
+        <div class="flex gap-2">
+            <button class="btn btn-primary" onclick="analyzeLinks()">
+                🤖 Analyze Links
+            </button>
+            <button class="btn btn-secondary" onclick="window.location.reload()">
+                🔄 Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="card">
+            <div class="text-2xl font-bold text-primary">{{ total_links }}</div>
+            <div class="text-sm text-secondary">Total Links</div>
+        </div>
+        <div class="card">
+            <div class="text-2xl font-bold text-success">{{ accepted_links }}</div>
+            <div class="text-sm text-secondary">Accepted</div>
+        </div>
+        <div class="card">
+            <div class="text-2xl font-bold text-warning">{{ pending_links }}</div>
+            <div class="text-sm text-secondary">Pending Review</div>
+        </div>
+        <div class="card">
+            <div class="text-2xl font-bold text-secondary">{{ rejected_links }}</div>
+            <div class="text-sm text-secondary">Rejected</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-6">
+        <div class="flex gap-4 items-end">
+            <div class="form-group flex-1">
+                <label class="form-label">Filter by Type</label>
+                <select class="form-select" id="filter-type" onchange="filterLinks()">
+                    <option value="">All Types</option>
+                    <option value="customer">Customer Links</option>
+                    <option value="subscription">Subscription Links</option>
+                    <option value="category">Category Links</option>
+                </select>
+            </div>
+            <div class="form-group flex-1">
+                <label class="form-label">Filter by Status</label>
+                <select class="form-select" id="filter-status" onchange="filterLinks()">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="form-group flex-1">
+                <label class="form-label">Minimum Confidence</label>
+                <input type="range" class="form-input" id="filter-confidence" min="0" max="100" value="0" 
+                       onchange="filterLinks(); document.getElementById('confidence-value').textContent = this.value + '%'">
+                <small id="confidence-value">0%</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Links Display -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">All Relationships</h2>
+        </div>
+        <div id="links-container">
+            {% if links %}
+            <div class="space-y-3">
+                {% for link in links %}
+                <div class="link-item card" 
+                     data-type="{{ link.source_type }}" 
+                     data-status="{{ link.user_decision or 'pending' }}"
+                     data-confidence="{{ link.confidence }}"
+                     style="background: var(--color-bg-secondary); border-left: 4px solid {% if link.confidence >= 0.7 %}var(--color-success){% elif link.confidence >= 0.4 %}var(--color-warning){% else %}var(--color-secondary){% endif %};">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="badge badge-{{ 'success' if link.confidence >= 0.7 else 'warning' if link.confidence >= 0.4 else 'secondary' }}">
+                                    {{ (link.confidence * 100)|int }}% confidence
+                                </span>
+                                <span class="text-sm font-medium text-secondary">{{ link.source_type.value }} ↔ {{ link.target_type.value }}</span>
+                                {% if link.user_decision %}
+                                <span class="badge badge-{{ 'success' if link.user_decision == 'accepted' else 'danger' }}">
+                                    {{ link.user_decision | capitalize }}
+                                </span>
+                                {% else %}
+                                <span class="badge badge-warning">Pending Review</span>
+                                {% endif %}
+                            </div>
+                            <div class="mb-2 font-semibold">
+                                <span class="text-primary">{{ link.source_type | capitalize }} #{{ link.source_id }}</span>
+                                →
+                                <span class="text-primary">{{ link.target_type | capitalize }} #{{ link.target_id }}</span>
+                            </div>
+                            <p class="text-sm text-secondary">{{ link.evidence_text }}</p>
+                        </div>
+                        <div class="flex gap-2 ml-4">
+                            {% if not link.user_decision %}
+                            <button class="btn btn-success btn-sm" onclick="acceptLink({{ link.id }})">
+                                ✓ Accept
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="rejectLink({{ link.id }})">
+                                ✗ Reject
+                            </button>
+                            {% else %}
+                            <span class="badge badge-{{ 'success' if link.user_decision == 'accepted' else 'danger' }}">
+                                {{ link.user_decision | capitalize }}
+                            </span>
+                            <button class="btn btn-secondary btn-sm" onclick="unlinkRelationship({{ link.id }})">
+                                🔓 Unlink
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">🔗</div>
+                <h3 class="empty-state-title">No links found</h3>
+                <p class="empty-state-text">No links yet. Links are created when you connect items.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function filterLinks() {
+    const type = document.getElementById('filter-type').value;
+    const status = document.getElementById('filter-status').value;
+    const confidence = parseInt(document.getElementById('filter-confidence').value);
+    
+    const links = document.querySelectorAll('.link-item');
+    
+    links.forEach(link => {
+        const linkType = link.dataset.type;
+        const linkStatus = link.dataset.status;
+        const linkConfidence = parseInt(link.dataset.confidence);
+        
+        let show = true;
+        
+        if (type && !linkType.includes(type)) show = false;
+        if (status && linkStatus !== status) show = false;
+        if (linkConfidence < confidence) show = false;
+        
+        link.style.display = show ? 'block' : 'none';
+    });
+}
+
+</script>
+{% endblock %}

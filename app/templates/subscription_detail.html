@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}{{ subscription.vendor_name }} - SubTrack Web{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <nav class="breadcrumbs" style="margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+        <a href="/" style="color: var(--color-text-secondary);">Dashboard</a>
+        <span style="margin: 0 var(--space-2); color: var(--color-text-tertiary);">/</span>
+        <a href="/customers/{{ subscription.customer.id }}" style="color: var(--color-text-secondary);">{{ subscription.customer.name }}</a>
+        <span style="margin: 0 var(--space-2); color: var(--color-text-tertiary);">/</span>
+        <span style="color: var(--color-text);">{{ subscription.vendor_name }}</span>
+    </nav>
+    
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1>{{ subscription.vendor_name }}</h1>
+            <p class="text-secondary">
+                {{ subscription.plan_name or 'No plan name' }} • 
+                <a href="/customers/{{ subscription.customer.id }}">{{ subscription.customer.name }}</a>
+            </p>
+        </div>
+        <div class="flex gap-2">
+            <button class="btn btn-secondary btn-sm" onclick="loadEditData('subscription', {{ subscription.id }})">
+                ✏️ Edit
+            </button>
+            <button class="btn btn-danger btn-sm"
+                    onclick="deleteItem('subscription', {{ subscription.id }}, '{{ subscription.vendor_name }}')">
+                🗑️ Delete
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6">
+        <!-- Subscription Details -->
+        <div class="card" style="grid-column: span 2;">
+            <div class="card-header">
+                <h2 class="card-title">Subscription Details</h2>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="text-sm text-secondary mb-1">Vendor</div>
+                    <div class="font-medium text-lg">{{ subscription.vendor_name }}</div>
+                </div>
+                <div>
+                    <div class="text-sm text-secondary mb-1">Plan</div>
+                    <div class="font-medium">{{ subscription.plan_name or '-' }}</div>
+                </div>
+                <div>
+                    <div class="text-sm text-secondary mb-1">Cost</div>
+                    <div class="font-medium text-lg text-success">
+                        ${{ "%.2f"|format(subscription.cost) }} {{ subscription.currency }}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm text-secondary mb-1">Billing Cycle</div>
+                    <div class="font-medium">{{ subscription.billing_cycle.value }}</div>
+                </div>
+                <div>
+                    <div class="text-sm text-secondary mb-1">Start Date</div>
+                    <div>{{ subscription.start_date.strftime('%b %d, %Y') }}</div>
+                </div>
+                <div>
+                    <div class="text-sm text-secondary mb-1">Next Renewal</div>
+                    <div>
+                        {{ subscription.next_renewal_date.strftime('%b %d, %Y') }}
+                        {% set days = subscription.days_until_renewal() %}
+                        {% if days < 0 %}
+                        <span class="badge badge-danger ml-2">{{ -days }} days overdue</span>
+                        {% elif days <= 7 %}
+                        <span class="badge badge-danger ml-2">{{ days }} days</span>
+                        {% elif days <= 30 %}
+                        <span class="badge badge-warning ml-2">{{ days }} days</span>
+                        {% else %}
+                        <span class="badge badge-success ml-2">{{ days }} days</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm text-secondary mb-1">Status</div>
+                    <div>
+                        <span class="badge badge-{{ 'success' if subscription.status.value == 'active' else 'secondary' }}">
+                            {{ subscription.status.value }}
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm text-secondary mb-1">Category</div>
+                    <div>
+                        <a href="/categories/{{ subscription.category.id }}" class="text-primary">
+                            {{ subscription.category.name }}
+                        </a>
+                    </div>
+                </div>
+                <div style="grid-column: span 2;">
+                    <div class="text-sm text-secondary mb-1">Notes</div>
+                    <div>{{ subscription.notes or 'No notes' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="flex flex-col gap-4">
+            <div class="card">
+                <h3 class="font-semibold mb-3">Quick Actions</h3>
+                <div class="flex flex-col gap-2">
+                    <button class="btn btn-sm btn-primary" onclick="renewSubscription({{ subscription.id }})">Renew Now</button>
+                    <button class="btn btn-sm btn-secondary" onclick="loadEditData('subscription', {{ subscription.id }})">Change Plan</button>
+                    <button class="btn btn-sm btn-warning" onclick="pauseSubscription({{ subscription.id }})">Pause</button>
+                    <button class="btn btn-sm btn-danger" onclick="cancelSubscription({{ subscription.id }})">Cancel</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="text-sm text-secondary mb-2">Days Until Renewal</div>
+                <div class="text-3xl font-bold text-{{ 'danger' if subscription.days_until_renewal() < 7 else 'warning' if subscription.days_until_renewal() < 30 else 'success' }}">
+                    {{ subscription.days_until_renewal() }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Subscriptions -->
+    <div class="card mt-6">
+        <div class="card-header">
+            <h2 class="card-title">🔗 Related Subscriptions</h2>
+            <button class="btn btn-secondary btn-sm"
+                    hx-get="/links/render?source_type=subscription&source_id={{ subscription.id }}"
+                    hx-target="#related-content"
+                    hx-swap="innerHTML">
+                Find Related
+            </button>
+        </div>
+        <div id="related-content">
+            <p class="text-secondary">Click "Find Related" to discover connections with other subscriptions</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Categories - SubTrack Web{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="animate-fade-in">Categories</h1>
+            <p class="text-secondary animate-fade-in" style="animation-delay: 100ms;">Organize your subscriptions into categories</p>
+        </div>
+        <div class="flex gap-3 animate-fade-in" style="animation-delay: 200ms;">
+            <button class="btn btn-gradient" onclick="openModal('categoryModal')" data-tooltip="Create new category">
+                ➕ New Category
+            </button>
+        </div>
+    </div>
+
+    {% if categories %}
+    <div class="grid grid-cols-3">
+        {% for category in categories %}
+        <div class="card card-hover animate-slide-in" style="animation-delay: {{ loop.index0 * 50 }}ms">
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <span style="font-size: 2rem;">📁</span>
+                    <div>
+                        <h3 class="font-semibold text-lg">{{ category.name }}</h3>
+                        <span class="badge badge-secondary text-xs">{{ category.groups|length }} groups</span>
+                    </div>
+                </div>
+            </div>
+            <p class="text-secondary text-sm mb-4" style="min-height: 40px;">{{ category.description or 'No description' }}</p>
+            <div class="flex gap-2">
+                <a href="/categories/{{ category.id }}" class="btn btn-sm btn-primary flex-1">
+                    View Details
+                </a>
+                <button class="btn btn-sm btn-secondary" 
+                        onclick="loadEditData('category', {{ category.id }})"
+                        data-tooltip-bottom="Edit category">
+                    ✏️
+                </button>
+                <button class="btn btn-sm btn-danger" 
+                        onclick="deleteItem('category', {{ category.id }}, '{{ category.name }}')"
+                        data-tooltip-bottom="Delete category">
+                    🗑️
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card card-hover animate-fade-in">
+        <div class="empty-state">
+            <div class="empty-state-icon animate-pulse">📁</div>
+            <h3 class="empty-state-title">No categories yet</h3>
+            <p class="empty-state-text">Create your first category to start organizing subscriptions.</p>
+            <button class="btn btn-gradient" onclick="openModal('categoryModal')">
+                ✨ Create First Category
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

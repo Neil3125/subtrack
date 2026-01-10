@@ -1,0 +1,75 @@
+{% if total > 0 %}
+<div class="search-results-dropdown">
+    <div class="search-results-header">
+        <span class="text-sm text-secondary">Found {{ total }} result{{ 's' if total != 1 else '' }}</span>
+    </div>
+    
+    {% if categories %}
+    <div class="search-results-section">
+        <div class="search-results-section-title">Categories</div>
+        {% for category in categories %}
+        <a href="/categories/{{ category.id }}" class="search-result-item">
+            <span class="search-result-icon">📁</span>
+            <div>
+                <div class="search-result-title">{{ category.name }}</div>
+                {% if category.description %}
+                <div class="search-result-subtitle">{{ category.description[:50] }}...</div>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if groups %}
+    <div class="search-results-section">
+        <div class="search-results-section-title">Groups</div>
+        {% for group in groups %}
+        <a href="/groups/{{ group.id }}" class="search-result-item">
+            <span class="search-result-icon">📦</span>
+            <div>
+                <div class="search-result-title">{{ group.name }}</div>
+                <div class="search-result-subtitle">{{ group.category.name }}</div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if customers %}
+    <div class="search-results-section">
+        <div class="search-results-section-title">Customers</div>
+        {% for customer in customers %}
+        <a href="/customers/{{ customer.id }}" class="search-result-item">
+            <span class="search-result-icon">👤</span>
+            <div>
+                <div class="search-result-title">{{ customer.name }}</div>
+                <div class="search-result-subtitle">{{ customer.email or customer.category.name }}</div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if subscriptions %}
+    <div class="search-results-section">
+        <div class="search-results-section-title">Subscriptions</div>
+        {% for sub in subscriptions %}
+        <a href="/subscriptions/{{ sub.id }}" class="search-result-item">
+            <span class="search-result-icon">📋</span>
+            <div>
+                <div class="search-result-title">{{ sub.vendor_name }}</div>
+                <div class="search-result-subtitle">{{ sub.customer.name }} • ${{ "%.2f"|format(sub.cost) }}</div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="search-results-dropdown">
+    <div class="search-result-item">
+        <span class="text-secondary">No results found for "{{ query }}"</span>
+    </div>
+</div>
+{% endif %}

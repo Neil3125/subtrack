@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SubTrack Web{% endblock %}</title>
+    
+    <!-- Prevent FOUC (Flash of Unstyled Content) and dark mode flash -->
+    <script>
+        // Load theme IMMEDIATELY before any rendering
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedVisualTheme = localStorage.getItem('visual-theme') || 'default';
+            document.documentElement.setAttribute('data-theme', savedVisualTheme !== 'default' ? savedVisualTheme : savedTheme);
+        })();
+    </script>
+    
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style">
+    <link rel="preload" href="/static/css/style.css" as="style">
+    
+    <!-- Critical CSS inline for instant load -->
+    <style>
+        /* Prevent flash */
+        html { background: var(--color-bg, #ffffff); }
+        [data-theme="dark"] { background: var(--color-bg, #0d0d0d); }
+        body { margin: 0; }
+    </style>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/enhancements.css">
+    <link rel="stylesheet" href="/static/css/themes.css">
+    <link rel="stylesheet" href="/static/css/animations.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Floating Particles Background -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+    
+    <!-- Morphing Background Blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+    <div class="blob blob-4"></div>
+    
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <span>📊</span> SubTrack
+        </a>
+        
+        <div class="navbar-search">
+            <div class="search-wrapper">
+                <input 
+                    type="search" 
+                    class="search-input" 
+                    placeholder="Search subscriptions, customers, vendors..."
+                    hx-get="/search"
+                    hx-trigger="keyup changed delay:300ms"
+                    hx-target="#search-results"
+                    hx-swap="innerHTML"
+                    name="q"
+                    autocomplete="off"
+                    aria-label="Search"
+                >
+                <span class="search-icon">🔍</span>
+            </div>
+            <div id="search-results" class="search-results"></div>
+        </div>
+        
+        <div class="navbar-actions">
+            <button class="btn btn-secondary btn-sm" onclick="toggleTheme()">
+                <span id="theme-icon">🌙</span>
+            </button>
+            <div class="dropdown">
+                <button class="btn btn-secondary btn-sm" data-tooltip-bottom="Visual Themes">
+                    🎨
+                </button>
+                <div class="dropdown-menu">
+                    <button onclick="setVisualTheme('default')" class="dropdown-item">
+                        <span>🌊</span> Ocean (Default)
+                    </button>
+                    <button onclick="setVisualTheme('sunset')" class="dropdown-item">
+                        <span>🌅</span> Sunset
+                    </button>
+                    <button onclick="setVisualTheme('midnight')" class="dropdown-item">
+                        <span>🌙</span> Midnight
+                    </button>
+                    <button onclick="setVisualTheme('forest')" class="dropdown-item">
+                        <span>🌲</span> Forest
+                    </button>
+                    <button onclick="setVisualTheme('candy')" class="dropdown-item">
+                        <span>🍭</span> Candy
+                    </button>
+                    <button onclick="setVisualTheme('aurora')" class="dropdown-item">
+                        <span>✨</span> Aurora
+                    </button>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-secondary btn-sm" data-tooltip-bottom="Settings & More">
+                    ⚙️
+                </button>
+                <div class="dropdown-menu">
+                    <a href="/settings" class="dropdown-item">
+                        <span>⚙️</span> Settings
+                    </a>
+                    <button onclick="toggleSidebarCollapse()" class="dropdown-item">
+                        <span>📌</span> Toggle Sidebar
+                    </button>
+                    <a href="/reports" class="dropdown-item">
+                        <span>📤</span> Reports & Exports
+                    </a>
+                    <button onclick="openModal('aiConfigModal'); loadAIConfig();" class="dropdown-item">
+                        <span>🤖</span> AI Configuration
+                    </button>
+                    <button onclick="openShortcutsModal()" class="dropdown-item">
+                        <span>⌨️</span> Keyboard Shortcuts
+                    </button>
+                    <button onclick="openAboutModal()" class="dropdown-item">
+                        <span>ℹ️</span> About
+                    </button>
+                    <button onclick="window.location.reload()" class="dropdown-item">
+                        <span>🔄</span> Refresh Page
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <a href="/docs" target="_blank" class="dropdown-item">
+                        <span>📚</span> API Docs
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="/logout" class="dropdown-item" style="color: var(--color-danger);">
+                        <span>🚪</span> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Navigation</h3>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-nav-item">
+                        <a href="/" class="sidebar-nav-link {% if request.path == '/' %}active{% endif %}">
+                            📊 Dashboard
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="/categories" class="sidebar-nav-link {% if '/categories' in request.path %}active{% endif %}">
+                            📁 Categories
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="/analytics" class="sidebar-nav-link {% if '/analytics' in request.path %}active{% endif %}">
+                            📈 Analytics
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="/reports" class="sidebar-nav-link {% if '/reports' in request.path %}active{% endif %}">
+                            📄 Reports
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="/links" class="sidebar-nav-link {% if '/links' in request.path %}active{% endif %}">
+                            🔗 Links
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="/settings" class="sidebar-nav-link {% if '/settings' in request.path %}active{% endif %}">
+                            ⚙️ Settings
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="/users" class="sidebar-nav-link {% if '/users' in request.path %}active{% endif %}">
+                            👥 Users
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Categories</h3>
+                <ul class="sidebar-nav" id="categories-list">
+                    {% for category in categories|default([]) %}
+                    <li class="sidebar-nav-item">
+                        <a href="/categories/{{ category.id }}" class="sidebar-nav-link">
+                            {{ category.name }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                    {% if not categories %}
+                    <li class="sidebar-nav-item">
+                        <span class="sidebar-nav-link text-secondary">No categories yet</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button class="fab" onclick="openModal('quickAddModal')">
+        ➕
+    </button>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">ℹ️ About SubTrack</h2>
+                <button class="modal-close" onclick="closeModal('aboutModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary">
+                    SubTrack helps you track subscriptions, renewals, and costs across categories and customers.
+                </p>
+                <div class="list-group">
+                    <div class="list-group-item"><strong>Quick Add</strong> — Use the + button to create items fast</div>
+                    <div class="list-group-item"><strong>Search</strong> — Search vendors/customers from the top bar</div>
+                    <div class="list-group-item"><strong>Reports</strong> — Export your data anytime</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="closeModal('aboutModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div id="shortcutsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">⌨️ Keyboard Shortcuts</h2>
+                <button class="modal-close" onclick="closeModal('shortcutsModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    <div class="list-group-item"><strong>/</strong> — Focus global search</div>
+                    <div class="list-group-item"><strong>N</strong> — Quick add</div>
+                    <div class="list-group-item"><strong>Ctrl/Cmd + K</strong> — Command palette</div>
+                    <div class="list-group-item"><strong>B</strong> — Toggle sidebar collapse</div>
+                    <div class="list-group-item"><strong>Esc</strong> — Close open windows</div>
+                </div>
+                <p class="text-secondary" style="margin-top: var(--space-4); margin-bottom: 0;">
+                    Tip: Use the command palette to navigate and create items quickly.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="closeModal('shortcutsModal')">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Add Modal -->
+    <div id="quickAddModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Quick Add</h2>
+                <button class="modal-close" onclick="closeModal('quickAddModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="card card-hover" onclick="closeModal('quickAddModal'); openModal('categoryModal');" style="cursor: pointer; text-align: center; padding: var(--space-8);">
+                        <div style="font-size: 3rem; margin-bottom: var(--space-3);">📁</div>
+                        <h3>Category</h3>
+                        <p class="text-secondary text-sm">Organize subscriptions</p>
+                    </button>
+                    <button class="card card-hover" onclick="closeModal('quickAddModal'); openModal('groupModal');" style="cursor: pointer; text-align: center; padding: var(--space-8);">
+                        <div style="font-size: 3rem; margin-bottom: var(--space-3);">📦</div>
+                        <h3>Group</h3>
+                        <p class="text-secondary text-sm">Group customers</p>
+                    </button>
+                    <button class="card card-hover" onclick="closeModal('quickAddModal'); openModal('customerModal');" style="cursor: pointer; text-align: center; padding: var(--space-8);">
+                        <div style="font-size: 3rem; margin-bottom: var(--space-3);">👤</div>
+                        <h3>Customer</h3>
+                        <p class="text-secondary text-sm">Add new customer</p>
+                    </button>
+                    <button class="card card-hover" onclick="closeModal('quickAddModal'); openModal('subscriptionModal');" style="cursor: pointer; text-align: center; padding: var(--space-8);">
+                        <div style="font-size: 3rem; margin-bottom: var(--space-3);">📋</div>
+                        <h3>Subscription</h3>
+                        <p class="text-secondary text-sm">Track subscription</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div id="categoryModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Create Category</h2>
+                <button class="modal-close" onclick="closeModal('categoryModal')">×</button>
+            </div>
+            <form onsubmit="handleFormSubmit(event, createCategory)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Name *</label>
+                        <input type="text" name="name" class="form-input" required placeholder="e.g., Cloud Services">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-textarea" placeholder="Brief description of this category"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('categoryModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Group Modal -->
+    <div id="groupModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Create Group</h2>
+                <button class="modal-close" onclick="closeModal('groupModal')">×</button>
+            </div>
+            <form onsubmit="handleFormSubmit(event, createGroup)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select name="category_id" class="form-select" required>
+                            <option value="">Select a category</option>
+                            {% for category in categories|default([]) %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Name *</label>
+                        <input type="text" name="name" class="form-input" required placeholder="e.g., VPS Servers">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-textarea" placeholder="Additional notes"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('groupModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer Modal -->
+    <div id="customerModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Create Customer</h2>
+                <button class="modal-close" onclick="closeModal('customerModal')">×</button>
+            </div>
+            <form onsubmit="handleFormSubmit(event, createCustomer)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select name="category_id" class="form-select" required onchange="updateGroupSelect(this.value)">
+                            <option value="">Select a category</option>
+                            {% for category in categories|default([]) %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Group (Optional)</label>
+                        <select name="group_id" class="form-select">
+                            <option value="">No group</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Name *</label>
+                        <input type="text" name="name" class="form-input" required placeholder="Customer name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-input" placeholder="email@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" name="phone" class="form-input" placeholder="+1-555-0000">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tags</label>
+                        <input type="text" name="tags" class="form-input" placeholder="vip, enterprise, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-textarea" placeholder="Additional notes"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('customerModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Subscription Modal -->
+    <div id="subscriptionModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Create Subscription</h2>
+                <button class="modal-close" onclick="closeModal('subscriptionModal')">×</button>
+            </div>
+            <form onsubmit="handleFormSubmit(event, createSubscription)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select name="category_id" class="form-select" required onchange="updateCustomerSelect(this.value)">
+                            <option value="">Select a category</option>
+                            {% for category in categories|default([]) %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Customer *</label>
+                        <select name="customer_id" class="form-select" required>
+                            <option value="">Select a customer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Vendor Name *</label>
+                        <input type="text" name="vendor_name" class="form-input" required placeholder="e.g., AWS, Netflix, Adobe">
+                        <small class="text-secondary">The company providing the service</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Plan Name</label>
+                        <input type="text" name="plan_name" class="form-input" placeholder="e.g., Professional, Premium">
+                        <small class="text-secondary">Optional: The specific plan or tier</small>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label">Cost *</label>
+                            <input type="number" step="0.01" name="cost" class="form-input" required placeholder="99.99">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Currency</label>
+                            <select name="currency" class="form-select">
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Billing Cycle *</label>
+                        <select name="billing_cycle" class="form-select" required>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="yearly">Yearly</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="biannual">Biannual</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label">Start Date *</label>
+                            <input type="date" name="start_date" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Next Renewal *</label>
+                            <input type="date" name="next_renewal_date" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="active">Active</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="paused">Paused</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-textarea" placeholder="Additional notes"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('subscriptionModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Subscription</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div id="editCategoryModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Edit Category</h2>
+                <button class="modal-close" onclick="closeModal('editCategoryModal')">×</button>
+            </div>
+            <form onsubmit="handleFormSubmit(event, updateCategory)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Name *</label>
+                        <input type="text" name="name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-textarea"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editCategoryModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Group Modal -->
+    <div id="editGroupModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Edit Group</h2>
+                <button class="modal-close" onclick="closeModal('editGroupModal')">×</button>
+            </div>
+            <form onsubmit="handleFormSubmit(event, updateGroup)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select name="category_id" class="form-select" required>
+                            {% for category in categories|default([]) %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Name *</label>
+                        <input type="text" name="name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-textarea"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editGroupModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Customer Modal -->
+    <div id="editCustomerModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Edit Customer</h2>
+                <button class="modal-close" onclick="closeModal('editCustomerModal')">×</button>
+            </div>
+            <form onsubmit="handleFormSubmit(event, updateCustomer)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select name="category_id" class="form-select" required onchange="updateGroupSelect(this.value)">
+                            {% for category in categories|default([]) %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Group (Optional)</label>
+                        <select name="group_id" class="form-select">
+                            <option value="">No group</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Name *</label>
+                        <input type="text" name="name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" name="phone" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tags</label>
+                        <input type="text" name="tags" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-textarea"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editCustomerModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI Configuration Modal -->
+    <div id="aiConfigModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🤖 AI Configuration</h2>
+                <button class="modal-close" onclick="closeModal('aiConfigModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box info-box-info mb-4">
+                    <strong>ℹ️ AI Provider:</strong> SubTrack uses Google Gemini for AI features
+                </div>
+                <div class="form-group">
+                    <label class="form-label">API Key</label>
+                    <input type="password" id="ai-api-key" class="form-input" placeholder="Enter your Gemini API key">
+                    <small class="text-secondary">Get your free API key from <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Model</label>
+                    <select id="ai-model" class="form-select">
+                        <option value="gemini-pro">Gemini Pro</option>
+                        <option value="gemini-pro-vision">Gemini Pro Vision</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ai-enabled">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Enable AI Features</span>
+                    </label>
+                </div>
+                <div class="info-box info-box-success">
+                    <strong>✅ Deterministic Mode:</strong> AI features work without an API key using rule-based intelligence
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('aiConfigModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveAIConfig()">Save Configuration</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Subscription Modal -->
+    <div id="editSubscriptionModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Edit Subscription</h2>
+                <button class="modal-close" onclick="closeModal('editSubscriptionModal')">×</button>
+            </div>
+            <form onsubmit="handleFormSubmit(event, updateSubscription)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select name="category_id" class="form-select" required onchange="updateCustomerSelect(this.value)">
+                            {% for category in categories|default([]) %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Customer *</label>
+                        <select name="customer_id" class="form-select" required>
+                            <option value="">Select a customer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Vendor Name *</label>
+                        <input type="text" name="vendor_name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Plan Name</label>
+                        <input type="text" name="plan_name" class="form-input">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label">Cost *</label>
+                            <input type="number" step="0.01" name="cost" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Currency</label>
+                            <select name="currency" class="form-select">
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Billing Cycle *</label>
+                        <select name="billing_cycle" class="form-select" required>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="yearly">Yearly</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="biannual">Biannual</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label">Start Date *</label>
+                            <input type="date" name="start_date" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Next Renewal *</label>
+                            <input type="date" name="next_renewal_date" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="active">Active</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="paused">Paused</option>
+                            <option value="expired">Expired</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-textarea"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editSubscriptionModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Subscription</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SubTrack Web{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1>Dashboard</h1>
+            <p class="text-secondary">Overview of your subscriptions</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('categoryModal')">
+            ➕ Add Category
+        </button>
+    </div>
+
+    <!-- Stats Grid with Enhanced Design -->
+    <div class="grid grid-cols-4 mb-8">
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 0ms;">
+            <div class="text-sm text-secondary mb-2">Active Subscriptions</div>
+            <div class="text-3xl font-bold text-primary mb-2">{{ stats.total_active|default(0) }}</div>
+            <div class="progress">
+                <div class="progress-bar" style="width: {{ (stats.total_active|default(0) / 20 * 100)|int }}%;"></div>
+            </div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 100ms;">
+            <div class="text-sm text-secondary mb-2">Monthly Cost</div>
+            <div class="text-3xl font-bold text-success mb-2">${{ "%.2f"|format(stats.monthly_cost|default(0)) }}</div>
+            <div class="text-xs text-secondary">Total recurring expenses</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 200ms; position: relative;">
+            <div class="text-sm text-secondary mb-2">Expiring Soon</div>
+            <div class="text-3xl font-bold text-warning mb-2">{{ stats.expiring_soon|default(0) }}</div>
+            {% if stats.expiring_soon > 0 %}
+            <span class="notification-badge">!</span>
+            {% endif %}
+            <div class="text-xs text-secondary">Within 30 days</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 300ms; position: relative;">
+            <div class="text-sm text-secondary mb-2">Overdue</div>
+            <div class="text-3xl font-bold text-danger mb-2">{{ stats.overdue|default(0) }}</div>
+            {% if stats.overdue > 0 %}
+            <span class="notification-badge" style="background: var(--color-danger);">{{ stats.overdue }}</span>
+            {% endif %}
+            <div class="text-xs text-secondary">Requires attention</div>
+        </div>
+    </div>
+
+
+    <!-- Expiring Soon -->
+    {% if expiring_soon %}
+    <div class="card mb-8">
+        <div class="card-header">
+            <h2 class="card-title">⚠️ Expiring Soon</h2>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Vendor</th>
+                        <th>Customer</th>
+                        <th>Cost</th>
+                        <th>Days Until Renewal</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in expiring_soon %}
+                    <tr>
+                        <td class="font-medium">{{ sub.vendor_name }}</td>
+                        <td>{{ sub.customer.name }}</td>
+                        <td>${{ "%.2f"|format(sub.cost) }} {{ sub.currency }}</td>
+                        <td>
+                            <span class="badge badge-warning">{{ sub.days_until_renewal() }} days</span>
+                        </td>
+                        <td>
+                            <a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Overdue -->
+    {% if overdue %}
+    <div class="card mb-8">
+        <div class="card-header">
+            <h2 class="card-title">🚨 Overdue Subscriptions</h2>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Vendor</th>
+                        <th>Customer</th>
+                        <th>Cost</th>
+                        <th>Days Overdue</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in overdue %}
+                    <tr>
+                        <td class="font-medium">{{ sub.vendor_name }}</td>
+                        <td>{{ sub.customer.name }}</td>
+                        <td>${{ "%.2f"|format(sub.cost) }} {{ sub.currency }}</td>
+                        <td>
+                            <span class="badge badge-danger">{{ -sub.days_until_renewal() }} days</span>
+                        </td>
+                        <td>
+                            <a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+
+    <!-- Empty state -->
+    {% if not expiring_soon and not overdue and stats.total_active == 0 %}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-state-icon">📊</div>
+            <h3 class="empty-state-title">No subscriptions yet</h3>
+            <p class="empty-state-text">Get started by creating a category and adding your first subscription.</p>
+            <button class="btn btn-primary" onclick="openModal('categoryModal')">
+                Create First Category
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

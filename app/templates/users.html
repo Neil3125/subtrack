@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Users - SubTrack Web{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1>👥 User Management</h1>
+            <p class="text-secondary">Manage user accounts and permissions</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('userModal')">
+            ➕ Add User
+        </button>
+    </div>
+
+    <!-- Users Stats -->
+    <div class="grid grid-cols-3 mb-8">
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 0ms;">
+            <div class="text-sm text-secondary mb-2">Total Users</div>
+            <div class="text-3xl font-bold text-primary mb-2">{{ users|length }}</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 100ms;">
+            <div class="text-sm text-secondary mb-2">Active Users</div>
+            <div class="text-3xl font-bold text-success mb-2">{{ users|selectattr('is_active')|list|length }}</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 200ms;">
+            <div class="text-sm text-secondary mb-2">Administrators</div>
+            <div class="text-3xl font-bold text-warning mb-2">{{ users|selectattr('is_admin')|list|length }}</div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">All Users</h2>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr class="animate-slide-in" style="animation-delay: {{ loop.index * 50 }}ms;">
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <div class="avatar" style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                    {{ user.username[0]|upper }}
+                                </div>
+                                <div>
+                                    <div class="font-medium">{{ user.username }}</div>
+                                    <div class="text-xs text-secondary">ID: {{ user.id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if user.email %}
+                                <span>{{ user.email }}</span>
+                            {% else %}
+                                <span class="text-secondary">Not set</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_admin %}
+                                <span class="badge badge-warning">Admin</span>
+                            {% else %}
+                                <span class="badge badge-secondary">User</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_active %}
+                                <span class="badge badge-success">Active</span>
+                            {% else %}
+                                <span class="badge badge-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-secondary text-sm">
+                            {{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'N/A' }}
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button class="btn btn-sm btn-secondary" onclick="editUser({{ user.id }}, '{{ user.username }}', '{{ user.email or '' }}', {{ 'true' if user.is_admin else 'false' }}, {{ 'true' if user.is_active else 'false' }})">
+                                    ✏️ Edit
+                                </button>
+                                {% if user.username != 'admin' %}
+                                <button class="btn btn-sm btn-danger" onclick="confirmDeleteUser({{ user.id }}, '{{ user.username }}')">
+                                    🗑️
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div id="userModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">➕ Add New User</h2>
+            <button class="modal-close" onclick="closeModal('userModal')">×</button>
+        </div>
+        <form id="addUserForm" onsubmit="handleAddUser(event)">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Username *</label>
+                    <input type="text" name="username" class="form-input" required placeholder="Enter username" minlength="3">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-input" placeholder="user@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password *</label>
+                    <input type="password" name="password" class="form-input" required placeholder="Enter password" minlength="4">
+                </div>
+                <div class="form-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="is_admin">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Administrator</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('userModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="editUserModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">✏️ Edit User</h2>
+            <button class="modal-close" onclick="closeModal('editUserModal')">×</button>
+        </div>
+        <form id="editUserForm" onsubmit="handleEditUser(event)">
+            <input type="hidden" name="user_id" id="edit_user_id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Username *</label>
+                    <input type="text" name="username" id="edit_username" class="form-input" required minlength="3">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" id="edit_email" class="form-input" placeholder="user@example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">New Password</label>
+                    <input type="password" name="password" class="form-input" placeholder="Leave blank to keep current">
+                    <small class="text-secondary">Leave blank to keep current password</small>
+                </div>
+                <div class="form-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="is_admin" id="edit_is_admin">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Administrator</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="is_active" id="edit_is_active">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Active</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editUserModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteUserModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">🗑️ Delete User</h2>
+            <button class="modal-close" onclick="closeModal('deleteUserModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete user <strong id="delete_username"></strong>?</p>
+            <p class="text-secondary">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('deleteUserModal')">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn" onclick="deleteUser()">Delete User</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let deleteUserId = null;
+
+function editUser(id, username, email, isAdmin, isActive) {
+    document.getElementById('edit_user_id').value = id;
+    document.getElementById('edit_username').value = username;
+    document.getElementById('edit_email').value = email;
+    document.getElementById('edit_is_admin').checked = isAdmin;
+    document.getElementById('edit_is_active').checked = isActive;
+    openModal('editUserModal');
+}
+
+function confirmDeleteUser(id, username) {
+    deleteUserId = id;
+    document.getElementById('delete_username').textContent = username;
+    openModal('deleteUserModal');
+}
+
+async function handleAddUser(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    const data = {
+        username: formData.get('username'),
+        email: formData.get('email') || null,
+        password: formData.get('password'),
+        is_admin: formData.get('is_admin') === 'on'
+    };
+    
+    try {
+        const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            showToast('User created successfully!', 'success');
+            closeModal('userModal');
+            setTimeout(() => location.reload(), 500);
+        } else {
+            const error = await response.json();
+            showToast(error.detail || 'Failed to create user', 'error');
+        }
+    } catch (error) {
+        showToast('An error occurred', 'error');
+    }
+}
+
+async function handleEditUser(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const userId = formData.get('user_id');
+    
+    const data = {
+        username: formData.get('username'),
+        email: formData.get('email') || null,
+        is_admin: formData.get('is_admin') === 'on',
+        is_active: formData.get('is_active') === 'on'
+    };
+    
+    const password = formData.get('password');
+    if (password) {
+        data.password = password;
+    }
+    
+    try {
+        const response = await fetch(`/api/users/${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            showToast('User updated successfully!', 'success');
+            closeModal('editUserModal');
+            setTimeout(() => location.reload(), 500);
+        } else {
+            const error = await response.json();
+            showToast(error.detail || 'Failed to update user', 'error');
+        }
+    } catch (error) {
+        showToast('An error occurred', 'error');
+    }
+}
+
+async function deleteUser() {
+    if (!deleteUserId) return;
+    
+    try {
+        const response = await fetch(`/api/users/${deleteUserId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showToast('User deleted successfully!', 'success');
+            closeModal('deleteUserModal');
+            setTimeout(() => location.reload(), 500);
+        } else {
+            const error = await response.json();
+            showToast(error.detail || 'Failed to delete user', 'error');
+        }
+    } catch (error) {
+        showToast('An error occurred', 'error');
+    }
+}
+</script>
+{% endblock %}
