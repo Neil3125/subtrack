@@ -1,0 +1,16 @@
+{
+  "categories": [],
+  "groups": [],
+  "customers": [],
+  "subscriptions": [],
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "email": "admin@subtrack.local",
+      "is_active": true,
+      "is_admin": true,
+      "created_at": "2026-01-10T07:06:48"
+    }
+  ]
+}
