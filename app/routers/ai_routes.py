@@ -672,6 +672,53 @@ async def clear_ai_expired_cache(db: Session = Depends(get_db)):
 
 
 @router.get("/status")
+@router.get("/test-ai-direct")
+async def test_ai_direct():
+    """Direct test of AI API - bypasses cache and shows real usage."""
+    from app.ai.provider import get_ai_provider
+    import time
+    
+    provider = get_ai_provider()
+    
+    result = {
+        "provider_type": type(provider).__name__,
+        "is_available": provider.is_available(),
+        "config": {}
+    }
+    
+    if hasattr(provider, 'api_key'):
+        result["config"]["api_key"] = provider.api_key[:20] + "..."
+    if hasattr(provider, 'model'):
+        result["config"]["model"] = provider.model
+    if hasattr(provider, 'base_url'):
+        result["config"]["base_url"] = provider.base_url
+    
+    if not provider.is_available():
+        result["status"] = "AI not configured"
+        return result
+    
+    try:
+        start = time.time()
+        response = await provider.generate_completion(
+            prompt="In exactly 10 words, describe what SubTrack subscription manager does.",
+            temperature=0.7,
+            max_tokens=50
+        )
+        end = time.time()
+        
+        result["status"] = "success"
+        result["response"] = response
+        result["time_taken"] = f"{end - start:.2f}s"
+        result["message"] = "✅ AI API is working! This call used your OpenRouter quota."
+        
+    except Exception as e:
+        result["status"] = "error"
+        result["error"] = str(e)
+        result["message"] = "API call failed - see error for details"
+    
+    return result
+
+
 async def get_ai_status(db: Session = Depends(get_db)):
     """
     Get AI provider status and configuration.

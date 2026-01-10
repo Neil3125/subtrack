@@ -86,12 +86,14 @@ class OpenRouterProvider(AIProvider):
         }
         
         try:
+            logger.info(f"🤖 Calling OpenRouter API: model={self.model}, prompt_length={len(prompt)}, max_tokens={max_tokens}")
             async with httpx.AsyncClient(timeout=float(self.timeout)) as client:
                 response = await client.post(
                     f"{self.base_url}/chat/completions",
                     headers=headers,
                     json=data
                 )
+                logger.info(f"✅ OpenRouter API response: status={response.status_code}")
                 
                 # Handle specific error codes
                 if response.status_code == 429:
@@ -120,7 +122,7 @@ class OpenRouterProvider(AIProvider):
                 # Extract the response content
                 if "choices" in result and len(result["choices"]) > 0:
                     content = result["choices"][0]["message"]["content"]
-                    logger.debug(f"OpenRouter response received: {len(content)} chars")
+                    logger.info(f"✅ OpenRouter success: {len(content)} chars returned")
                     return content
                 else:
                     raise AIProviderError("Invalid response format from OpenRouter")
