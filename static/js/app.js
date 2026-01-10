@@ -360,7 +360,9 @@ window.runLinkAnalysis = function() {
 
 // Load item data for editing
 window.loadEditData = function(type, id) {
-  fetch(`/api/${type}s/${id}`)
+  // Handle irregular plurals (category -> categories)
+  const pluralType = type === 'category' ? 'categories' : `${type}s`;
+  fetch(`/api/${pluralType}/${id}`)
     .then(response => response.json())
     .then(data => {
       const modalId = `edit${type.charAt(0).toUpperCase() + type.slice(1)}Modal`;
@@ -456,6 +458,31 @@ window.createCategory = function(formData) {
     showToast('Error creating category', 'error');
     console.error('Error:', error);
   });
+};
+
+// Open Group Modal with pre-selected category
+window.openGroupModalForCategory = function(categoryId) {
+  openModal('groupModal');
+  // Pre-select the category after modal opens
+  setTimeout(() => {
+    const categorySelect = document.querySelector('#groupModal select[name="category_id"]');
+    if (categorySelect) {
+      categorySelect.value = categoryId;
+    }
+  }, 50);
+};
+
+// Open Customer Modal with pre-selected category
+window.openCustomerModalForCategory = function(categoryId) {
+  openModal('customerModal');
+  // Pre-select the category and load groups for that category
+  setTimeout(() => {
+    const categorySelect = document.querySelector('#customerModal select[name="category_id"]');
+    if (categorySelect) {
+      categorySelect.value = categoryId;
+      updateGroupSelect(categoryId, 'group_id');
+    }
+  }, 50);
 };
 
 // Create Group

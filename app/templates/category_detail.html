@@ -13,10 +13,10 @@
             <button class="btn btn-secondary btn-sm" onclick="loadEditData('category', {{ category.id }})">
                 ✏️ Edit Category
             </button>
-            <button class="btn btn-primary" onclick="openModal('groupModal')">
+            <button class="btn btn-primary" onclick="openGroupModalForCategory({{ category.id }})">
                 ➕ New Group
             </button>
-            <button class="btn btn-primary" onclick="openModal('customerModal')">
+            <button class="btn btn-primary" onclick="openCustomerModalForCategory({{ category.id }})">
                 ➕ New Customer
             </button>
         </div>
