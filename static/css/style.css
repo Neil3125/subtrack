@@ -683,13 +683,19 @@ a:hover {
   position: sticky;
   top: 0;
   z-index: 5;
-  background: var(--color-bg-elevated);
 }
 
 .modal .table thead th {
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-secondary);
   position: sticky;
   top: 0;
+  /* Solid background to hide scrolling content */
+  box-shadow: 0 1px 0 var(--color-border);
+}
+
+/* Dark mode table headers in modals */
+[data-theme="dark"] .modal .table thead th {
+  background: var(--color-bg-tertiary);
 }
 
 .table th {
@@ -1021,7 +1027,7 @@ a:hover {
   border-radius: var(--radius-xl);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(91, 127, 255, 0.1);
   border: 1px solid var(--color-border);
-  max-width: 600px;
+  max-width: 900px;
   width: 100%;
   max-height: calc(100vh - 48px);
   display: flex;
