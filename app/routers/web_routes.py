@@ -110,6 +110,69 @@ async def groups_list(request: Request, db: Session = Depends(get_db)):
     })
 
 
+@router.get("/subscriptions", response_class=HTMLResponse)
+async def subscriptions_page(request: Request, db: Session = Depends(get_db)):
+    """Subscriptions management page."""
+    categories = db.query(Category).all()
+    subscriptions = db.query(Subscription).all()
+    
+    # Calculate stats
+    total_subscriptions = len(subscriptions)
+    active_subs = [s for s in subscriptions if s.status == SubscriptionStatus.ACTIVE]
+    active_count = len(active_subs)
+    paused_count = len([s for s in subscriptions if s.status == SubscriptionStatus.PAUSED])
+    cancelled_count = len([s for s in subscriptions if s.status == SubscriptionStatus.CANCELLED])
+    expired_count = len([s for s in subscriptions if s.status == SubscriptionStatus.EXPIRED])
+    
+    monthly_cost = sum(s.cost for s in active_subs)
+    
+    # Expiring and overdue
+    today = date.today()
+    threshold_date = today + timedelta(days=30)
+    expiring_soon_count = len([s for s in active_subs if s.next_renewal_date and today <= s.next_renewal_date <= threshold_date])
+    overdue_count = len([s for s in active_subs if s.next_renewal_date and s.next_renewal_date < today])
+    
+    # Category stats
+    from collections import defaultdict
+    cat_data = defaultdict(lambda: {'count': 0, 'monthly_cost': 0})
+    for s in subscriptions:
+        cat_data[s.category_id]['count'] += 1
+        if s.status == SubscriptionStatus.ACTIVE:
+            cat_data[s.category_id]['monthly_cost'] += s.cost
+    
+    category_stats = []
+    for cat in categories:
+        if cat.id in cat_data:
+            category_stats.append({
+                'name': cat.name,
+                'count': cat_data[cat.id]['count'],
+                'monthly_cost': cat_data[cat.id]['monthly_cost']
+            })
+    category_stats.sort(key=lambda x: x['count'], reverse=True)
+    
+    # Cycle stats
+    cycle_data = defaultdict(lambda: {'count': 0, 'cost': 0})
+    for s in subscriptions:
+        cycle_data[s.billing_cycle.value]['count'] += 1
+        cycle_data[s.billing_cycle.value]['cost'] += s.cost
+    
+    return templates.TemplateResponse("subscriptions_page.html", {
+        "request": request,
+        "categories": categories,
+        "subscriptions": subscriptions,
+        "total_subscriptions": total_subscriptions,
+        "active_count": active_count,
+        "paused_count": paused_count,
+        "cancelled_count": cancelled_count,
+        "expired_count": expired_count,
+        "monthly_cost": monthly_cost,
+        "expiring_soon_count": expiring_soon_count,
+        "overdue_count": overdue_count,
+        "category_stats": category_stats,
+        "cycle_stats": dict(cycle_data)
+    })
+
+
 @router.get("/customers", response_class=HTMLResponse)
 async def customers_list(request: Request, db: Session = Depends(get_db)):
     """List all customers with statistics."""

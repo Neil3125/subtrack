@@ -491,6 +491,9 @@ window.loadEditData = function(type, id) {
           });
           categoryField.dataset.groupHooked = 'true';
         }
+        
+        // Load customer subscriptions
+        loadCustomerSubscriptions(id);
       }
 
       // Special handling: subscription edit needs customer dropdown populated based on category
@@ -1105,6 +1108,90 @@ function handleCommandNavigation(e) {
   
   items[currentIndex].scrollIntoView({ block: 'nearest' });
 }
+
+// ==================== Customer Subscriptions Management ====================
+let currentEditingCustomerId = null;
+
+window.loadCustomerSubscriptions = function(customerId) {
+  currentEditingCustomerId = customerId;
+  const container = document.getElementById('customer-subscriptions-list');
+  if (!container) return;
+  
+  container.innerHTML = '<p class="text-secondary text-sm">Loading subscriptions...</p>';
+  
+  fetch(`/api/subscriptions?customer_id=${customerId}`)
+    .then(response => response.json())
+    .then(subscriptions => {
+      if (subscriptions.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-3" style="background: var(--color-bg-secondary); border-radius: var(--radius-md);">
+            <p class="text-secondary text-sm mb-2">No subscriptions yet</p>
+            <button type="button" class="btn btn-sm btn-primary" onclick="addSubscriptionForCustomer()">+ Add First Subscription</button>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = subscriptions.map(sub => `
+        <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--color-bg-secondary);">
+          <div class="flex-1">
+            <div class="font-medium">${sub.vendor_name}</div>
+            <div class="text-sm text-secondary">
+              $${parseFloat(sub.cost).toFixed(2)} / ${sub.billing_cycle} 
+              <span class="badge badge-${sub.status === 'active' ? 'success' : sub.status === 'paused' ? 'warning' : 'secondary'}" style="margin-left: 8px;">${sub.status}</span>
+            </div>
+          </div>
+          <div class="flex gap-1">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="editSubscriptionFromCustomer(${sub.id})" title="Edit">✏️</button>
+            <a href="/subscriptions/${sub.id}" class="btn btn-sm btn-secondary" title="View">👁️</a>
+          </div>
+        </div>
+      `).join('');
+    })
+    .catch(error => {
+      console.error('Error loading subscriptions:', error);
+      container.innerHTML = '<p class="text-secondary text-sm">Error loading subscriptions</p>';
+    });
+};
+
+window.addSubscriptionForCustomer = function() {
+  if (!currentEditingCustomerId) {
+    showToast('Please save the customer first', 'warning');
+    return;
+  }
+  
+  // Close the edit customer modal
+  closeModal('editCustomerModal');
+  
+  // Open subscription modal and pre-fill customer
+  setTimeout(() => {
+    openModal('subscriptionModal');
+    
+    // Fetch customer to get category
+    fetch(`/api/customers/${currentEditingCustomerId}`)
+      .then(response => response.json())
+      .then(customer => {
+        const form = document.querySelector('#subscriptionModal form');
+        const categorySelect = form.querySelector('select[name="category_id"]');
+        const customerSelect = form.querySelector('select[name="customer_id"]');
+        
+        if (categorySelect) {
+          categorySelect.value = customer.category_id;
+          // Load customers for this category
+          updateCustomerSelect(customer.category_id, 'customer_id', currentEditingCustomerId);
+        }
+      })
+      .catch(error => console.error('Error:', error));
+  }, 350);
+};
+
+window.editSubscriptionFromCustomer = function(subscriptionId) {
+  // Close customer modal and open subscription edit
+  closeModal('editCustomerModal');
+  setTimeout(() => {
+    loadEditData('subscription', subscriptionId);
+  }, 350);
+};
 
 // ==================== Subscription Actions ====================
 let renewalSubscriptionId = null;

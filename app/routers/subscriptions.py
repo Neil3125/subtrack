@@ -82,3 +82,42 @@ def delete_subscription(subscription_id: int, db: Session = Depends(get_db)):
     db.delete(db_subscription)
     db.commit()
     return None
+
+
+@router.post("/{subscription_id}/renew")
+def renew_subscription(subscription_id: int, db: Session = Depends(get_db)):
+    """Renew a subscription to the next billing cycle."""
+    from datetime import date, timedelta
+    from dateutil.relativedelta import relativedelta
+    from app.models.subscription import SubscriptionStatus
+    
+    db_subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
+    if not db_subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    
+    # Calculate next renewal date based on billing cycle
+    current_date = db_subscription.next_renewal_date or date.today()
+    
+    if db_subscription.billing_cycle.value == 'weekly':
+        new_date = current_date + timedelta(weeks=1)
+    elif db_subscription.billing_cycle.value == 'monthly':
+        new_date = current_date + relativedelta(months=1)
+    elif db_subscription.billing_cycle.value == 'quarterly':
+        new_date = current_date + relativedelta(months=3)
+    elif db_subscription.billing_cycle.value == 'biannual':
+        new_date = current_date + relativedelta(months=6)
+    elif db_subscription.billing_cycle.value == 'yearly':
+        new_date = current_date + relativedelta(years=1)
+    else:
+        new_date = current_date + relativedelta(months=1)
+    
+    db_subscription.next_renewal_date = new_date
+    db_subscription.status = SubscriptionStatus.ACTIVE
+    
+    db.commit()
+    db.refresh(db_subscription)
+    
+    return {
+        "message": "Subscription renewed",
+        "next_renewal_date": new_date.isoformat()
+    }

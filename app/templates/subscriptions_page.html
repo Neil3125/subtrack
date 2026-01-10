@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+
+{% block title %}Subscriptions - SubTrack Web{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="gradient-text">📋 All Subscriptions</h1>
+            <p class="text-secondary">Manage all subscriptions across categories</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('subscriptionModal')">
+            ➕ Add Subscription
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-5 mb-8">
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 0ms;">
+            <div class="text-sm text-secondary mb-2">Total Subscriptions</div>
+            <div class="text-3xl font-bold text-primary mb-2">{{ total_subscriptions }}</div>
+            <div class="text-xs text-secondary">All subscriptions</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 100ms;">
+            <div class="text-sm text-secondary mb-2">Active</div>
+            <div class="text-3xl font-bold text-success mb-2">{{ active_count }}</div>
+            <div class="text-xs text-secondary">Currently active</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 150ms;">
+            <div class="text-sm text-secondary mb-2">Monthly Cost</div>
+            <div class="text-3xl font-bold text-info mb-2">${{ "%.2f"|format(monthly_cost) }}</div>
+            <div class="text-xs text-secondary">All active subs</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 200ms; position: relative;">
+            <div class="text-sm text-secondary mb-2">Expiring Soon</div>
+            <div class="text-3xl font-bold text-warning mb-2">{{ expiring_soon_count }}</div>
+            {% if expiring_soon_count > 0 %}
+            <span class="notification-badge">!</span>
+            {% endif %}
+            <div class="text-xs text-secondary">Within 30 days</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 300ms; position: relative;">
+            <div class="text-sm text-secondary mb-2">Overdue</div>
+            <div class="text-3xl font-bold text-danger mb-2">{{ overdue_count }}</div>
+            {% if overdue_count > 0 %}
+            <span class="notification-badge" style="background: var(--color-danger);">{{ overdue_count }}</span>
+            {% endif %}
+            <div class="text-xs text-secondary">Needs attention</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-6">
+        <div class="flex gap-4 items-end flex-wrap">
+            <div class="form-group flex-1" style="min-width: 150px;">
+                <label class="form-label">Category</label>
+                <select class="form-select" id="filter-category" onchange="filterSubscriptions()">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group flex-1" style="min-width: 150px;">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="filter-status" onchange="filterSubscriptions()">
+                    <option value="">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="paused">Paused</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="expired">Expired</option>
+                </select>
+            </div>
+            <div class="form-group flex-1" style="min-width: 150px;">
+                <label class="form-label">Billing Cycle</label>
+                <select class="form-select" id="filter-cycle" onchange="filterSubscriptions()">
+                    <option value="">All Cycles</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="biannual">Biannual</option>
+                </select>
+            </div>
+            <div class="form-group flex-1" style="min-width: 200px;">
+                <label class="form-label">Search</label>
+                <input type="text" class="form-input" id="filter-search" placeholder="Vendor, customer, plan..." oninput="filterSubscriptions()">
+            </div>
+            <button class="btn btn-secondary" onclick="clearFilters()">Clear</button>
+        </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    <div class="card mb-6" id="bulk-actions" style="display: none;">
+        <div class="flex gap-4 items-center">
+            <span class="font-medium"><span id="selected-count">0</span> selected</span>
+            <button class="btn btn-sm btn-secondary" onclick="bulkUpdateStatus('active')">Set Active</button>
+            <button class="btn btn-sm btn-secondary" onclick="bulkUpdateStatus('paused')">Set Paused</button>
+            <button class="btn btn-sm btn-warning" onclick="bulkUpdateStatus('cancelled')">Set Cancelled</button>
+            <button class="btn btn-sm btn-danger" onclick="bulkDelete()">Delete Selected</button>
+            <button class="btn btn-sm btn-secondary" onclick="clearSelection()">Clear Selection</button>
+        </div>
+    </div>
+
+    <!-- Subscriptions Table -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">📋 Subscription List</h2>
+            <div class="flex gap-2 items-center">
+                <span class="badge badge-primary" id="visible-count">{{ subscriptions|length }} subscriptions</span>
+                <button class="btn btn-sm btn-secondary" onclick="exportSubscriptions()">📥 Export</button>
+            </div>
+        </div>
+        {% if subscriptions %}
+        <div class="table-container">
+            <table class="table" id="subscriptions-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="select-all" onchange="toggleSelectAll()">
+                        </th>
+                        <th>Vendor</th>
+                        <th>Plan</th>
+                        <th>Customer</th>
+                        <th>Category</th>
+                        <th>Cost</th>
+                        <th>Cycle</th>
+                        <th>Status</th>
+                        <th>Next Renewal</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in subscriptions %}
+                    <tr class="subscription-row" 
+                        data-id="{{ sub.id }}"
+                        data-category="{{ sub.category_id }}"
+                        data-status="{{ sub.status.value }}"
+                        data-cycle="{{ sub.billing_cycle.value }}"
+                        data-vendor="{{ sub.vendor_name|lower }}"
+                        data-customer="{{ sub.customer.name|lower if sub.customer else '' }}"
+                        data-plan="{{ (sub.plan_name or '')|lower }}">
+                        <td>
+                            <input type="checkbox" class="sub-checkbox" data-id="{{ sub.id }}" onchange="updateBulkActions()">
+                        </td>
+                        <td class="font-medium">
+                            <a href="/subscriptions/{{ sub.id }}" class="text-primary hover:underline">
+                                {{ sub.vendor_name }}
+                            </a>
+                        </td>
+                        <td>{{ sub.plan_name or '-' }}</td>
+                        <td>
+                            {% if sub.customer %}
+                            <a href="/customers/{{ sub.customer.id }}" class="text-secondary hover:underline">
+                                {{ sub.customer.name }}
+                            </a>
+                            {% else %}
+                            <span class="text-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/categories/{{ sub.category.id }}" class="badge badge-primary">
+                                {{ sub.category.name }}
+                            </a>
+                        </td>
+                        <td>${{ "%.2f"|format(sub.cost) }} {{ sub.currency }}</td>
+                        <td><span class="badge badge-secondary">{{ sub.billing_cycle.value }}</span></td>
+                        <td>
+                            {% if sub.status.value == 'active' %}
+                            <span class="badge badge-success">Active</span>
+                            {% elif sub.status.value == 'paused' %}
+                            <span class="badge badge-warning">Paused</span>
+                            {% elif sub.status.value == 'cancelled' %}
+                            <span class="badge badge-danger">Cancelled</span>
+                            {% else %}
+                            <span class="badge badge-secondary">{{ sub.status.value }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sub.next_renewal_date %}
+                                {% set days = sub.days_until_renewal() %}
+                                {% if days < 0 %}
+                                <span class="badge badge-danger">{{ -days }}d overdue</span>
+                                {% elif days <= 7 %}
+                                <span class="badge badge-danger">{{ days }}d</span>
+                                {% elif days <= 30 %}
+                                <span class="badge badge-warning">{{ days }}d</span>
+                                {% else %}
+                                <span class="badge badge-success">{{ days }}d</span>
+                                {% endif %}
+                            {% else %}
+                            <span class="text-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="flex gap-1">
+                                <a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary" title="View">👁️</a>
+                                <button class="btn btn-sm btn-secondary" onclick="loadEditData('subscription', {{ sub.id }})" title="Edit">✏️</button>
+                                <button class="btn btn-sm btn-success" onclick="renewSubscription({{ sub.id }})" title="Renew">🔄</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteItem('subscription', {{ sub.id }}, '{{ sub.vendor_name }}')" title="Delete">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <h3 class="empty-state-title">No subscriptions yet</h3>
+            <p class="empty-state-text">Add your first subscription to start tracking.</p>
+            <button class="btn btn-primary" onclick="openModal('subscriptionModal')">
+                Add Subscription
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Subscription Stats by Category -->
+    {% if category_stats %}
+    <div class="card mt-6">
+        <div class="card-header">
+            <h2 class="card-title">📊 Subscriptions by Category</h2>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {% for stat in category_stats %}
+            <div class="card card-hover" style="background: var(--color-bg-secondary);">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-medium">{{ stat.name }}</span>
+                    <span class="badge badge-primary">{{ stat.count }}</span>
+                </div>
+                <div class="text-sm text-secondary mb-2">${{ "%.2f"|format(stat.monthly_cost) }}/mo</div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar" style="width: {{ (stat.count / total_subscriptions * 100) if total_subscriptions > 0 else 0 }}%;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Subscription Stats by Status -->
+    <div class="grid grid-cols-2 gap-6 mt-6">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📈 By Status</h2>
+            </div>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--color-success-bg);">
+                    <span>Active</span>
+                    <span class="badge badge-success">{{ active_count }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--color-warning-bg);">
+                    <span>Paused</span>
+                    <span class="badge badge-warning">{{ paused_count }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--color-danger-bg);">
+                    <span>Cancelled</span>
+                    <span class="badge badge-danger">{{ cancelled_count }}</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--color-bg-secondary);">
+                    <span>Expired</span>
+                    <span class="badge badge-secondary">{{ expired_count }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">💰 By Billing Cycle</h2>
+            </div>
+            <div class="space-y-3">
+                {% for cycle, data in cycle_stats.items() %}
+                <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--color-bg-secondary);">
+                    <span>{{ cycle|capitalize }}</span>
+                    <div class="flex gap-2 items-center">
+                        <span class="text-secondary">${{ "%.2f"|format(data.cost) }}</span>
+                        <span class="badge badge-primary">{{ data.count }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterSubscriptions() {
+    const categoryFilter = document.getElementById('filter-category').value;
+    const statusFilter = document.getElementById('filter-status').value;
+    const cycleFilter = document.getElementById('filter-cycle').value;
+    const searchFilter = document.getElementById('filter-search').value.toLowerCase();
+    
+    const rows = document.querySelectorAll('.subscription-row');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const category = row.dataset.category;
+        const status = row.dataset.status;
+        const cycle = row.dataset.cycle;
+        const vendor = row.dataset.vendor;
+        const customer = row.dataset.customer;
+        const plan = row.dataset.plan;
+        
+        let show = true;
+        
+        if (categoryFilter && category !== categoryFilter) show = false;
+        if (statusFilter && status !== statusFilter) show = false;
+        if (cycleFilter && cycle !== cycleFilter) show = false;
+        if (searchFilter && !vendor.includes(searchFilter) && !customer.includes(searchFilter) && !plan.includes(searchFilter)) show = false;
+        
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+    
+    document.getElementById('visible-count').textContent = `${visibleCount} subscriptions`;
+}
+
+function clearFilters() {
+    document.getElementById('filter-category').value = '';
+    document.getElementById('filter-status').value = '';
+    document.getElementById('filter-cycle').value = '';
+    document.getElementById('filter-search').value = '';
+    filterSubscriptions();
+}
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('select-all').checked;
+    document.querySelectorAll('.sub-checkbox').forEach(cb => {
+        const row = cb.closest('tr');
+        if (row.style.display !== 'none') {
+            cb.checked = selectAll;
+        }
+    });
+    updateBulkActions();
+}
+
+function updateBulkActions() {
+    const checked = document.querySelectorAll('.sub-checkbox:checked').length;
+    document.getElementById('selected-count').textContent = checked;
+    document.getElementById('bulk-actions').style.display = checked > 0 ? 'block' : 'none';
+}
+
+function clearSelection() {
+    document.querySelectorAll('.sub-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('select-all').checked = false;
+    updateBulkActions();
+}
+
+function getSelectedIds() {
+    return Array.from(document.querySelectorAll('.sub-checkbox:checked')).map(cb => cb.dataset.id);
+}
+
+function bulkUpdateStatus(status) {
+    const ids = getSelectedIds();
+    if (ids.length === 0) return;
+    
+    if (!confirm(`Update ${ids.length} subscription(s) to ${status}?`)) return;
+    
+    Promise.all(ids.map(id => 
+        fetch(`/api/subscriptions/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: status })
+        })
+    ))
+    .then(() => {
+        showToast(`Updated ${ids.length} subscription(s)`, 'success');
+        setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+        showToast('Error updating subscriptions', 'error');
+        console.error(error);
+    });
+}
+
+function bulkDelete() {
+    const ids = getSelectedIds();
+    if (ids.length === 0) return;
+    
+    if (!confirm(`Delete ${ids.length} subscription(s)? This cannot be undone.`)) return;
+    
+    Promise.all(ids.map(id => 
+        fetch(`/api/subscriptions/${id}`, { method: 'DELETE' })
+    ))
+    .then(() => {
+        showToast(`Deleted ${ids.length} subscription(s)`, 'success');
+        setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+        showToast('Error deleting subscriptions', 'error');
+        console.error(error);
+    });
+}
+
+function renewSubscription(id) {
+    if (!confirm('Renew this subscription to the next billing cycle?')) return;
+    
+    fetch(`/api/subscriptions/${id}/renew`, {
+        method: 'POST'
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to renew');
+        return response.json();
+    })
+    .then(data => {
+        showToast('Subscription renewed!', 'success');
+        setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+        showToast('Error renewing subscription', 'error');
+        console.error(error);
+    });
+}
+
+function exportSubscriptions() {
+    window.location.href = '/api/export/subscriptions/excel';
+}
+</script>
+{% endblock %}
