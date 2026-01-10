@@ -190,7 +190,7 @@ document.addEventListener('keydown', function(e) {
   // b - Toggle sidebar
   if (e.key === 'b' || e.key === 'B') {
     e.preventDefault();
-    toggleSidebarCollapse();
+    // Sidebar collapse removed
   }
 });
 
@@ -1319,17 +1319,7 @@ window.toggleSidebar = function() {
   }
 };
 
-window.toggleSidebarCollapse = function() {
-  document.body.classList.toggle('sidebar-collapsed');
-  const isCollapsed = document.body.classList.contains('sidebar-collapsed');
-  localStorage.setItem('sidebar-collapsed', isCollapsed);
-  showToast(isCollapsed ? 'Sidebar collapsed' : 'Sidebar expanded', 'info');
-};
-
-// Load sidebar state on page load
-if (localStorage.getItem('sidebar-collapsed') === 'true') {
-  document.body.classList.add('sidebar-collapsed');
-}
+// Sidebar collapse feature removed
 
 // ==================== Command Palette ====================
 window.openCommandPalette = function() {
@@ -1907,7 +1897,6 @@ window.SubTrack = {
   deleteItem,
   showToast,
   toggleSidebar,
-  toggleSidebarCollapse,
   renewSubscription,
   pauseSubscription,
   cancelSubscription,

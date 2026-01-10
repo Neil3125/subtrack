@@ -71,6 +71,11 @@
                     hx-swap="innerHTML"
                     name="q"
                     autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    data-form-type="other"
+                    data-lpignore="true"
                     aria-label="Search"
                 >
                 <span class="search-icon">🔍</span>
@@ -115,9 +120,7 @@
                     <a href="/settings" class="dropdown-item">
                         <span>⚙️</span> Settings
                     </a>
-                    <button onclick="toggleSidebarCollapse()" class="dropdown-item">
-                        <span>📌</span> Toggle Sidebar
-                    </button>
+                    
                     <a href="/reports" class="dropdown-item">
                         <span>📤</span> Reports & Exports
                     </a>
