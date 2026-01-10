@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-// ==================== Country Autocomplete ====================
+// ==================== Smart Autocomplete System ====================
 let cachedCountries = [];
 const defaultCountries = [
   'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Australia', 'Austria',
@@ -277,69 +277,367 @@ const defaultCountries = [
   'Ukraine', 'United Kingdom', 'United States', 'Vietnam'
 ];
 
+// Smart Autocomplete Class
+class SmartAutocomplete {
+  constructor(input, options = {}) {
+    this.input = input;
+    this.options = {
+      minChars: options.minChars || 1,
+      maxResults: options.maxResults || 8,
+      highlightMatches: options.highlightMatches !== false,
+      showRecentFirst: options.showRecentFirst !== false,
+      dataSource: options.dataSource || [],
+      placeholder: options.placeholder || 'Type to search...',
+      emptyMessage: options.emptyMessage || 'No matches found',
+      onSelect: options.onSelect || null,
+      fetchUrl: options.fetchUrl || null,
+      ...options
+    };
+    
+    this.dropdown = null;
+    this.selectedIndex = -1;
+    this.isOpen = false;
+    this.recentSelections = this.loadRecentSelections();
+    
+    this.init();
+  }
+  
+  init() {
+    // Remove any existing datalist reference
+    this.input.removeAttribute('list');
+    this.input.setAttribute('autocomplete', 'off');
+    
+    // Create dropdown container
+    this.createDropdown();
+    
+    // Bind events
+    this.bindEvents();
+  }
+  
+  createDropdown() {
+    // Create wrapper if input isn't already wrapped
+    let wrapper = this.input.parentElement;
+    if (!wrapper.classList.contains('smart-autocomplete-wrapper')) {
+      wrapper = document.createElement('div');
+      wrapper.className = 'smart-autocomplete-wrapper';
+      this.input.parentNode.insertBefore(wrapper, this.input);
+      wrapper.appendChild(this.input);
+    }
+    
+    // Create dropdown
+    this.dropdown = document.createElement('div');
+    this.dropdown.className = 'smart-autocomplete-dropdown';
+    this.dropdown.style.display = 'none';
+    wrapper.appendChild(this.dropdown);
+  }
+  
+  bindEvents() {
+    // Input events
+    this.input.addEventListener('input', (e) => this.onInput(e));
+    this.input.addEventListener('focus', (e) => this.onFocus(e));
+    this.input.addEventListener('blur', (e) => this.onBlur(e));
+    this.input.addEventListener('keydown', (e) => this.onKeyDown(e));
+    
+    // Prevent form submission on enter when dropdown is open
+    this.input.closest('form')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && this.isOpen && this.selectedIndex >= 0) {
+        e.preventDefault();
+      }
+    });
+  }
+  
+  onInput(e) {
+    const value = e.target.value.trim();
+    
+    if (value.length < this.options.minChars) {
+      this.close();
+      return;
+    }
+    
+    this.search(value);
+  }
+  
+  onFocus(e) {
+    const value = this.input.value.trim();
+    if (value.length >= this.options.minChars) {
+      this.search(value);
+    } else if (this.recentSelections.length > 0) {
+      // Show recent selections on focus with empty input
+      this.showRecent();
+    }
+  }
+  
+  onBlur(e) {
+    // Delay to allow click on dropdown item
+    setTimeout(() => this.close(), 200);
+  }
+  
+  onKeyDown(e) {
+    if (!this.isOpen) {
+      if (e.key === 'ArrowDown' && this.input.value.length >= this.options.minChars) {
+        this.search(this.input.value);
+      }
+      return;
+    }
+    
+    const items = this.dropdown.querySelectorAll('.smart-autocomplete-item:not(.empty-message)');
+    
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        this.selectedIndex = Math.min(this.selectedIndex + 1, items.length - 1);
+        this.updateSelection(items);
+        break;
+        
+      case 'ArrowUp':
+        e.preventDefault();
+        this.selectedIndex = Math.max(this.selectedIndex - 1, 0);
+        this.updateSelection(items);
+        break;
+        
+      case 'Enter':
+        if (this.selectedIndex >= 0 && items[this.selectedIndex]) {
+          e.preventDefault();
+          this.selectItem(items[this.selectedIndex].dataset.value);
+        }
+        break;
+        
+      case 'Tab':
+        if (this.selectedIndex >= 0 && items[this.selectedIndex]) {
+          e.preventDefault();
+          this.selectItem(items[this.selectedIndex].dataset.value);
+        } else if (items.length > 0) {
+          e.preventDefault();
+          this.selectItem(items[0].dataset.value);
+        }
+        break;
+        
+      case 'Escape':
+        this.close();
+        break;
+    }
+  }
+  
+  updateSelection(items) {
+    items.forEach((item, index) => {
+      item.classList.toggle('selected', index === this.selectedIndex);
+    });
+    
+    // Scroll selected item into view
+    if (items[this.selectedIndex]) {
+      items[this.selectedIndex].scrollIntoView({ block: 'nearest' });
+    }
+  }
+  
+  search(query) {
+    const lowerQuery = query.toLowerCase();
+    let data = this.options.dataSource;
+    
+    // Filter and score results
+    let results = data
+      .map(item => {
+        const lowerItem = item.toLowerCase();
+        let score = 0;
+        
+        // Exact match gets highest score
+        if (lowerItem === lowerQuery) score = 100;
+        // Starts with query
+        else if (lowerItem.startsWith(lowerQuery)) score = 80;
+        // Word starts with query
+        else if (lowerItem.split(' ').some(word => word.startsWith(lowerQuery))) score = 60;
+        // Contains query
+        else if (lowerItem.includes(lowerQuery)) score = 40;
+        else score = 0;
+        
+        // Boost recent selections
+        if (this.options.showRecentFirst && this.recentSelections.includes(item)) {
+          score += 20;
+        }
+        
+        return { item, score };
+      })
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, this.options.maxResults)
+      .map(r => r.item);
+    
+    this.renderResults(results, query);
+  }
+  
+  showRecent() {
+    const recentItems = this.recentSelections
+      .filter(item => this.options.dataSource.includes(item))
+      .slice(0, 5);
+    
+    if (recentItems.length > 0) {
+      this.renderResults(recentItems, '', true);
+    }
+  }
+  
+  renderResults(results, query, isRecent = false) {
+    this.dropdown.innerHTML = '';
+    this.selectedIndex = -1;
+    
+    if (results.length === 0) {
+      this.dropdown.innerHTML = `
+        <div class="smart-autocomplete-item empty-message">
+          <span class="autocomplete-icon">🔍</span>
+          ${this.options.emptyMessage}
+        </div>
+      `;
+    } else {
+      if (isRecent) {
+        this.dropdown.innerHTML = `
+          <div class="smart-autocomplete-header">
+            <span class="autocomplete-icon">🕐</span> Recent
+          </div>
+        `;
+      }
+      
+      results.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'smart-autocomplete-item';
+        div.dataset.value = item;
+        
+        // Highlight matching text
+        let displayText = item;
+        if (this.options.highlightMatches && query) {
+          const regex = new RegExp(`(${this.escapeRegex(query)})`, 'gi');
+          displayText = item.replace(regex, '<mark>$1</mark>');
+        }
+        
+        const isRecentItem = this.recentSelections.includes(item);
+        div.innerHTML = `
+          ${isRecentItem && !isRecent ? '<span class="recent-indicator">●</span>' : ''}
+          <span class="item-text">${displayText}</span>
+        `;
+        
+        div.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          this.selectItem(item);
+        });
+        
+        div.addEventListener('mouseenter', () => {
+          this.selectedIndex = index;
+          this.updateSelection(this.dropdown.querySelectorAll('.smart-autocomplete-item:not(.empty-message)'));
+        });
+        
+        this.dropdown.appendChild(div);
+      });
+    }
+    
+    this.open();
+  }
+  
+  selectItem(value) {
+    this.input.value = value;
+    this.addToRecent(value);
+    this.close();
+    
+    // Trigger input event for any listeners
+    this.input.dispatchEvent(new Event('input', { bubbles: true }));
+    this.input.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    if (this.options.onSelect) {
+      this.options.onSelect(value);
+    }
+  }
+  
+  open() {
+    this.dropdown.style.display = 'block';
+    this.isOpen = true;
+  }
+  
+  close() {
+    this.dropdown.style.display = 'none';
+    this.isOpen = false;
+    this.selectedIndex = -1;
+  }
+  
+  addToRecent(value) {
+    // Remove if already exists, add to front
+    this.recentSelections = this.recentSelections.filter(v => v !== value);
+    this.recentSelections.unshift(value);
+    this.recentSelections = this.recentSelections.slice(0, 10); // Keep last 10
+    this.saveRecentSelections();
+  }
+  
+  loadRecentSelections() {
+    try {
+      const key = `autocomplete_recent_${this.input.name || 'default'}`;
+      return JSON.parse(localStorage.getItem(key)) || [];
+    } catch {
+      return [];
+    }
+  }
+  
+  saveRecentSelections() {
+    try {
+      const key = `autocomplete_recent_${this.input.name || 'default'}`;
+      localStorage.setItem(key, JSON.stringify(this.recentSelections));
+    } catch {}
+  }
+  
+  escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+  
+  updateDataSource(data) {
+    this.options.dataSource = data;
+  }
+}
+
+// Initialize country autocomplete with smart system
 function initCountryAutocomplete() {
   // Fetch existing countries from the database
-  fetchExistingCountries();
-  
-  // Setup autocomplete for all country inputs
-  document.querySelectorAll('.country-autocomplete').forEach(input => {
-    setupCountryInput(input);
+  fetchExistingCountries().then(() => {
+    // Setup smart autocomplete for all country inputs
+    document.querySelectorAll('.country-autocomplete').forEach(input => {
+      setupSmartCountryInput(input);
+    });
   });
 }
 
 function fetchExistingCountries() {
-  fetch('/api/customers/countries')
+  return fetch('/api/customers/countries')
     .then(response => response.json())
     .then(countries => {
       cachedCountries = countries;
-      updateAllCountryDatalists();
+      return countries;
     })
     .catch(error => {
       console.log('Using default countries list');
       cachedCountries = [];
+      return [];
     });
 }
 
-function updateAllCountryDatalists() {
-  // Combine existing countries with defaults, remove duplicates
+function setupSmartCountryInput(input) {
+  // Combine cached and default countries
   const allCountries = [...new Set([...cachedCountries, ...defaultCountries])].sort();
   
-  document.querySelectorAll('datalist[id^="country-suggestions"]').forEach(datalist => {
-    datalist.innerHTML = allCountries.map(country => 
-      `<option value="${country}">`
-    ).join('');
-  });
-}
-
-function setupCountryInput(input) {
-  // Add input event for real-time filtering/suggestions
-  input.addEventListener('input', function(e) {
-    const value = e.target.value.toLowerCase();
-    const datalistId = input.getAttribute('list');
-    const datalist = document.getElementById(datalistId);
-    
-    if (!datalist) return;
-    
-    // Combine and filter countries based on input
-    const allCountries = [...new Set([...cachedCountries, ...defaultCountries])].sort();
-    const filtered = allCountries.filter(c => c.toLowerCase().includes(value));
-    
-    datalist.innerHTML = filtered.map(country => 
-      `<option value="${country}">`
-    ).join('');
+  // Create smart autocomplete instance
+  const autocomplete = new SmartAutocomplete(input, {
+    dataSource: allCountries,
+    minChars: 1,
+    maxResults: 10,
+    placeholder: 'Start typing country...',
+    emptyMessage: 'No countries found',
+    highlightMatches: true,
+    showRecentFirst: true
   });
   
-  // Tab key to accept first suggestion
-  input.addEventListener('keydown', function(e) {
-    if (e.key === 'Tab' && input.value) {
-      const value = input.value.toLowerCase();
-      const allCountries = [...new Set([...cachedCountries, ...defaultCountries])];
-      const match = allCountries.find(c => c.toLowerCase().startsWith(value));
-      
-      if (match && match.toLowerCase() !== value) {
-        e.preventDefault();
-        input.value = match;
-      }
+  // Store reference for later updates
+  input._smartAutocomplete = autocomplete;
+}
+
+// Legacy function compatibility - now does nothing as we use smart autocomplete
+function updateAllCountryDatalists() {
+  // Update all smart autocomplete instances with new data
+  const allCountries = [...new Set([...cachedCountries, ...defaultCountries])].sort();
+  document.querySelectorAll('.country-autocomplete').forEach(input => {
+    if (input._smartAutocomplete) {
+      input._smartAutocomplete.updateDataSource(allCountries);
     }
   });
 }

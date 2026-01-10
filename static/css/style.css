@@ -211,15 +211,16 @@ a:hover {
   display: flex;
   align-items: center;
   padding: 0 var(--space-6);
-  z-index: 100;
+  z-index: var(--z-sticky);
   box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(8px);
-  /* Let theme system control the actual background (light/dark/visual themes) */
-  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  /* Solid background to prevent content showing through */
+  background: var(--color-bg);
 }
 
 [data-theme="dark"] .navbar {
-  background: var(--glass-bg);
+  background: var(--color-bg);
 }
 
 .navbar-brand {
@@ -332,6 +333,15 @@ a:hover {
   flex: 1;
   padding: var(--space-8);
   max-width: 1400px;
+  position: relative;
+  z-index: 1;
+}
+
+/* App container - ensures proper stacking context */
+.app-container {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
 }
 
 /* ==================== Components ==================== */
@@ -2051,4 +2061,137 @@ tr:hover {
 /* Loading Skeleton already exists, but enhance it */
 .skeleton-pulse {
   animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ==================== Smart Autocomplete ==================== */
+.smart-autocomplete-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.smart-autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: var(--z-dropdown);
+  animation: dropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.smart-autocomplete-header {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.smart-autocomplete-item {
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.smart-autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.smart-autocomplete-item:hover,
+.smart-autocomplete-item.selected {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+
+.smart-autocomplete-item.selected {
+  background: var(--color-primary);
+  color: white;
+}
+
+.smart-autocomplete-item.empty-message {
+  color: var(--color-text-tertiary);
+  cursor: default;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.smart-autocomplete-item.empty-message:hover {
+  background: transparent;
+  color: var(--color-text-tertiary);
+}
+
+.smart-autocomplete-item .item-text {
+  flex: 1;
+}
+
+.smart-autocomplete-item mark {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.smart-autocomplete-item.selected mark {
+  background: rgba(255, 255, 255, 0.3);
+  color: inherit;
+}
+
+.smart-autocomplete-item .recent-indicator {
+  color: var(--color-primary);
+  font-size: 8px;
+  margin-right: var(--space-1);
+}
+
+.smart-autocomplete-item .autocomplete-icon {
+  font-size: var(--font-size-base);
+  opacity: 0.7;
+}
+
+/* Dark mode adjustments for smart autocomplete */
+[data-theme="dark"] .smart-autocomplete-dropdown {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .smart-autocomplete-item:hover,
+[data-theme="dark"] .smart-autocomplete-item.selected {
+  background: var(--color-primary-bg);
+}
+
+[data-theme="dark"] .smart-autocomplete-item.selected {
+  background: var(--color-primary);
+}
+
+[data-theme="dark"] .smart-autocomplete-item mark {
+  background: rgba(255, 170, 0, 0.2);
 }

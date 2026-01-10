@@ -22,3 +22,9 @@ node_modules/
 # Database backups directory
 backups/
 *.db.before_restore
+
+# Data persistence file - DO NOT IGNORE!
+# This file stores all application data and must be committed to the repo
+# so that data persists across deployments
+!subtrack_data.json
+!subtrack_data_backup.json

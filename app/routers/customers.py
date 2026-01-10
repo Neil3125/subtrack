@@ -1,17 +1,18 @@
 """Customer API routes."""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import distinct
 from typing import List, Optional
 from app.database import get_db
 from app.models import Customer, Category, Group
 from app.schemas import CustomerCreate, CustomerUpdate, CustomerResponse
+from app.data_persistence import auto_save
 
 router = APIRouter()
 
 
 @router.post("", response_model=CustomerResponse, status_code=201)
-def create_customer(customer: CustomerCreate, db: Session = Depends(get_db)):
+def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Create a new customer."""
     # Verify category exists
     category = db.query(Category).filter(Category.id == customer.category_id).first()
@@ -28,6 +29,10 @@ def create_customer(customer: CustomerCreate, db: Session = Depends(get_db)):
     db.add(db_customer)
     db.commit()
     db.refresh(db_customer)
+    
+    # Auto-save data to file
+    background_tasks.add_task(auto_save, db)
+    
     return db_customer
 
 
@@ -69,7 +74,7 @@ def get_customer(customer_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{customer_id}", response_model=CustomerResponse)
-def update_customer(customer_id: int, customer: CustomerUpdate, db: Session = Depends(get_db)):
+def update_customer(customer_id: int, customer: CustomerUpdate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Update a customer."""
     db_customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not db_customer:
@@ -81,11 +86,15 @@ def update_customer(customer_id: int, customer: CustomerUpdate, db: Session = De
     
     db.commit()
     db.refresh(db_customer)
+    
+    # Auto-save data to file
+    background_tasks.add_task(auto_save, db)
+    
     return db_customer
 
 
 @router.delete("/{customer_id}", status_code=204)
-def delete_customer(customer_id: int, db: Session = Depends(get_db)):
+def delete_customer(customer_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Delete a customer."""
     db_customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not db_customer:
@@ -93,4 +102,8 @@ def delete_customer(customer_id: int, db: Session = Depends(get_db)):
     
     db.delete(db_customer)
     db.commit()
+    
+    # Auto-save data to file
+    background_tasks.add_task(auto_save, db)
+    
     return None

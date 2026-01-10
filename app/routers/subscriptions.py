@@ -1,16 +1,17 @@
 """Subscription API routes."""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
 from app.models import Subscription, Customer, Category
 from app.schemas import SubscriptionCreate, SubscriptionUpdate, SubscriptionResponse
+from app.data_persistence import auto_save
 
 router = APIRouter()
 
 
 @router.post("", response_model=SubscriptionResponse, status_code=201)
-def create_subscription(subscription: SubscriptionCreate, db: Session = Depends(get_db)):
+def create_subscription(subscription: SubscriptionCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Create a new subscription."""
     # Verify customer exists
     customer = db.query(Customer).filter(Customer.id == subscription.customer_id).first()
@@ -26,6 +27,10 @@ def create_subscription(subscription: SubscriptionCreate, db: Session = Depends(
     db.add(db_subscription)
     db.commit()
     db.refresh(db_subscription)
+    
+    # Auto-save data to file
+    background_tasks.add_task(auto_save, db)
+    
     return db_subscription
 
 
@@ -57,7 +62,7 @@ def get_subscription(subscription_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{subscription_id}", response_model=SubscriptionResponse)
-def update_subscription(subscription_id: int, subscription: SubscriptionUpdate, db: Session = Depends(get_db)):
+def update_subscription(subscription_id: int, subscription: SubscriptionUpdate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Update a subscription."""
     db_subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
     if not db_subscription:
@@ -69,11 +74,15 @@ def update_subscription(subscription_id: int, subscription: SubscriptionUpdate, 
     
     db.commit()
     db.refresh(db_subscription)
+    
+    # Auto-save data to file
+    background_tasks.add_task(auto_save, db)
+    
     return db_subscription
 
 
 @router.delete("/{subscription_id}", status_code=204)
-def delete_subscription(subscription_id: int, db: Session = Depends(get_db)):
+def delete_subscription(subscription_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Delete a subscription."""
     db_subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
     if not db_subscription:
@@ -81,11 +90,15 @@ def delete_subscription(subscription_id: int, db: Session = Depends(get_db)):
     
     db.delete(db_subscription)
     db.commit()
+    
+    # Auto-save data to file
+    background_tasks.add_task(auto_save, db)
+    
     return None
 
 
 @router.post("/{subscription_id}/renew")
-def renew_subscription(subscription_id: int, db: Session = Depends(get_db)):
+def renew_subscription(subscription_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Renew a subscription to the next billing cycle."""
     from datetime import date, timedelta
     from dateutil.relativedelta import relativedelta
@@ -116,6 +129,9 @@ def renew_subscription(subscription_id: int, db: Session = Depends(get_db)):
     
     db.commit()
     db.refresh(db_subscription)
+    
+    # Auto-save data to file
+    background_tasks.add_task(auto_save, db)
     
     return {
         "message": "Subscription renewed",

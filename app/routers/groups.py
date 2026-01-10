@@ -1,16 +1,17 @@
 """Group API routes."""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db
 from app.models import Group, Category
 from app.schemas import GroupCreate, GroupUpdate, GroupResponse
+from app.data_persistence import auto_save
 
 router = APIRouter()
 
 
 @router.post("", response_model=GroupResponse, status_code=201)
-def create_group(group: GroupCreate, db: Session = Depends(get_db)):
+def create_group(group: GroupCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Create a new group."""
     # Verify category exists
     category = db.query(Category).filter(Category.id == group.category_id).first()
@@ -21,6 +22,10 @@ def create_group(group: GroupCreate, db: Session = Depends(get_db)):
     db.add(db_group)
     db.commit()
     db.refresh(db_group)
+    
+    # Auto-save data to file
+    background_tasks.add_task(auto_save, db)
+    
     return db_group
 
 
@@ -43,7 +48,7 @@ def get_group(group_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{group_id}", response_model=GroupResponse)
-def update_group(group_id: int, group: GroupUpdate, db: Session = Depends(get_db)):
+def update_group(group_id: int, group: GroupUpdate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Update a group."""
     db_group = db.query(Group).filter(Group.id == group_id).first()
     if not db_group:
@@ -55,11 +60,15 @@ def update_group(group_id: int, group: GroupUpdate, db: Session = Depends(get_db
     
     db.commit()
     db.refresh(db_group)
+    
+    # Auto-save data to file
+    background_tasks.add_task(auto_save, db)
+    
     return db_group
 
 
 @router.delete("/{group_id}", status_code=204)
-def delete_group(group_id: int, db: Session = Depends(get_db)):
+def delete_group(group_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Delete a group."""
     db_group = db.query(Group).filter(Group.id == group_id).first()
     if not db_group:
@@ -67,4 +76,8 @@ def delete_group(group_id: int, db: Session = Depends(get_db)):
     
     db.delete(db_group)
     db.commit()
+    
+    # Auto-save data to file
+    background_tasks.add_task(auto_save, db)
+    
     return None

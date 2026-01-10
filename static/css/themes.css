@@ -462,21 +462,23 @@ body::after {
 }
 
 /* Navbar / Sidebar glass styling
-   IMPORTANT: do not force light colors with !important.
+   IMPORTANT: Use solid/opaque backgrounds to prevent content scrolling through.
    Use theme variables so light/dark/visual themes all render correctly. */
 .navbar {
-  background: var(--glass-bg);
+  background: var(--color-bg) !important;
   border-bottom: 1px solid var(--glass-border);
   backdrop-filter: blur(12px) saturate(160%);
   -webkit-backdrop-filter: blur(12px) saturate(160%);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
+  z-index: var(--z-sticky);
 }
 
 .sidebar {
-  background: var(--glass-bg);
+  background: var(--color-bg);
   border-right: 1px solid var(--glass-border);
   backdrop-filter: blur(12px) saturate(160%);
   -webkit-backdrop-filter: blur(12px) saturate(160%);
+  z-index: calc(var(--z-sticky) - 1);
 }
 
 /* Badges with gradients */
@@ -633,9 +635,9 @@ body::after {
   opacity: 0.5;
 }
 
-/* Enhanced navbar for dark mode */
+/* Enhanced navbar for dark mode - use solid background to prevent content overlap */
 [data-theme="dark"] .navbar {
-  background: rgba(20, 20, 25, 0.9);
+  background: var(--color-bg) !important;
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
