@@ -228,7 +228,7 @@ async def subscription_health(subscription_id: int, db: Session = Depends(get_db
     return health
 
 
-# ==================== NEW SMART AI FEATURES (OpenRouter) ====================
+# ==================== SMART AI FEATURES ====================
 
 class ExtractURLRequest(BaseModel):
     """Request schema for URL extraction."""
@@ -676,15 +676,11 @@ async def clear_ai_expired_cache(db: Session = Depends(get_db)):
 async def test_ai_direct():
     """Direct test of AI API - bypasses cache and shows real usage."""
     from app.config import settings
-    from app.ai.openrouter_provider import OpenRouterProvider
+    from app.ai.provider import get_ai_provider
     import time
     
-    # Force use OpenRouter with settings from .env (ignore any cached providers)
-    provider = OpenRouterProvider(
-        api_key=settings.subtrack_ai_api_key or "",
-        model=settings.subtrack_ai_model,
-        base_url=settings.subtrack_ai_base_url
-    )
+    # Use the configured AI provider from settings
+    provider = get_ai_provider()
     
     result = {
         "provider_type": type(provider).__name__,
@@ -693,7 +689,7 @@ async def test_ai_direct():
     }
     
     if hasattr(provider, 'api_key'):
-        result["config"]["api_key"] = provider.api_key[:20] + "..."
+        result["config"]["api_key"] = provider.api_key[:20] + "..." if provider.api_key else "Not set"
     if hasattr(provider, 'model'):
         result["config"]["model"] = provider.model
     if hasattr(provider, 'base_url'):
@@ -715,7 +711,7 @@ async def test_ai_direct():
         result["status"] = "success"
         result["response"] = response
         result["time_taken"] = f"{end - start:.2f}s"
-        result["message"] = "✅ AI API is working! This call used your OpenRouter quota."
+        result["message"] = f"✅ AI API is working! Using {settings.subtrack_ai_provider} provider."
         
     except Exception as e:
         result["status"] = "error"

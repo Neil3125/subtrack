@@ -34,18 +34,17 @@ class Settings(BaseSettings):
     # Database - automatically uses Railway PostgreSQL if available
     database_url: str = get_database_url()
     
-    # AI Provider (optional)
-    # Supported providers: "github_models" (free), "anthropic" (Claude - cheap), "groq", "huggingface", "openrouter", "gemini", "openai"
-    subtrack_ai_provider: str = "github_models"
-    subtrack_ai_api_key: Optional[str] = None
-    subtrack_ai_model: str = "gpt-4o"
-    subtrack_ai_base_url: str = "https://models.github.ai/inference"
+    # AI Provider - Google Gemini (free tier available)
+    subtrack_ai_provider: str = "gemini"
+    subtrack_ai_api_key: Optional[str] = "AIzaSyCNiWJ2ZPqmGcQRR9UAXeyTPRseOm00QSM"
+    subtrack_ai_model: str = "gemma-3-27b-it"
+    subtrack_ai_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     
     # AI Cache Settings
     ai_cache_ttl: int = 86400  # 24 hours in seconds
     ai_request_timeout: int = 30  # seconds
     ai_max_retries: int = 2
-    ai_daily_limit: int = 50  # OpenRouter free tier daily limit
+    ai_daily_limit: int = 1000  # Daily request limit (GitHub Models: unlimited)
     
     # App
     debug: bool = True

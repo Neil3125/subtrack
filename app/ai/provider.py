@@ -1,10 +1,23 @@
-"""AI provider interface and implementations."""
+"""AI provider interface - Powered by Google Gemini."""
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from app.config import settings
-import httpx
-import json
-import os
+
+
+# Generic AI error classes
+class RateLimitError(Exception):
+    """Raised when API returns 429 (rate limited)."""
+    pass
+
+
+class ServiceUnavailableError(Exception):
+    """Raised when API returns 503 (service down)."""
+    pass
+
+
+class AIProviderError(Exception):
+    """General AI provider error."""
+    pass
 
 
 class AIProvider(ABC):
@@ -27,103 +40,6 @@ class AIProvider(ABC):
         pass
 
 
-class OpenAIProvider(AIProvider):
-    """OpenAI-compatible API provider."""
-    
-    def __init__(self, api_key: str, model: str, base_url: str):
-        self.api_key = api_key
-        self.model = model
-        self.base_url = base_url.rstrip('/')
-        
-    async def generate_completion(
-        self, 
-        prompt: str, 
-        system_prompt: Optional[str] = None,
-        temperature: float = 0.7,
-        max_tokens: int = 500
-    ) -> str:
-        """Generate a text completion using OpenAI API."""
-        messages = []
-        if system_prompt:
-            messages.append({"role": "system", "content": system_prompt})
-        messages.append({"role": "user", "content": prompt})
-        
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        
-        data = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens
-        }
-        
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=headers,
-                    json=data
-                )
-                response.raise_for_status()
-                result = response.json()
-                return result["choices"][0]["message"]["content"]
-        except Exception as e:
-            raise Exception(f"AI API error: {str(e)}")
-    
-    def is_available(self) -> bool:
-        """Check if the provider is configured."""
-        return bool(self.api_key)
-
-
-class GeminiProvider(AIProvider):
-    """Google Gemini AI provider."""
-    
-    def __init__(self, api_key: str, model: str = "gemini-pro"):
-        self.api_key = api_key
-        self.model = model
-        
-    async def generate_completion(
-        self, 
-        prompt: str, 
-        system_prompt: Optional[str] = None,
-        temperature: float = 0.7,
-        max_tokens: int = 500
-    ) -> str:
-        """Generate a text completion using Gemini API."""
-        try:
-            import google.generativeai as genai
-            genai.configure(api_key=self.api_key)
-            
-            model = genai.GenerativeModel(self.model)
-            
-            # Combine system prompt and user prompt
-            full_prompt = prompt
-            if system_prompt:
-                full_prompt = f"{system_prompt}\n\n{prompt}"
-            
-            # Generate response
-            response = model.generate_content(
-                full_prompt,
-                generation_config={
-                    "temperature": temperature,
-                    "max_output_tokens": max_tokens,
-                }
-            )
-            
-            return response.text
-        except ImportError:
-            raise Exception("google-generativeai package not installed. Run: pip install google-generativeai")
-        except Exception as e:
-            raise Exception(f"Gemini API error: {str(e)}")
-    
-    def is_available(self) -> bool:
-        """Check if the provider is configured."""
-        return bool(self.api_key)
-
-
 class DummyAIProvider(AIProvider):
     """Dummy provider for when AI is not configured."""
     
@@ -143,62 +59,12 @@ class DummyAIProvider(AIProvider):
 
 
 def get_ai_provider() -> AIProvider:
-    """Get the configured AI provider."""
+    """Get the configured AI provider - uses Google Gemini exclusively."""
     if settings.subtrack_ai_api_key:
-        provider_type = settings.subtrack_ai_provider.lower()
-        
-        if provider_type == "anthropic":
-            from app.ai.anthropic_provider import AnthropicProvider
-            return AnthropicProvider(
-                api_key=settings.subtrack_ai_api_key,
-                model=settings.subtrack_ai_model,
-                base_url=settings.subtrack_ai_base_url
-            )
-        elif provider_type == "groq":
-            from app.ai.groq_provider import GroqProvider
-            return GroqProvider(
-                api_key=settings.subtrack_ai_api_key,
-                model=settings.subtrack_ai_model,
-                base_url=settings.subtrack_ai_base_url
-            )
-        elif provider_type == "huggingface":
-            from app.ai.huggingface_provider import HuggingFaceProvider
-            return HuggingFaceProvider(
-                api_key=settings.subtrack_ai_api_key,
-                model=settings.subtrack_ai_model,
-                base_url=settings.subtrack_ai_base_url
-            )
-        elif provider_type == "openrouter":
-            from app.ai.openrouter_provider import OpenRouterProvider
-            return OpenRouterProvider(
-                api_key=settings.subtrack_ai_api_key,
-                model=settings.subtrack_ai_model,
-                base_url=settings.subtrack_ai_base_url
-            )
-        elif provider_type == "gemini":
-            return GeminiProvider(
-                api_key=settings.subtrack_ai_api_key,
-                model=settings.subtrack_ai_model
-            )
-        elif provider_type == "openai":
-            return OpenAIProvider(
-                api_key=settings.subtrack_ai_api_key,
-                model=settings.subtrack_ai_model,
-                base_url=settings.subtrack_ai_base_url
-            )
-        elif provider_type == "github_models":
-            from app.ai.github_models_provider import GitHubModelsProvider
-            return GitHubModelsProvider(
-                api_key=settings.subtrack_ai_api_key,
-                model=settings.subtrack_ai_model,
-                base_url=settings.subtrack_ai_base_url
-            )
-        else:
-            # Default to GitHub Models if provider not recognized
-            from app.ai.github_models_provider import GitHubModelsProvider
-            return GitHubModelsProvider(
-                api_key=settings.subtrack_ai_api_key,
-                model=settings.subtrack_ai_model,
-                base_url=settings.subtrack_ai_base_url
-            )
+        from app.ai.gemini_provider import GeminiProvider
+        return GeminiProvider(
+            api_key=settings.subtrack_ai_api_key,
+            model=settings.subtrack_ai_model,
+            base_url=settings.subtrack_ai_base_url
+        )
     return DummyAIProvider()

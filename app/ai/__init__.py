@@ -1,12 +1,13 @@
-"""AI provider and intelligence services."""
-from app.ai.provider import AIProvider, get_ai_provider
-from app.ai.smart_features import SmartAIFeatures
-from app.ai.openrouter_provider import (
-    OpenRouterProvider, 
+"""AI provider and intelligence services - Powered by Google Gemini."""
+from app.ai.provider import (
+    AIProvider, 
+    get_ai_provider,
     RateLimitError, 
     ServiceUnavailableError, 
     AIProviderError
 )
+from app.ai.gemini_provider import GeminiProvider, parse_json_from_response
+from app.ai.smart_features import SmartAIFeatures
 from app.ai.cache import (
     generate_cache_key,
     get_cached_response,
@@ -19,11 +20,12 @@ from app.ai.cache import (
 __all__ = [
     "AIProvider", 
     "get_ai_provider",
+    "GeminiProvider",
     "SmartAIFeatures",
-    "OpenRouterProvider",
     "RateLimitError",
     "ServiceUnavailableError",
     "AIProviderError",
+    "parse_json_from_response",
     "generate_cache_key",
     "get_cached_response",
     "store_cached_response",

@@ -1,5 +1,5 @@
 """
-Smart AI Features for SubTrack using OpenRouter.
+Smart AI Features for SubTrack.
 
 This module provides 4 AI-powered features:
 1. Smart Link Intelligence - Extract subscription details from URLs
@@ -7,7 +7,7 @@ This module provides 4 AI-powered features:
 3. Renewal Forecaster - Predict upcoming bill totals
 4. Auto-Categorizer - Suggest categories for subscriptions
 
-All features include caching to save API quota (50 requests/day on free tier).
+All features include caching to optimize API usage.
 """
 import json
 import re
@@ -18,9 +18,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.models import Subscription, Customer, Category, Group
-from app.ai.provider import get_ai_provider
+from app.ai.provider import get_ai_provider, RateLimitError, ServiceUnavailableError, AIProviderError
 from app.ai.cache import generate_cache_key, get_cached_response, store_cached_response
-from app.ai.openrouter_provider import RateLimitError, ServiceUnavailableError, AIProviderError
 
 logger = logging.getLogger(__name__)
 
