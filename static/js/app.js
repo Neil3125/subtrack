@@ -60,6 +60,12 @@ function openModal(modalId) {
     return;
   }
   
+  // Clear search input to prevent autofill issues
+  const searchInput = document.getElementById('global-search-input');
+  if (searchInput && searchInput.value === 'admin') {
+    searchInput.value = '';
+  }
+  
   const modal = document.getElementById(modalId);
   if (modal) {
     // Prevent page layout shift when locking scroll (scrollbar disappears)

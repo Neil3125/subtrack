@@ -61,16 +61,20 @@
         
         <div class="navbar-search">
             <div class="search-wrapper">
+                <!-- Hidden fields to trap browser autofill -->
+                <input type="text" name="trap_username" style="display:none !important; position:absolute; left:-9999px;" tabindex="-1" autocomplete="username">
+                <input type="password" name="trap_password" style="display:none !important; position:absolute; left:-9999px;" tabindex="-1" autocomplete="current-password">
                 <input 
                     type="text" 
                     class="search-input" 
+                    id="global-search-input"
                     placeholder="Search subscriptions, customers, vendors..."
                     hx-get="/search"
                     hx-trigger="keyup changed delay:300ms"
                     hx-target="#search-results"
                     hx-swap="innerHTML"
-                    name="search_query"
-                    autocomplete="new-password"
+                    name="search_query_field"
+                    autocomplete="off"
                     autocorrect="off"
                     autocapitalize="off"
                     spellcheck="false"
@@ -79,6 +83,8 @@
                     data-1p-ignore="true"
                     aria-label="Search"
                     role="searchbox"
+                    readonly
+                    onfocus="this.removeAttribute('readonly');"
                 >
                 <span class="search-icon">🔍</span>
             </div>
