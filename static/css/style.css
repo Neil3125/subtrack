@@ -647,6 +647,14 @@ a:hover {
   box-shadow: var(--shadow-sm);
 }
 
+/* Table container inside modal needs proper scroll containment */
+.modal .table-container {
+  overflow-y: auto;
+  max-height: 100%;
+  border: none;
+  box-shadow: none;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -658,6 +666,20 @@ a:hover {
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+/* Table headers inside modals need special handling */
+.modal .table thead {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--color-bg-elevated);
+}
+
+.modal .table thead th {
+  background: var(--color-bg-elevated);
+  position: sticky;
+  top: 0;
 }
 
 .table th {
