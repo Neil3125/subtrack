@@ -11,6 +11,10 @@ alembic upgrade head
 echo "🔐 Initializing authentication..."
 python init_auth.py
 
+# Seed database with sample data (only if empty)
+echo "🌱 Seeding database with sample data..."
+python seed_data.py
+
 # Start the application
 echo "✅ Starting application..."
 exec uvicorn app.main:app --host 0.0.0.0 --port $PORT
