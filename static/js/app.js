@@ -266,15 +266,71 @@ document.addEventListener('DOMContentLoaded', function() {
 // ==================== Smart Autocomplete System ====================
 let cachedCountries = [];
 const defaultCountries = [
-  'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Australia', 'Austria',
-  'Bangladesh', 'Belgium', 'Brazil', 'Canada', 'Chile', 'China', 'Colombia',
-  'Czech Republic', 'Denmark', 'Egypt', 'Finland', 'France', 'Germany', 'Greece',
-  'Hong Kong', 'Hungary', 'India', 'Indonesia', 'Ireland', 'Israel', 'Italy',
-  'Jamaica', 'Japan', 'Kenya', 'Malaysia', 'Mexico', 'Netherlands', 'New Zealand',
-  'Nigeria', 'Norway', 'Pakistan', 'Peru', 'Philippines', 'Poland', 'Portugal',
-  'Romania', 'Russia', 'Saudi Arabia', 'Singapore', 'South Africa', 'South Korea',
-  'Spain', 'Sweden', 'Switzerland', 'Taiwan', 'Thailand', 'Turkey', 'UAE',
-  'Ukraine', 'United Kingdom', 'United States', 'Vietnam'
+  // A
+  'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda',
+  'Argentina', 'Armenia', 'Aruba', 'Australia', 'Austria', 'Azerbaijan',
+  // B
+  'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize',
+  'Benin', 'Bermuda', 'Bhutan', 'Bolivia', 'Bonaire', 'Bosnia and Herzegovina',
+  'Botswana', 'Brazil', 'British Virgin Islands', 'Brunei', 'Bulgaria', 'Burkina Faso',
+  // C
+  'Cambodia', 'Cameroon', 'Canada', 'Cape Verde', 'Cayman Islands', 'Central African Republic',
+  'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica', 'Croatia',
+  'Cuba', 'Curaçao', 'Curacao', 'Cyprus', 'Czech Republic',
+  // D
+  'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic',
+  // E
+  'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia',
+  // F
+  'Fiji', 'Finland', 'France', 'French Guiana', 'French Polynesia',
+  // G
+  'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Gibraltar', 'Greece', 'Greenland',
+  'Grenada', 'Guadeloupe', 'Guam', 'Guatemala', 'Guernsey', 'Guinea', 'Guyana',
+  // H
+  'Haiti', 'Honduras', 'Hong Kong', 'Hungary',
+  // I
+  'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Isle of Man', 'Israel', 'Italy', 'Ivory Coast',
+  // J
+  'Jamaica', 'Japan', 'Jersey', 'Jordan',
+  // K
+  'Kazakhstan', 'Kenya', 'Kiribati', 'Kosovo', 'Kuwait', 'Kyrgyzstan',
+  // L
+  'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein',
+  'Lithuania', 'Luxembourg',
+  // M
+  'Macau', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta',
+  'Marshall Islands', 'Martinique', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia',
+  'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Montserrat', 'Morocco', 'Mozambique', 'Myanmar',
+  // N
+  'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Caledonia', 'New Zealand',
+  'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia', 'Norway',
+  // O
+  'Oman',
+  // P
+  'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay',
+  'Peru', 'Philippines', 'Poland', 'Portugal', 'Puerto Rico',
+  // Q
+  'Qatar',
+  // R
+  'Romania', 'Russia', 'Rwanda',
+  // S
+  'Saint Kitts and Nevis', 'Saint Lucia', 'St. Lucia', 'Saint Martin', 'Saint Vincent and the Grenadines',
+  'Samoa', 'San Marino', 'São Tomé and Príncipe', 'Saudi Arabia', 'Senegal', 'Serbia',
+  'Seychelles', 'Sierra Leone', 'Singapore', 'Sint Maarten', 'Slovakia', 'Slovenia',
+  'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain',
+  'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria',
+  // T
+  'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga',
+  'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Turks and Caicos Islands', 'Tuvalu',
+  // U
+  'Uganda', 'Ukraine', 'United Arab Emirates', 'UAE', 'United Kingdom', 'UK', 'England',
+  'Scotland', 'Wales', 'Northern Ireland', 'United States', 'USA', 'Uruguay', 'US Virgin Islands', 'Uzbekistan',
+  // V
+  'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam',
+  // Y
+  'Yemen',
+  // Z
+  'Zambia', 'Zimbabwe'
 ];
 
 // Smart Autocomplete Class

@@ -577,3 +577,100 @@ async def export_country_revenue_excel(db: Session = Depends(get_db)):
             media_type="text/csv",
             headers={"Content-Disposition": f"attachment; filename=revenue_by_country_{date.today().isoformat()}.csv"}
         )
+
+
+# ==================== Data Persistence Endpoints ====================
+
+@router.get("/export/data-backup")
+async def export_data_backup(db: Session = Depends(get_db)):
+    """
+    Export all data as JSON for backup purposes.
+    This can be used to manually backup your data.
+    """
+    from app.data_persistence import export_all_data
+    import json
+    
+    data = export_all_data(db)
+    json_str = json.dumps(data, indent=2, default=str)
+    
+    return Response(
+        content=json_str,
+        media_type="application/json",
+        headers={"Content-Disposition": f"attachment; filename=subtrack_backup_{date.today().isoformat()}.json"}
+    )
+
+
+@router.get("/export/data-string")
+async def export_data_string(db: Session = Depends(get_db)):
+    """
+    Export all data as a base64-encoded string.
+    
+    IMPORTANT: Copy this string and set it as the SUBTRACK_DATA environment 
+    variable in your Railway/Render/Heroku deployment settings.
+    
+    This ensures your data persists across deployments!
+    """
+    from app.data_persistence import get_data_as_base64, export_all_data
+    
+    data = export_all_data(db)
+    base64_string = get_data_as_base64(db)
+    
+    return {
+        "message": "Copy the 'data_string' value below and set it as SUBTRACK_DATA environment variable in your deployment platform",
+        "instructions": [
+            "1. Copy the entire 'data_string' value (without quotes)",
+            "2. Go to your Railway/Render/Heroku dashboard",
+            "3. Find Environment Variables settings",
+            "4. Create or update SUBTRACK_DATA with this value",
+            "5. Redeploy your application",
+            "Your data will now persist across deployments!"
+        ],
+        "data_stats": {
+            "categories": len(data.get("categories", [])),
+            "groups": len(data.get("groups", [])),
+            "customers": len(data.get("customers", [])),
+            "subscriptions": len(data.get("subscriptions", [])),
+            "exported_at": data.get("exported_at")
+        },
+        "data_string": base64_string
+    }
+
+
+@router.post("/import/data-string")
+async def import_data_string(payload: dict, db: Session = Depends(get_db)):
+    """
+    Import data from a base64-encoded string.
+    
+    Send a POST request with: {"data_string": "your_base64_string_here"}
+    
+    WARNING: This will add data to your database. Existing records with 
+    the same IDs will NOT be overwritten.
+    """
+    import base64
+    import json
+    from app.data_persistence import import_data_to_db
+    
+    data_string = payload.get("data_string")
+    if not data_string:
+        return {"error": "Missing 'data_string' in request body"}
+    
+    try:
+        json_str = base64.b64decode(data_string).decode('utf-8')
+        data = json.loads(json_str)
+        
+        success = import_data_to_db(db, data)
+        
+        if success:
+            return {
+                "message": "Data imported successfully",
+                "imported": {
+                    "categories": len(data.get("categories", [])),
+                    "groups": len(data.get("groups", [])),
+                    "customers": len(data.get("customers", [])),
+                    "subscriptions": len(data.get("subscriptions", []))
+                }
+            }
+        else:
+            return {"error": "Import failed - check server logs for details"}
+    except Exception as e:
+        return {"error": f"Import failed: {str(e)}"}

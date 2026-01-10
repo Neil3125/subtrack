@@ -4,12 +4,16 @@ Automatic Data Persistence Module for SubTrack.
 This module ensures that data survives code deployments by:
 1. Auto-exporting data to a JSON file after any write operation
 2. Auto-importing data from JSON on startup if the database is empty
+3. Supporting environment variable storage for platforms with ephemeral filesystems
 
-The JSON file (subtrack_data.json) should be committed to the repository
-so that data persists across deployments on platforms like Railway, Render, etc.
+For Railway/Render/Heroku deployments:
+- Set SUBTRACK_DATA environment variable with base64-encoded JSON data
+- The app will auto-restore from this on startup
+- Use the /api/export/data-string endpoint to get the current data string
 """
 import json
 import os
+import base64
 import threading
 from datetime import datetime, date
 from typing import Optional
@@ -19,6 +23,9 @@ from sqlalchemy.orm import Session
 # File for persistent data storage
 DATA_FILE = "subtrack_data.json"
 BACKUP_DATA_FILE = "subtrack_data_backup.json"
+
+# Environment variable for data persistence (base64 encoded JSON)
+DATA_ENV_VAR = "SUBTRACK_DATA"
 
 # Lock to prevent concurrent writes
 _write_lock = threading.Lock()
@@ -201,6 +208,23 @@ def save_data_to_file(data: dict, filename: str = DATA_FILE) -> bool:
             return False
 
 
+def load_data_from_env() -> Optional[dict]:
+    """Load data from environment variable (base64 encoded JSON)."""
+    env_data = os.environ.get(DATA_ENV_VAR)
+    if not env_data:
+        return None
+    
+    try:
+        # Decode base64 and parse JSON
+        json_str = base64.b64decode(env_data).decode('utf-8')
+        data = json.loads(json_str)
+        print(f"[DataPersistence] Loaded data from environment variable")
+        return data
+    except Exception as e:
+        print(f"[DataPersistence] Error loading data from env var: {e}")
+        return None
+
+
 def load_data_from_file(filename: str = DATA_FILE) -> Optional[dict]:
     """Load data dictionary from JSON file."""
     if not os.path.exists(filename):
@@ -219,6 +243,34 @@ def load_data_from_file(filename: str = DATA_FILE) -> Optional[dict]:
             except Exception:
                 pass
         return None
+
+
+def load_data() -> Optional[dict]:
+    """
+    Load data from the best available source.
+    Priority: 1) Environment variable, 2) JSON file, 3) Backup file
+    """
+    # First try environment variable (for Railway/Render deployments)
+    data = load_data_from_env()
+    if data:
+        return data
+    
+    # Then try JSON file
+    data = load_data_from_file()
+    if data:
+        return data
+    
+    return None
+
+
+def get_data_as_base64(db: Session) -> str:
+    """
+    Export current data as base64 string for environment variable storage.
+    Use this to get the string to set as SUBTRACK_DATA env var.
+    """
+    data = export_all_data(db)
+    json_str = json.dumps(data, default=datetime_handler)
+    return base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
 
 
 def import_data_to_db(db: Session, data: dict) -> bool:
@@ -364,7 +416,8 @@ def auto_save(db: Session):
 
 def check_and_restore_data(db: Session) -> bool:
     """
-    Check if database is empty and restore from JSON file if available.
+    Check if database is empty and restore from saved data if available.
+    Checks environment variable first, then JSON file.
     Call this on application startup.
     Returns True if data was restored, False otherwise.
     """
@@ -381,16 +434,16 @@ def check_and_restore_data(db: Session) -> bool:
         print(f"[DataPersistence] Error checking database: {e}")
         return False
     
-    # Database is empty, try to restore from file
-    data = load_data_from_file()
+    # Database is empty, try to restore from env var or file
+    data = load_data()
     
     if data is None:
-        print("[DataPersistence] No saved data file found")
+        print("[DataPersistence] No saved data found (checked env var and file)")
         return False
     
     # Check if there's actual data to restore
     if not data.get("categories") and not data.get("customers") and not data.get("subscriptions"):
-        print("[DataPersistence] Saved data file is empty, skipping restore")
+        print("[DataPersistence] Saved data is empty, skipping restore")
         return False
     
     print("[DataPersistence] Database is empty, restoring from saved data...")

@@ -216,6 +216,75 @@
             </div>
         </div>
 
+        <!-- Cloud Backup (Data Persistence) -->
+        <div class="card card-hover" style="border: 2px solid var(--color-warning); background: var(--color-warning-bg);">
+            <div class="card-header">
+                <h2 class="card-title">☁️ Cloud Backup (IMPORTANT)</h2>
+            </div>
+            <div class="card-body">
+                <div class="mb-4" style="background: var(--color-bg); padding: 16px; border-radius: 8px; border: 1px solid var(--color-border);">
+                    <div class="font-medium mb-2">⚠️ Data Persistence for Deployments</div>
+                    <div class="text-sm text-secondary mb-3">
+                        If you're using Railway, Render, or Heroku, your data may be lost when you push new code.
+                        <strong>Use the button below to generate a backup string</strong>, then set it as the 
+                        <code style="background: var(--color-bg-tertiary); padding: 2px 6px; border-radius: 4px;">SUBTRACK_DATA</code> 
+                        environment variable in your deployment platform.
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mb-4">
+                    <button class="btn btn-primary" onclick="generateBackupString()">
+                        🔐 Generate Backup String
+                    </button>
+                    <button class="btn btn-secondary" onclick="downloadBackupFile()">
+                        💾 Download JSON Backup
+                    </button>
+                </div>
+
+                <div id="backup-string-container" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Backup String (copy this entire value)</label>
+                        <textarea id="backup-string-output" class="form-input" rows="4" readonly 
+                            style="font-family: monospace; font-size: 12px; word-break: break-all;"></textarea>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="btn btn-success" onclick="copyBackupString()">
+                            📋 Copy to Clipboard
+                        </button>
+                    </div>
+                    <div class="text-sm text-secondary mt-3">
+                        <strong>Instructions:</strong><br>
+                        1. Copy the string above<br>
+                        2. Go to Railway/Render/Heroku dashboard → Environment Variables<br>
+                        3. Create variable: <code>SUBTRACK_DATA</code> = (paste the string)<br>
+                        4. Redeploy your app - data will auto-restore!
+                    </div>
+                </div>
+
+                <div id="backup-stats" class="mt-4" style="display: none;">
+                    <div class="text-sm font-medium mb-2">Backup contains:</div>
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                        <div style="background: var(--color-bg); padding: 8px; border-radius: 6px;">
+                            <div class="text-lg font-bold" id="backup-categories">0</div>
+                            <div class="text-xs text-secondary">Categories</div>
+                        </div>
+                        <div style="background: var(--color-bg); padding: 8px; border-radius: 6px;">
+                            <div class="text-lg font-bold" id="backup-customers">0</div>
+                            <div class="text-xs text-secondary">Customers</div>
+                        </div>
+                        <div style="background: var(--color-bg); padding: 8px; border-radius: 6px;">
+                            <div class="text-lg font-bold" id="backup-subscriptions">0</div>
+                            <div class="text-xs text-secondary">Subscriptions</div>
+                        </div>
+                        <div style="background: var(--color-bg); padding: 8px; border-radius: 6px;">
+                            <div class="text-lg font-bold" id="backup-groups">0</div>
+                            <div class="text-xs text-secondary">Groups</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- System Info -->
         <div class="card">
             <div class="card-header">
@@ -458,6 +527,69 @@ function resetSettings() {
     if (confirm('Reset all settings to default? This cannot be undone.')) {
         localStorage.removeItem('subtrack_settings');
         location.reload();
+    }
+}
+
+// Cloud Backup Functions
+async function generateBackupString() {
+    try {
+        showToast('Generating backup...', 'info');
+        const response = await fetch('/api/export/data-string');
+        const data = await response.json();
+        
+        if (data.data_string) {
+            document.getElementById('backup-string-output').value = data.data_string;
+            document.getElementById('backup-string-container').style.display = 'block';
+            document.getElementById('backup-stats').style.display = 'block';
+            
+            // Update stats
+            document.getElementById('backup-categories').textContent = data.data_stats.categories;
+            document.getElementById('backup-customers').textContent = data.data_stats.customers;
+            document.getElementById('backup-subscriptions').textContent = data.data_stats.subscriptions;
+            document.getElementById('backup-groups').textContent = data.data_stats.groups;
+            
+            showToast('Backup string generated! Copy it to your deployment settings.', 'success');
+        } else {
+            showToast('Failed to generate backup', 'error');
+        }
+    } catch (error) {
+        console.error('Backup error:', error);
+        showToast('Error generating backup', 'error');
+    }
+}
+
+async function copyBackupString() {
+    const textarea = document.getElementById('backup-string-output');
+    try {
+        await navigator.clipboard.writeText(textarea.value);
+        showToast('Backup string copied to clipboard!', 'success');
+    } catch (error) {
+        // Fallback for older browsers
+        textarea.select();
+        document.execCommand('copy');
+        showToast('Backup string copied!', 'success');
+    }
+}
+
+async function downloadBackupFile() {
+    try {
+        showToast('Preparing download...', 'info');
+        const response = await fetch('/api/export/data-backup');
+        const blob = await response.blob();
+        
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `subtrack_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        showToast('Backup file downloaded!', 'success');
+    } catch (error) {
+        console.error('Download error:', error);
+        showToast('Error downloading backup', 'error');
     }
 }
 </script>
