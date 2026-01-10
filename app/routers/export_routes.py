@@ -25,7 +25,7 @@ async def export_subscriptions_excel(db: Session = Depends(get_db)):
         
         # Headers
         headers = ["ID", "Vendor", "Plan", "Cost", "Currency", "Billing Cycle", "Status", 
-                   "Customer", "Category", "Country", "Next Renewal", "Notes"]
+                   "Customer", "Customer Email", "Customer Country", "Category", "Subscription Country", "Next Renewal", "Notes"]
         ws.append(headers)
         
         # Style headers
@@ -48,6 +48,8 @@ async def export_subscriptions_excel(db: Session = Depends(get_db)):
                 sub.billing_cycle.value,
                 sub.status.value,
                 sub.customer.name if sub.customer else "",
+                sub.customer.email if sub.customer and sub.customer.email else "",
+                sub.customer.country if sub.customer and sub.customer.country else "",
                 sub.category.name if sub.category else "",
                 sub.country or "",
                 sub.next_renewal_date.isoformat() if sub.next_renewal_date else "",
@@ -90,7 +92,7 @@ async def export_subscriptions_csv(db: Session = Depends(get_db)):
     
     # Headers
     writer.writerow(["ID", "Vendor", "Plan", "Cost", "Currency", "Billing Cycle", "Status", 
-                     "Customer", "Category", "Country", "Next Renewal", "Notes"])
+                     "Customer", "Customer Email", "Customer Country", "Category", "Subscription Country", "Next Renewal", "Notes"])
     
     # Data
     subscriptions = db.query(Subscription).all()
@@ -104,6 +106,8 @@ async def export_subscriptions_csv(db: Session = Depends(get_db)):
             sub.billing_cycle.value,
             sub.status.value,
             sub.customer.name if sub.customer else "",
+            sub.customer.email if sub.customer and sub.customer.email else "",
+            sub.customer.country if sub.customer and sub.customer.country else "",
             sub.category.name if sub.category else "",
             sub.country or "",
             sub.next_renewal_date.isoformat() if sub.next_renewal_date else "",
@@ -242,8 +246,8 @@ async def export_outstanding_excel(db: Session = Depends(get_db)):
         ws_overdue = wb.active
         ws_overdue.title = "Overdue"
         
-        headers = ["ID", "Vendor", "Plan", "Cost", "Currency", "Customer", "Category", 
-                   "Country", "Next Renewal", "Days Overdue"]
+        headers = ["ID", "Vendor", "Plan", "Cost", "Currency", "Customer", "Customer Email", "Customer Country", "Category", 
+                   "Subscription Country", "Next Renewal", "Days Overdue"]
         ws_overdue.append(headers)
         
         # Style headers
@@ -269,6 +273,8 @@ async def export_outstanding_excel(db: Session = Depends(get_db)):
                 float(sub.cost),
                 sub.currency,
                 sub.customer.name if sub.customer else "",
+                sub.customer.email if sub.customer and sub.customer.email else "",
+                sub.customer.country if sub.customer and sub.customer.country else "",
                 sub.category.name if sub.category else "",
                 sub.country or "Not specified",
                 sub.next_renewal_date.isoformat() if sub.next_renewal_date else "",
@@ -277,7 +283,9 @@ async def export_outstanding_excel(db: Session = Depends(get_db)):
         
         # Expiring soon sheet
         ws_expiring = wb.create_sheet("Expiring Soon (30 days)")
-        ws_expiring.append(headers[:-1] + ["Days Until Renewal"])
+        headers_expiring = ["ID", "Vendor", "Plan", "Cost", "Currency", "Customer", "Customer Email", "Customer Country", "Category", 
+                           "Subscription Country", "Next Renewal", "Days Until Renewal"]
+        ws_expiring.append(headers_expiring)
         
         header_fill_warning = PatternFill(start_color="F39C12", end_color="F39C12", fill_type="solid")
         for cell in ws_expiring[1]:
@@ -301,6 +309,8 @@ async def export_outstanding_excel(db: Session = Depends(get_db)):
                 float(sub.cost),
                 sub.currency,
                 sub.customer.name if sub.customer else "",
+                sub.customer.email if sub.customer and sub.customer.email else "",
+                sub.customer.country if sub.customer and sub.customer.country else "",
                 sub.category.name if sub.category else "",
                 sub.country or "Not specified",
                 sub.next_renewal_date.isoformat() if sub.next_renewal_date else "",

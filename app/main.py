@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from app.config import settings
 from app.routers import categories, groups, customers, subscriptions, ai_routes, search, search_routes
-from app.routers import web_routes, export_routes, auth_routes, users
+from app.routers import web_routes, export_routes, auth_routes, users, saved_reports_routes
 from app.routers.auth_routes import get_session
 
 # Create FastAPI app
@@ -81,6 +81,7 @@ app.include_router(ai_routes.router, prefix="/api/ai", tags=["ai"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(search_routes.router, tags=["search-html"])
 app.include_router(export_routes.router, prefix="/api", tags=["exports"])
+app.include_router(saved_reports_routes.router, prefix="/api", tags=["saved-reports"])
 
 
 @app.get("/health")

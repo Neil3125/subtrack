@@ -320,6 +320,7 @@ async def render_links(
 @router.get("/links", response_class=HTMLResponse)
 async def links_page(request: Request, db: Session = Depends(get_db)):
     """Dedicated links and relationships page."""
+    categories = db.query(Category).all()
     all_links = db.query(Link).order_by(Link.confidence.desc()).all()
     
     total_links = len(all_links)
@@ -329,6 +330,7 @@ async def links_page(request: Request, db: Session = Depends(get_db)):
     
     return templates.TemplateResponse("links_page.html", {
         "request": request,
+        "categories": categories,
         "links": all_links,
         "total_links": total_links,
         "accepted_links": accepted_links,
@@ -420,11 +422,24 @@ async def analytics_page(request: Request, period: str = "30", db: Session = Dep
 @router.get("/reports", response_class=HTMLResponse)
 async def reports_page(request: Request, db: Session = Depends(get_db)):
     """Reports and exports page."""
+    from app.models.saved_report import SavedReport
+    
     categories = db.query(Category).all()
+    current_user = get_current_user(request, db)
+    
+    # Get saved reports for the current user
+    if current_user:
+        saved_reports = db.query(SavedReport).filter(
+            SavedReport.user_id == current_user.id
+        ).order_by(SavedReport.created_at.desc()).all()
+    else:
+        saved_reports = db.query(SavedReport).order_by(SavedReport.created_at.desc()).all()
     
     return templates.TemplateResponse("reports.html", {
         "request": request,
-        "categories": categories
+        "categories": categories,
+        "saved_reports": saved_reports,
+        "current_user": current_user
     })
 
 
