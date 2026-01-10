@@ -257,17 +257,50 @@ async def extract_from_url(request: ExtractURLRequest, db: Session = Depends(get
     🔗 Smart Link Intelligence
     
     Extract subscription details from a URL automatically.
-    
-    Example:
-        POST /api/ai/extract-from-url
-        {"url": "https://figma.com/pricing"}
-        
-    Returns:
-        Extracted vendor name, cost, billing cycle, plan name, confidence score
     """
+    from fastapi.responses import HTMLResponse
+    from fastapi.templating import Jinja2Templates
+    
     smart_features = SmartAIFeatures(db)
     result = await smart_features.extract_from_url(request.url)
-    return result
+    
+    # Render as HTML for HTMX
+    templates = Jinja2Templates(directory="app/templates")
+    html = f"""
+    <div class="ai-result {'ai-result-error' if result.get('error') else 'ai-result-success'}">
+        {'<div class="ai-error"><span class="ai-error-icon">⚠️</span><div><strong>' + result.get('error', '') + '</strong>' + ('<p class="text-sm text-secondary">' + result.get('fallback', '') + '</p>' if result.get('fallback') else '') + '</div></div>' if result.get('error') else ''}
+        {'' if result.get('error') else f'''
+        <div class="ai-success">
+            <div class="ai-result-header">
+                <span class="ai-confidence-badge confidence-{'high' if result.get('confidence', 0) > 80 else 'medium' if result.get('confidence', 0) > 50 else 'low'}">
+                    {result.get('confidence', 0)}% confidence
+                </span>
+                {'<span class="ai-cached-badge">⚡ Cached</span>' if result.get('cached') else ''}
+            </div>
+            <div class="ai-extracted-data">
+                <div class="ai-data-row">
+                    <span class="ai-data-label">Vendor:</span>
+                    <span class="ai-data-value">{result.get('vendor_name', 'Unknown')}</span>
+                </div>
+                <div class="ai-data-row">
+                    <span class="ai-data-label">Plan:</span>
+                    <span class="ai-data-value">{result.get('plan_name', 'Standard')}</span>
+                </div>
+                <div class="ai-data-row">
+                    <span class="ai-data-label">Cost:</span>
+                    <span class="ai-data-value">${result.get('cost', '0')} {result.get('currency', 'USD')}</span>
+                </div>
+                <div class="ai-data-row">
+                    <span class="ai-data-label">Billing:</span>
+                    <span class="ai-data-value">{result.get('billing_cycle', 'monthly')}</span>
+                </div>
+                {'<div class="ai-data-row"><span class="ai-data-label">Notes:</span><span class="ai-data-value text-secondary">' + result.get('notes', '') + '</span></div>' if result.get('notes') else ''}
+            </div>
+        </div>
+        '''}
+    </div>
+    """
+    return HTMLResponse(content=html)
 
 
 @router.post("/budget-surgeon")
@@ -279,20 +312,74 @@ async def budget_surgeon(
     🔪 Budget Surgeon
     
     Identify duplicate or redundant spending across subscriptions.
-    
-    Example:
-        POST /api/ai/budget-surgeon
-        {"customer_id": null}  # null for all customers
-        
-    Returns:
-        List of duplicates, potential savings, recommendations
     """
+    from fastapi.responses import HTMLResponse
+    
     if request is None:
         request = BudgetSurgeonRequest()
     
     smart_features = SmartAIFeatures(db)
     result = await smart_features.analyze_budget(request.customer_id)
-    return result
+    
+    # Build HTML response
+    if result.get('error'):
+        html = f"""
+        <div class="ai-result ai-result-error">
+            <div class="ai-error">
+                <span class="ai-error-icon">⚠️</span>
+                <div>
+                    <strong>{result.get('error')}</strong>
+                    {f'<p class="text-sm text-secondary">{result.get("message")}</p>' if result.get('message') else ''}
+                </div>
+            </div>
+        </div>
+        """
+    else:
+        duplicates_html = ""
+        if result.get('duplicates') and len(result['duplicates']) > 0:
+            duplicates_html = "<h5>Recommendations:</h5>"
+            for item in result['duplicates']:
+                priority = item.get('priority', 'medium')
+                duplicates_html += f"""
+                <div class="ai-recommendation-card priority-{priority}">
+                    <div class="ai-rec-header">
+                        <span class="ai-rec-type">{item.get('type', '').replace('_', ' ').title()}</span>
+                        <span class="ai-rec-savings">${item.get('potential_savings', 0):.2f}/mo</span>
+                    </div>
+                    <p class="ai-rec-action">{item.get('recommendation', '')}</p>
+                    <p class="ai-rec-reason text-sm text-secondary">{item.get('reasoning', '')}</p>
+                </div>
+                """
+        else:
+            duplicates_html = """
+            <div class="ai-no-issues">
+                <span class="ai-success-icon">✅</span>
+                <p>No duplicate or redundant subscriptions found. Your subscription portfolio looks optimized!</p>
+            </div>
+            """
+        
+        html = f"""
+        <div class="ai-result ai-result-success">
+            <div class="ai-success">
+                <div class="ai-result-header">
+                    <div class="ai-savings-highlight">
+                        <span class="ai-savings-amount">${result.get('total_potential_savings', 0):.2f}</span>
+                        <span class="ai-savings-label">potential monthly savings</span>
+                    </div>
+                    {f'<span class="ai-cached-badge">⚡ Cached</span>' if result.get('cached') else ''}
+                </div>
+                <div class="ai-summary mb-3">
+                    <p><strong>Current Monthly:</strong> ${result.get('current_monthly_total', 0):.2f}</p>
+                    {f'<p class="text-secondary">{result.get("summary")}</p>' if result.get('summary') else ''}
+                </div>
+                <div class="ai-recommendations">
+                    {duplicates_html}
+                </div>
+            </div>
+        </div>
+        """
+    
+    return HTMLResponse(content=html)
 
 
 @router.post("/renewal-forecast")
@@ -304,20 +391,91 @@ async def renewal_forecast(
     📅 Renewal Forecaster
     
     Predict upcoming subscription costs for the next N months.
-    
-    Example:
-        POST /api/ai/renewal-forecast
-        {"months_ahead": 12}
-        
-    Returns:
-        Month-by-month forecast, peak spending, AI insights
     """
+    from fastapi.responses import HTMLResponse
+    
     if request is None:
         request = RenewalForecastRequest()
     
     smart_features = SmartAIFeatures(db)
     result = await smart_features.forecast_renewals(request.months_ahead)
-    return result
+    
+    # Build HTML response
+    if result.get('error'):
+        html = f"""
+        <div class="ai-result ai-result-error">
+            <div class="ai-error">
+                <span class="ai-error-icon">⚠️</span>
+                <div><strong>{result.get('error')}</strong></div>
+            </div>
+        </div>
+        """
+    else:
+        # Build forecast chart
+        forecast_bars = ""
+        peak_amount = result.get('peak_spending', {}).get('amount', 1)
+        if peak_amount == 0:
+            peak_amount = 1
+        
+        for month in result.get('forecast', [])[:12]:
+            month_cost = month.get('cost', 0)
+            height = int((month_cost / peak_amount * 100)) if peak_amount > 0 else 0
+            month_num = month.get('month', '')[-2:]
+            forecast_bars += f"""
+            <div class="forecast-bar-container" title="{month.get('month_name', '')}: ${month_cost:.2f}">
+                <div class="forecast-bar" style="height: {height}%;"></div>
+                <span class="forecast-month">{month_num}</span>
+            </div>
+            """
+        
+        # Build AI insights
+        insights_html = ""
+        if result.get('ai_insights'):
+            insights_list = ""
+            for insight in result.get('ai_insights', {}).get('insights', []):
+                insights_list += f"<li>{insight}</li>"
+            
+            opt_tip = result.get('ai_insights', {}).get('optimization_tip', '')
+            
+            insights_html = f"""
+            <div class="ai-insights-section">
+                <h5>🤖 AI Insights:</h5>
+                {f'<ul class="ai-insights-list">{insights_list}</ul>' if insights_list else ''}
+                {f'<div class="ai-tip"><strong>💡 Tip:</strong> {opt_tip}</div>' if opt_tip else ''}
+            </div>
+            """
+        
+        html = f"""
+        <div class="ai-result ai-result-success">
+            <div class="ai-success">
+                <div class="ai-forecast-summary">
+                    <div class="ai-forecast-stat">
+                        <span class="ai-forecast-value">${result.get('total_yearly_cost', 0):.2f}</span>
+                        <span class="ai-forecast-label">Yearly Total</span>
+                    </div>
+                    <div class="ai-forecast-stat">
+                        <span class="ai-forecast-value">${result.get('average_monthly_cost', 0):.2f}</span>
+                        <span class="ai-forecast-label">Avg Monthly</span>
+                    </div>
+                    <div class="ai-forecast-stat">
+                        <span class="ai-forecast-value">{result.get('subscription_count', 0)}</span>
+                        <span class="ai-forecast-label">Subscriptions</span>
+                    </div>
+                </div>
+                
+                {f'''<div class="ai-peak-info">
+                    <p>📈 <strong>Peak:</strong> {result.get('peak_spending', {}).get('month')} (${result.get('peak_spending', {}).get('amount', 0):.2f})</p>
+                    <p>📉 <strong>Lowest:</strong> {result.get('lowest_spending', {}).get('month')} (${result.get('lowest_spending', {}).get('amount', 0):.2f})</p>
+                </div>''' if result.get('peak_spending') else ''}
+                
+                {f'<div class="ai-forecast-chart"><h5>12-Month Forecast:</h5><div class="forecast-bars">{forecast_bars}</div></div>' if result.get('forecast') else ''}
+                
+                {insights_html}
+            </div>
+        </div>
+        """
+    
+    return HTMLResponse(content=html)
 
 
 @router.post("/categorize-subscription")
@@ -329,20 +487,58 @@ async def categorize_subscription(
     📁 Auto-Categorizer
     
     Suggest the best category for a subscription.
-    
-    Example:
-        POST /api/ai/categorize-subscription
-        {"vendor_name": "Adobe Acrobat", "plan_name": "Annual"}
-        
-    Returns:
-        Suggested category, confidence score, reasoning, alternatives
     """
+    from fastapi.responses import HTMLResponse
+    
     smart_features = SmartAIFeatures(db)
     result = await smart_features.suggest_category(
         request.vendor_name,
         request.plan_name
     )
-    return result
+    
+    # Build HTML response
+    if result.get('error') and not result.get('suggested_category'):
+        html = f"""
+        <div class="ai-result ai-result-error">
+            <div class="ai-error">
+                <span class="ai-error-icon">⚠️</span>
+                <div><strong>{result.get('error')}</strong></div>
+            </div>
+        </div>
+        """
+    else:
+        # Build alternatives
+        alternatives_html = ""
+        if result.get('alternatives') and len(result.get('alternatives', [])) > 0:
+            alternatives_html = '<p class="text-sm text-secondary mb-1">Alternatives:</p>'
+            for alt in result['alternatives']:
+                alternatives_html += f'<span class="ai-alt-badge">{alt.get("category")} ({alt.get("confidence")}%)</span>'
+        
+        confidence = result.get('confidence', 0)
+        confidence_class = 'high' if confidence > 80 else 'medium' if confidence > 50 else 'low'
+        
+        html = f"""
+        <div class="ai-result ai-result-success">
+            <div class="ai-success">
+                <div class="ai-result-header">
+                    <span class="ai-confidence-badge confidence-{confidence_class}">
+                        {confidence}% confidence
+                    </span>
+                    {f'<span class="ai-cached-badge">⚡ Cached</span>' if result.get('cached') else ''}
+                </div>
+                <div class="ai-category-suggestion">
+                    <div class="ai-suggested-category">
+                        <span class="ai-category-icon">📁</span>
+                        <span class="ai-category-name">{result.get('suggested_category', 'Uncategorized')}</span>
+                    </div>
+                    {f'<p class="ai-reasoning text-secondary">{result.get("reasoning")}</p>' if result.get('reasoning') else ''}
+                </div>
+                {f'<div class="ai-alternatives">{alternatives_html}</div>' if alternatives_html else ''}
+            </div>
+        </div>
+        """
+    
+    return HTMLResponse(content=html)
 
 
 # ==================== CACHE MANAGEMENT ====================
@@ -354,8 +550,58 @@ async def get_ai_cache_stats(db: Session = Depends(get_db)):
     
     Returns cache hit rates, entry counts, and usage by feature type.
     """
+    from fastapi.responses import HTMLResponse
+    
     stats = get_cache_stats(db)
-    return stats
+    
+    # Build stats HTML
+    by_type_html = ""
+    if stats.get('by_type'):
+        for req_type, data in stats['by_type'].items():
+            by_type_html += f"""
+            <div class="cache-stat-item">
+                <span class="cache-stat-label">{req_type.replace('_', ' ').title()}:</span>
+                <span class="cache-stat-value">{data['count']} entries ({data['hits']} hits)</span>
+            </div>
+            """
+    
+    html = f"""
+    <div class="cache-stats-container">
+        <div class="cache-stat-grid">
+            <div class="cache-stat-card">
+                <div class="cache-stat-number">{stats.get('total_entries', 0)}</div>
+                <div class="cache-stat-text">Total Entries</div>
+            </div>
+            <div class="cache-stat-card">
+                <div class="cache-stat-number">{stats.get('active_entries', 0)}</div>
+                <div class="cache-stat-text">Active</div>
+            </div>
+            <div class="cache-stat-card">
+                <div class="cache-stat-number">{stats.get('expired_entries', 0)}</div>
+                <div class="cache-stat-text">Expired</div>
+            </div>
+            <div class="cache-stat-card">
+                <div class="cache-stat-number">{stats.get('cache_ttl_hours', 24):.0f}h</div>
+                <div class="cache-stat-text">Cache TTL</div>
+            </div>
+        </div>
+        {f'<div class="cache-by-type mt-4"><h5>By Feature Type:</h5>{by_type_html}</div>' if by_type_html else ''}
+    </div>
+    <style>
+    .cache-stats-container {{ margin-top: 1rem; }}
+    .cache-stat-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }}
+    .cache-stat-card {{ text-align: center; padding: 1rem; background: var(--color-background); border-radius: var(--border-radius); border: 1px solid var(--color-border); }}
+    .cache-stat-number {{ font-size: 1.75rem; font-weight: 700; color: var(--color-primary); }}
+    .cache-stat-text {{ font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 0.25rem; }}
+    .cache-by-type h5 {{ font-size: 0.875rem; margin-bottom: 0.5rem; }}
+    .cache-stat-item {{ display: flex; justify-content: space-between; padding: 0.5rem; background: var(--color-background); border-radius: var(--border-radius); margin-bottom: 0.5rem; }}
+    .cache-stat-label {{ color: var(--color-text-secondary); font-size: 0.875rem; }}
+    .cache-stat-value {{ font-weight: 500; font-size: 0.875rem; }}
+    @media (max-width: 768px) {{ .cache-stat-grid {{ grid-template-columns: repeat(2, 1fr); }} }}
+    </style>
+    """
+    
+    return HTMLResponse(content=html)
 
 
 @router.post("/cache/clear-expired")
@@ -365,30 +611,84 @@ async def clear_ai_expired_cache(db: Session = Depends(get_db)):
     
     This frees up database space without affecting active cache entries.
     """
+    from fastapi.responses import HTMLResponse
+    
     deleted = clear_expired_cache(db)
-    return {"deleted_entries": deleted, "message": f"Cleared {deleted} expired cache entries"}
+    
+    # Return updated stats
+    stats = get_cache_stats(db)
+    
+    # Build stats HTML (same as get_cache_stats)
+    by_type_html = ""
+    if stats.get('by_type'):
+        for req_type, data in stats['by_type'].items():
+            by_type_html += f"""
+            <div class="cache-stat-item">
+                <span class="cache-stat-label">{req_type.replace('_', ' ').title()}:</span>
+                <span class="cache-stat-value">{data['count']} entries ({data['hits']} hits)</span>
+            </div>
+            """
+    
+    html = f"""
+    <div class="cache-stats-container">
+        <div class="alert alert-success mb-3">✓ Cleared {deleted} expired cache entries</div>
+        <div class="cache-stat-grid">
+            <div class="cache-stat-card">
+                <div class="cache-stat-number">{stats.get('total_entries', 0)}</div>
+                <div class="cache-stat-text">Total Entries</div>
+            </div>
+            <div class="cache-stat-card">
+                <div class="cache-stat-number">{stats.get('active_entries', 0)}</div>
+                <div class="cache-stat-text">Active</div>
+            </div>
+            <div class="cache-stat-card">
+                <div class="cache-stat-number">{stats.get('expired_entries', 0)}</div>
+                <div class="cache-stat-text">Expired</div>
+            </div>
+            <div class="cache-stat-card">
+                <div class="cache-stat-number">{stats.get('cache_ttl_hours', 24):.0f}h</div>
+                <div class="cache-stat-text">Cache TTL</div>
+            </div>
+        </div>
+        {f'<div class="cache-by-type mt-4"><h5>By Feature Type:</h5>{by_type_html}</div>' if by_type_html else ''}
+    </div>
+    <style>
+    .cache-stats-container {{ margin-top: 1rem; }}
+    .cache-stat-grid {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }}
+    .cache-stat-card {{ text-align: center; padding: 1rem; background: var(--color-background); border-radius: var(--border-radius); border: 1px solid var(--color-border); }}
+    .cache-stat-number {{ font-size: 1.75rem; font-weight: 700; color: var(--color-primary); }}
+    .cache-stat-text {{ font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 0.25rem; }}
+    .cache-by-type h5 {{ font-size: 0.875rem; margin-bottom: 0.5rem; }}
+    .cache-stat-item {{ display: flex; justify-content: space-between; padding: 0.5rem; background: var(--color-background); border-radius: var(--border-radius); margin-bottom: 0.5rem; }}
+    .cache-stat-label {{ color: var(--color-text-secondary); font-size: 0.875rem; }}
+    .cache-stat-value {{ font-weight: 500; font-size: 0.875rem; }}
+    .alert {{ padding: 0.75rem 1rem; border-radius: var(--border-radius); }}
+    .alert-success {{ background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: var(--color-success); }}
+    @media (max-width: 768px) {{ .cache-stat-grid {{ grid-template-columns: repeat(2, 1fr); }} }}
+    </style>
+    """
+    
+    return HTMLResponse(content=html)
 
 
 @router.get("/status")
 async def get_ai_status(db: Session = Depends(get_db)):
     """
     Get AI provider status and configuration.
-    
-    Returns:
-        Provider type, model, availability, cache stats
     """
+    from fastapi.responses import HTMLResponse
     from app.config import settings
     from app.ai.provider import get_ai_provider
     
     provider = get_ai_provider()
-    cache_stats = get_cache_stats(db)
+    is_available = provider.is_available()
     
-    return {
-        "provider": settings.subtrack_ai_provider,
-        "model": settings.subtrack_ai_model,
-        "available": provider.is_available(),
-        "daily_limit": settings.ai_daily_limit,
-        "cache_ttl_hours": settings.ai_cache_ttl / 3600,
-        "request_timeout": settings.ai_request_timeout,
-        "cache_stats": cache_stats
-    }
+    html = f"""
+    <div class="ai-status-badge {'ai-online' if is_available else 'ai-offline'}">
+        <span>{'✓' if is_available else '✗'}</span>
+        <span>{settings.subtrack_ai_provider.title()} - {'Online' if is_available else 'Offline'}</span>
+        <span style="opacity: 0.7; font-size: 0.7rem;">({settings.ai_daily_limit} req/day)</span>
+    </div>
+    """
+    
+    return HTMLResponse(content=html)
