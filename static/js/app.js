@@ -69,7 +69,8 @@ function openModal(modalId) {
       document.body.style.paddingRight = `${scrollbarWidth}px`;
     }
 
-    modal.style.display = 'block';
+    // Use flex display to maintain centering (not 'block' which breaks flexbox centering)
+    modal.style.display = 'flex';
 
     // Track this modal
     window.openModals.push(modalId);

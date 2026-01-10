@@ -500,17 +500,58 @@ function exportData() {
         });
 }
 
-function importData(file) {
+async function importData(file) {
     if (!file) return;
     
+    // Confirm before importing
+    if (!confirm('Import data from this file? This will ADD new records to your database. Existing records with the same IDs will NOT be overwritten.')) {
+        return;
+    }
+    
+    showToast('Reading file...', 'info');
+    
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         try {
             const data = JSON.parse(e.target.result);
+            
+            // Validate the data structure
+            if (!data.categories && !data.customers && !data.subscriptions && !data.groups) {
+                showToast('Invalid file format. Expected SubTrack backup JSON.', 'error');
+                return;
+            }
+            
+            showToast('Importing data...', 'info');
+            
             // Send to import endpoint
-            showToast('Import functionality coming soon', 'info');
+            const response = await fetch('/api/import/data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.error) {
+                showToast(result.error, 'error');
+            } else {
+                const imported = result.imported;
+                showToast(
+                    `Imported: ${imported.categories} categories, ${imported.groups} groups, ${imported.customers} customers, ${imported.subscriptions} subscriptions`,
+                    'success'
+                );
+                // Reload page after short delay to show new data
+                setTimeout(() => {
+                    if (confirm('Import complete! Reload page to see imported data?')) {
+                        window.location.reload();
+                    }
+                }, 1000);
+            }
         } catch (error) {
-            showToast('Invalid file format', 'error');
+            console.error('Import error:', error);
+            showToast('Invalid file format or import failed', 'error');
         }
     };
     reader.readAsText(file);

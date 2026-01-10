@@ -674,3 +674,39 @@ async def import_data_string(payload: dict, db: Session = Depends(get_db)):
             return {"error": "Import failed - check server logs for details"}
     except Exception as e:
         return {"error": f"Import failed: {str(e)}"}
+
+
+@router.post("/import/data")
+async def import_data_json(payload: dict, db: Session = Depends(get_db)):
+    """
+    Import data from a JSON object (from file upload).
+    
+    Send a POST request with the JSON data directly.
+    Expected format: {"categories": [...], "customers": [...], "subscriptions": [...], ...}
+    
+    WARNING: This will add data to your database. Existing records with 
+    the same IDs will NOT be overwritten.
+    """
+    from app.data_persistence import import_data_to_db
+    
+    # Check if payload has the expected structure
+    if not any(key in payload for key in ["categories", "customers", "subscriptions", "groups"]):
+        return {"error": "Invalid data format. Expected JSON with categories, customers, subscriptions, or groups."}
+    
+    try:
+        success = import_data_to_db(db, payload)
+        
+        if success:
+            return {
+                "message": "Data imported successfully",
+                "imported": {
+                    "categories": len(payload.get("categories", [])),
+                    "groups": len(payload.get("groups", [])),
+                    "customers": len(payload.get("customers", [])),
+                    "subscriptions": len(payload.get("subscriptions", []))
+                }
+            }
+        else:
+            return {"error": "Import failed - check server logs for details"}
+    except Exception as e:
+        return {"error": f"Import failed: {str(e)}"}
