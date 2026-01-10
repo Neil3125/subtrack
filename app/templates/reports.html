@@ -79,24 +79,49 @@
         <div class="card-header">
             <h2 class="card-title">🛠️ Custom Report Builder</h2>
         </div>
-        <form onsubmit="buildCustomReport(event)">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <form onsubmit="buildCustomReport(event)" id="customReportForm">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div class="form-group">
                     <label class="form-label">Report Name</label>
-                    <input type="text" name="report_name" class="form-input" placeholder="My Custom Report" required>
+                    <input type="text" name="report_name" id="report_name" class="form-input" placeholder="My Custom Report" required>
                 </div>
                 
                 <div class="form-group">
                     <label class="form-label">Date Range</label>
-                    <select name="date_range" class="form-select">
+                    <select name="date_range" id="date_range" class="form-select" onchange="toggleCustomDateRange()">
                         <option value="7">Last 7 Days</option>
                         <option value="30" selected>Last 30 Days</option>
                         <option value="90">Last 90 Days</option>
+                        <option value="180">Last 6 Months</option>
                         <option value="365">Last Year</option>
+                        <option value="all">All Time</option>
                         <option value="custom">Custom Range</option>
                     </select>
                 </div>
                 
+                <div class="form-group">
+                    <label class="form-label">Export Format</label>
+                    <select name="export_format" id="export_format" class="form-select">
+                        <option value="xlsx">Excel (XLSX)</option>
+                        <option value="csv">CSV Spreadsheet</option>
+                        <option value="json">JSON Data</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Custom Date Range (hidden by default) -->
+            <div id="customDateRange" class="grid grid-cols-2 gap-4 mb-6" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" id="end_date" class="form-input">
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div class="form-group">
                     <label class="form-label">Include Data</label>
                     <div class="space-y-2">
@@ -109,30 +134,87 @@
                             <span>Customers</span>
                         </label>
                         <label class="flex items-center gap-2">
-                            <input type="checkbox" name="include_transactions">
-                            <span>Transactions</span>
+                            <input type="checkbox" name="include_categories">
+                            <span>Categories</span>
                         </label>
                         <label class="flex items-center gap-2">
                             <input type="checkbox" name="include_analytics" checked>
-                            <span>Analytics</span>
+                            <span>Analytics Summary</span>
                         </label>
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Export Format</label>
-                    <select name="export_format" class="form-select">
-                        <option value="pdf">PDF Document</option>
-                        <option value="csv">CSV Spreadsheet</option>
-                        <option value="xlsx">Excel (XLSX)</option>
-                        <option value="json">JSON Data</option>
+                    <label class="form-label">Filter by Status</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="status_active" checked>
+                            <span>Active</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="status_paused">
+                            <span>Paused</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="status_cancelled">
+                            <span>Cancelled</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="status_expired">
+                            <span>Expired</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Group By</label>
+                    <select name="group_by" class="form-select">
+                        <option value="none">No Grouping</option>
+                        <option value="category">Category</option>
+                        <option value="customer">Customer</option>
+                        <option value="vendor">Vendor</option>
+                        <option value="country">Country</option>
+                        <option value="billing_cycle">Billing Cycle</option>
+                        <option value="status">Status</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="form-group">
+                    <label class="form-label">Sort By</label>
+                    <select name="sort_by" class="form-select">
+                        <option value="vendor_name">Vendor Name</option>
+                        <option value="cost">Cost</option>
+                        <option value="next_renewal_date">Renewal Date</option>
+                        <option value="customer">Customer</option>
+                        <option value="category">Category</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Sort Order</label>
+                    <select name="sort_order" class="form-select">
+                        <option value="asc">Ascending</option>
+                        <option value="desc">Descending</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Filter by Category</label>
+                    <select name="filter_category" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
                     </select>
                 </div>
             </div>
             
             <div class="flex gap-3">
                 <button type="submit" class="btn btn-gradient">🚀 Generate Report</button>
-                <button type="button" class="btn btn-secondary" onclick="saveReportTemplate()">💾 Save as Template</button>
+                <button type="button" class="btn btn-secondary" onclick="openSaveTemplateModal()">💾 Save as Template</button>
+                <button type="button" class="btn btn-secondary" onclick="loadTemplatesList()">📂 Load Template</button>
             </div>
         </form>
     </div>
@@ -180,11 +262,10 @@
         </div>
     </div>
 
-    <!-- Report Templates -->
-    <div class="card card-glass">
+    <!-- Pre-built Report Templates -->
+    <div class="card card-glass mb-8">
         <div class="card-header">
-            <h2 class="card-title">📋 Report Templates</h2>
-            <button class="btn btn-sm btn-primary" onclick="openModal('newTemplateModal')">➕ New Template</button>
+            <h2 class="card-title">📋 Pre-built Templates</h2>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-primary cursor-pointer transition-colors" onclick="useTemplate('executive-summary')">
@@ -212,6 +293,16 @@
             </div>
         </div>
     </div>
+
+    <!-- Saved Custom Templates -->
+    <div class="card card-glass">
+        <div class="card-header">
+            <h2 class="card-title">💾 Your Saved Templates</h2>
+        </div>
+        <div id="saved-templates-list" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <p class="text-secondary text-center py-4">No saved templates yet. Create one using the form above!</p>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -236,6 +327,12 @@ function generateReport(type) {
     }, 500);
 }
 
+function toggleCustomDateRange() {
+    const dateRange = document.getElementById('date_range').value;
+    const customRange = document.getElementById('customDateRange');
+    customRange.style.display = dateRange === 'custom' ? 'grid' : 'none';
+}
+
 function buildCustomReport(event) {
     event.preventDefault();
     const formData = new FormData(event.target);
@@ -243,7 +340,7 @@ function buildCustomReport(event) {
     
     showToast('Building custom report...', 'info');
     
-    // Determine export format
+    // Determine export format and URL
     const format = data.export_format || 'xlsx';
     let url = '/api/export/subscriptions/excel';
     
@@ -253,14 +350,191 @@ function buildCustomReport(event) {
         url = '/api/export/analytics/excel';
     }
     
+    // Add query parameters for filtering
+    const params = new URLSearchParams();
+    if (data.filter_category) params.append('category_id', data.filter_category);
+    if (data.group_by && data.group_by !== 'none') params.append('group_by', data.group_by);
+    if (data.sort_by) params.append('sort_by', data.sort_by);
+    if (data.sort_order) params.append('sort_order', data.sort_order);
+    
+    const queryString = params.toString();
+    if (queryString) url += '?' + queryString;
+    
     setTimeout(() => {
         window.location.href = url;
         showToast('Report downloaded!', 'success');
     }, 500);
 }
 
-function saveReportTemplate() {
-    showToast('Report template saved!', 'success');
+// Template Management
+function getReportTemplates() {
+    const templates = localStorage.getItem('reportTemplates');
+    return templates ? JSON.parse(templates) : [];
+}
+
+function saveReportTemplates(templates) {
+    localStorage.setItem('reportTemplates', JSON.stringify(templates));
+}
+
+function openSaveTemplateModal() {
+    const templateName = prompt('Enter a name for this template:');
+    if (!templateName) return;
+    
+    const form = document.getElementById('customReportForm');
+    const formData = new FormData(form);
+    const templateData = {};
+    
+    // Collect all form data including checkboxes
+    formData.forEach((value, key) => {
+        templateData[key] = value;
+    });
+    
+    // Also save checkbox states (unchecked ones aren't in FormData)
+    form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        templateData[cb.name] = cb.checked;
+    });
+    
+    const templates = getReportTemplates();
+    const existingIndex = templates.findIndex(t => t.name === templateName);
+    
+    const template = {
+        name: templateName,
+        data: templateData,
+        createdAt: new Date().toISOString()
+    };
+    
+    if (existingIndex >= 0) {
+        templates[existingIndex] = template;
+        showToast(`Template "${templateName}" updated!`, 'success');
+    } else {
+        templates.push(template);
+        showToast(`Template "${templateName}" saved!`, 'success');
+    }
+    
+    saveReportTemplates(templates);
+    updateTemplatesDisplay();
+}
+
+function loadTemplatesList() {
+    const templates = getReportTemplates();
+    
+    if (templates.length === 0) {
+        showToast('No saved templates found', 'info');
+        return;
+    }
+    
+    const templateNames = templates.map((t, i) => `${i + 1}. ${t.name}`).join('\n');
+    const selection = prompt(`Select a template (enter number):\n\n${templateNames}`);
+    
+    if (!selection) return;
+    
+    const index = parseInt(selection) - 1;
+    if (index >= 0 && index < templates.length) {
+        loadTemplate(templates[index]);
+    } else {
+        showToast('Invalid selection', 'error');
+    }
+}
+
+function loadTemplate(template) {
+    const form = document.getElementById('customReportForm');
+    const data = template.data;
+    
+    // Set form values
+    Object.keys(data).forEach(key => {
+        const field = form.querySelector(`[name="${key}"]`);
+        if (field) {
+            if (field.type === 'checkbox') {
+                field.checked = data[key] === true || data[key] === 'on';
+            } else {
+                field.value = data[key];
+            }
+        }
+    });
+    
+    // Update custom date range visibility
+    toggleCustomDateRange();
+    
+    showToast(`Template "${template.name}" loaded!`, 'success');
+    
+    // Scroll to form
+    document.getElementById('customReportForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function useTemplate(templateName) {
+    // Pre-built templates
+    const prebuiltTemplates = {
+        'executive-summary': {
+            report_name: 'Executive Summary',
+            date_range: '30',
+            include_subscriptions: true,
+            include_analytics: true,
+            group_by: 'category',
+            sort_by: 'cost',
+            sort_order: 'desc'
+        },
+        'cost-analysis': {
+            report_name: 'Cost Analysis Report',
+            date_range: '90',
+            include_subscriptions: true,
+            include_analytics: true,
+            group_by: 'vendor',
+            sort_by: 'cost',
+            sort_order: 'desc'
+        },
+        'compliance': {
+            report_name: 'Compliance Report',
+            date_range: 'all',
+            include_subscriptions: true,
+            include_customers: true,
+            include_categories: true,
+            status_active: true,
+            status_paused: true,
+            status_cancelled: true,
+            status_expired: true,
+            group_by: 'status',
+            sort_by: 'vendor_name',
+            sort_order: 'asc'
+        }
+    };
+    
+    const template = prebuiltTemplates[templateName];
+    if (template) {
+        loadTemplate({ name: templateName, data: template });
+    }
+}
+
+function deleteTemplate(templateName) {
+    if (!confirm(`Delete template "${templateName}"?`)) return;
+    
+    const templates = getReportTemplates().filter(t => t.name !== templateName);
+    saveReportTemplates(templates);
+    updateTemplatesDisplay();
+    showToast(`Template "${templateName}" deleted`, 'success');
+}
+
+function updateTemplatesDisplay() {
+    const templates = getReportTemplates();
+    const container = document.getElementById('saved-templates-list');
+    if (!container) return;
+    
+    if (templates.length === 0) {
+        container.innerHTML = '<p class="text-secondary text-center py-4">No saved templates yet. Create one using the form above!</p>';
+        return;
+    }
+    
+    container.innerHTML = templates.map(t => `
+        <div class="p-4 rounded-lg border-2 border-dashed border-gray-300 hover:border-primary cursor-pointer transition-colors flex justify-between items-center">
+            <div onclick="loadTemplate(${JSON.stringify(t).replace(/"/g, '&quot;')})">
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="text-2xl">📄</span>
+                    <h4 class="font-semibold">${t.name}</h4>
+                </div>
+                <p class="text-sm text-secondary">Created: ${new Date(t.createdAt).toLocaleDateString()}</p>
+            </div>
+            <button class="btn btn-sm btn-danger" onclick="deleteTemplate('${t.name}')">🗑️</button>
+        </div>
+    `).join('');
 }
 
 function clearOldReports() {
@@ -271,7 +545,6 @@ function clearOldReports() {
 
 function downloadReport(id) {
     showToast('Downloading report...', 'info');
-    // For demo - in production would have real report IDs
     window.location.href = '/api/export/subscriptions/excel';
 }
 
@@ -281,9 +554,7 @@ function deleteReport(id) {
     }
 }
 
-function useTemplate(templateName) {
-    showToast(`Loaded ${templateName} template`, 'info');
-    window.scrollTo({ top: document.querySelector('.card').offsetTop, behavior: 'smooth' });
-}
+// Initialize templates display on page load
+document.addEventListener('DOMContentLoaded', updateTemplatesDisplay);
 </script>
 {% endblock %}

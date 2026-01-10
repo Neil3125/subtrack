@@ -45,10 +45,15 @@ async def get_insights(request: InsightsRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/link_analyze")
-async def analyze_links(request: LinkAnalyzeRequest, db: Session = Depends(get_db)):
+@router.post("/analyze-links")
+async def analyze_links(request: LinkAnalyzeRequest = None, db: Session = Depends(get_db)):
     """Analyze and discover relationships between entities."""
     ai_provider = get_ai_provider()
     analyzer = LinkAnalyzer(db, ai_provider)
+    
+    # Default request if none provided
+    if request is None:
+        request = LinkAnalyzeRequest(run_ai_refinement=False)
     
     # Run all link analyses
     customer_links = analyzer.analyze_customer_links()
@@ -86,6 +91,7 @@ async def analyze_links(request: LinkAnalyzeRequest, db: Session = Depends(get_d
     return {
         'total_analyzed': len(all_links),
         'new_links_found': len(new_links),
+        'links_found': len(new_links),
         'links': [LinkResponse.model_validate(link) for link in new_links]
     }
 

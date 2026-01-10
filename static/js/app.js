@@ -238,6 +238,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize tooltips
   initTooltips();
   
+  // Initialize country autocomplete
+  initCountryAutocomplete();
+  
   // Setup cascading selects
   document.querySelectorAll('select[name="category_id"]').forEach(select => {
     select.addEventListener('change', function() {
@@ -259,6 +262,87 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
+
+// ==================== Country Autocomplete ====================
+let cachedCountries = [];
+const defaultCountries = [
+  'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Australia', 'Austria',
+  'Bangladesh', 'Belgium', 'Brazil', 'Canada', 'Chile', 'China', 'Colombia',
+  'Czech Republic', 'Denmark', 'Egypt', 'Finland', 'France', 'Germany', 'Greece',
+  'Hong Kong', 'Hungary', 'India', 'Indonesia', 'Ireland', 'Israel', 'Italy',
+  'Jamaica', 'Japan', 'Kenya', 'Malaysia', 'Mexico', 'Netherlands', 'New Zealand',
+  'Nigeria', 'Norway', 'Pakistan', 'Peru', 'Philippines', 'Poland', 'Portugal',
+  'Romania', 'Russia', 'Saudi Arabia', 'Singapore', 'South Africa', 'South Korea',
+  'Spain', 'Sweden', 'Switzerland', 'Taiwan', 'Thailand', 'Turkey', 'UAE',
+  'Ukraine', 'United Kingdom', 'United States', 'Vietnam'
+];
+
+function initCountryAutocomplete() {
+  // Fetch existing countries from the database
+  fetchExistingCountries();
+  
+  // Setup autocomplete for all country inputs
+  document.querySelectorAll('.country-autocomplete').forEach(input => {
+    setupCountryInput(input);
+  });
+}
+
+function fetchExistingCountries() {
+  fetch('/api/customers/countries')
+    .then(response => response.json())
+    .then(countries => {
+      cachedCountries = countries;
+      updateAllCountryDatalists();
+    })
+    .catch(error => {
+      console.log('Using default countries list');
+      cachedCountries = [];
+    });
+}
+
+function updateAllCountryDatalists() {
+  // Combine existing countries with defaults, remove duplicates
+  const allCountries = [...new Set([...cachedCountries, ...defaultCountries])].sort();
+  
+  document.querySelectorAll('datalist[id^="country-suggestions"]').forEach(datalist => {
+    datalist.innerHTML = allCountries.map(country => 
+      `<option value="${country}">`
+    ).join('');
+  });
+}
+
+function setupCountryInput(input) {
+  // Add input event for real-time filtering/suggestions
+  input.addEventListener('input', function(e) {
+    const value = e.target.value.toLowerCase();
+    const datalistId = input.getAttribute('list');
+    const datalist = document.getElementById(datalistId);
+    
+    if (!datalist) return;
+    
+    // Combine and filter countries based on input
+    const allCountries = [...new Set([...cachedCountries, ...defaultCountries])].sort();
+    const filtered = allCountries.filter(c => c.toLowerCase().includes(value));
+    
+    datalist.innerHTML = filtered.map(country => 
+      `<option value="${country}">`
+    ).join('');
+  });
+  
+  // Tab key to accept first suggestion
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab' && input.value) {
+      const value = input.value.toLowerCase();
+      const allCountries = [...new Set([...cachedCountries, ...defaultCountries])];
+      const match = allCountries.find(c => c.toLowerCase().startsWith(value));
+      
+      if (match && match.toLowerCase() !== value) {
+        e.preventDefault();
+        input.value = match;
+      }
+    }
+  });
+}
 
 // Smooth scroll for anchor links
 document.addEventListener('click', function(e) {
@@ -523,6 +607,7 @@ window.createCustomer = function(formData) {
       group_id: formData.group_id ? parseInt(formData.group_id) : null,
       email: formData.email || null,
       phone: formData.phone || null,
+      country: formData.country || null,
       tags: formData.tags || null,
       notes: formData.notes || null
     })
@@ -635,6 +720,7 @@ window.updateCustomer = function(formData, id) {
       group_id: formData.group_id ? parseInt(formData.group_id) : null,
       email: formData.email || null,
       phone: formData.phone || null,
+      country: formData.country || null,
       tags: formData.tags || null,
       notes: formData.notes || null
     })

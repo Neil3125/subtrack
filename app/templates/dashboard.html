@@ -14,83 +14,217 @@
         </button>
     </div>
 
-    <!-- Stats Grid with Enhanced Design -->
-    <div class="grid grid-cols-4 mb-8">
-        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 0ms;">
+    <!-- Stats Grid with Enhanced Design - Clickable Cards -->
+    <div class="grid grid-cols-5 mb-8">
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 0ms; cursor: pointer;" onclick="openModal('activeSubscriptionsModal')">
             <div class="text-sm text-secondary mb-2">Active Subscriptions</div>
             <div class="text-3xl font-bold text-primary mb-2">{{ stats.total_active|default(0) }}</div>
             <div class="progress">
                 <div class="progress-bar" style="width: {{ (stats.total_active|default(0) / 20 * 100)|int }}%;"></div>
             </div>
+            <div class="text-xs text-secondary mt-2">Click to view all →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 100ms;">
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 100ms; cursor: pointer;" onclick="openModal('monthlyCostModal')">
             <div class="text-sm text-secondary mb-2">Monthly Cost</div>
             <div class="text-3xl font-bold text-success mb-2">${{ "%.2f"|format(stats.monthly_cost|default(0)) }}</div>
             <div class="text-xs text-secondary">Total recurring expenses</div>
+            <div class="text-xs text-secondary mt-1">Click for breakdown →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 200ms; position: relative;">
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 150ms;">
+            <div class="text-sm text-secondary mb-2">Annual Revenue</div>
+            <div class="text-3xl font-bold text-info mb-2">${{ "%.2f"|format(stats.annual_revenue|default(0)) }}</div>
+            <div class="text-xs text-secondary">Projected yearly total</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 200ms; position: relative; cursor: pointer;" onclick="openModal('expiringSoonModal')">
             <div class="text-sm text-secondary mb-2">Expiring Soon</div>
             <div class="text-3xl font-bold text-warning mb-2">{{ stats.expiring_soon|default(0) }}</div>
             {% if stats.expiring_soon > 0 %}
             <span class="notification-badge">!</span>
             {% endif %}
-            <div class="text-xs text-secondary">Within 30 days</div>
+            <div class="text-xs text-secondary">Click to filter →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 300ms; position: relative;">
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 300ms; position: relative; cursor: pointer;" onclick="openModal('overdueModal')">
             <div class="text-sm text-secondary mb-2">Overdue</div>
             <div class="text-3xl font-bold text-danger mb-2">{{ stats.overdue|default(0) }}</div>
             {% if stats.overdue > 0 %}
             <span class="notification-badge" style="background: var(--color-danger);">{{ stats.overdue }}</span>
             {% endif %}
-            <div class="text-xs text-secondary">Requires attention</div>
+            <div class="text-xs text-secondary">Click to view →</div>
         </div>
     </div>
 
-
-    <!-- Expiring Soon -->
-    {% if expiring_soon %}
-    <div class="card mb-8">
-        <div class="card-header">
-            <h2 class="card-title">⚠️ Expiring Soon</h2>
+    <!-- Empty state -->
+    {% if stats.total_active == 0 %}
+    <div class="card">
+        <div class="empty-state">
+            <div class="empty-state-icon">📊</div>
+            <h3 class="empty-state-title">No subscriptions yet</h3>
+            <p class="empty-state-text">Get started by creating a category and adding your first subscription.</p>
+            <button class="btn btn-primary" onclick="openModal('categoryModal')">
+                Create First Category
+            </button>
         </div>
-        <div class="table-container">
+    </div>
+    {% endif %}
+</div>
+
+<!-- Active Subscriptions Modal -->
+<div id="activeSubscriptionsModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-header">
+            <h2 class="modal-title">📋 Active Subscriptions ({{ stats.total_active }})</h2>
+            <button class="modal-close" onclick="closeModal('activeSubscriptionsModal')">×</button>
+        </div>
+        <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+            {% if all_active %}
             <table class="table">
                 <thead>
                     <tr>
                         <th>Vendor</th>
                         <th>Customer</th>
                         <th>Cost</th>
-                        <th>Days Until Renewal</th>
+                        <th>Cycle</th>
+                        <th>Next Renewal</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for sub in expiring_soon %}
+                    {% for sub in all_active %}
                     <tr>
                         <td class="font-medium">{{ sub.vendor_name }}</td>
                         <td>{{ sub.customer.name }}</td>
                         <td>${{ "%.2f"|format(sub.cost) }} {{ sub.currency }}</td>
+                        <td><span class="badge badge-secondary">{{ sub.billing_cycle.value }}</span></td>
+                        <td>{{ sub.next_renewal_date }}</td>
+                        <td><a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-secondary text-center">No active subscriptions</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Cost Modal -->
+<div id="monthlyCostModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h2 class="modal-title">💰 Monthly Cost Breakdown</h2>
+            <button class="modal-close" onclick="closeModal('monthlyCostModal')">×</button>
+        </div>
+        <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+            <div class="mb-4">
+                <div class="text-2xl font-bold text-success">${{ "%.2f"|format(stats.monthly_cost|default(0)) }}</div>
+                <div class="text-secondary">Total Monthly Cost</div>
+            </div>
+            <div class="mb-4">
+                <div class="text-2xl font-bold text-info">${{ "%.2f"|format(stats.annual_revenue|default(0)) }}</div>
+                <div class="text-secondary">Projected Annual Revenue</div>
+            </div>
+            <hr style="margin: 16px 0; border-color: var(--color-border);">
+            <h4 class="font-semibold mb-3">By Billing Cycle</h4>
+            {% if all_active %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Vendor</th>
+                        <th>Cost</th>
+                        <th>Cycle</th>
+                        <th>Monthly Equiv.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in all_active %}
+                    <tr>
+                        <td class="font-medium">{{ sub.vendor_name }}</td>
+                        <td>${{ "%.2f"|format(sub.cost) }}</td>
+                        <td><span class="badge badge-secondary">{{ sub.billing_cycle.value }}</span></td>
                         <td>
-                            <span class="badge badge-warning">{{ sub.days_until_renewal() }} days</span>
-                        </td>
-                        <td>
-                            <a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a>
+                            {% if sub.billing_cycle.value == 'yearly' %}
+                            ${{ "%.2f"|format(sub.cost / 12) }}
+                            {% elif sub.billing_cycle.value == 'quarterly' %}
+                            ${{ "%.2f"|format(sub.cost / 3) }}
+                            {% elif sub.billing_cycle.value == 'weekly' %}
+                            ${{ "%.2f"|format(sub.cost * 4.33) }}
+                            {% else %}
+                            ${{ "%.2f"|format(sub.cost) }}
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            {% endif %}
         </div>
     </div>
-    {% endif %}
+</div>
 
-    <!-- Overdue -->
-    {% if overdue %}
-    <div class="card mb-8">
-        <div class="card-header">
-            <h2 class="card-title">🚨 Overdue Subscriptions</h2>
+<!-- Expiring Soon Modal -->
+<div id="expiringSoonModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-header">
+            <h2 class="modal-title">⚠️ Expiring Soon</h2>
+            <button class="modal-close" onclick="closeModal('expiringSoonModal')">×</button>
         </div>
-        <div class="table-container">
+        <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+            <div class="form-group mb-4">
+                <label class="form-label">Filter by Days</label>
+                <select class="form-select" id="expiring-days-filter" onchange="filterExpiringSubscriptions()">
+                    <option value="3">Expiring in 3 days</option>
+                    <option value="14">Expiring in 14 days</option>
+                    <option value="30" selected>Expiring in 30 days</option>
+                    <option value="60">Expiring in 60 days</option>
+                    <option value="90">Expiring in 90 days</option>
+                    <option value="999">90+ days</option>
+                </select>
+            </div>
+            <div id="expiring-results">
+                {% if expiring_soon %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Customer</th>
+                            <th>Cost</th>
+                            <th>Days Until Renewal</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in expiring_soon %}
+                        <tr class="expiring-row" data-days="{{ sub.days_until_renewal() }}">
+                            <td class="font-medium">{{ sub.vendor_name }}</td>
+                            <td>{{ sub.customer.name }}</td>
+                            <td>${{ "%.2f"|format(sub.cost) }} {{ sub.currency }}</td>
+                            <td><span class="badge badge-warning">{{ sub.days_until_renewal() }} days</span></td>
+                            <td><a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-secondary text-center">No subscriptions expiring soon! 🎉</p>
+                {% endif %}
+            </div>
+            <div id="no-expiring-message" style="display: none;" class="text-secondary text-center py-4">
+                No subscriptions expiring in this period.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overdue Modal -->
+<div id="overdueModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-header">
+            <h2 class="modal-title">🚨 Overdue Subscriptions ({{ stats.overdue }})</h2>
+            <button class="modal-close" onclick="closeModal('overdueModal')">×</button>
+        </div>
+        <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+            {% if overdue %}
             <table class="table">
                 <thead>
                     <tr>
@@ -107,34 +241,44 @@
                         <td class="font-medium">{{ sub.vendor_name }}</td>
                         <td>{{ sub.customer.name }}</td>
                         <td>${{ "%.2f"|format(sub.cost) }} {{ sub.currency }}</td>
-                        <td>
-                            <span class="badge badge-danger">{{ -sub.days_until_renewal() }} days</span>
-                        </td>
+                        <td><span class="badge badge-danger">{{ -sub.days_until_renewal() }} days</span></td>
                         <td>
                             <a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a>
+                            <button class="btn btn-sm btn-primary" onclick="renewSubscription({{ sub.id }})">Renew</button>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            {% else %}
+            <p class="text-secondary text-center">No overdue subscriptions! 🎉</p>
+            {% endif %}
         </div>
     </div>
-    {% endif %}
-
-
-    <!-- Empty state -->
-    {% if not expiring_soon and not overdue and stats.total_active == 0 %}
-    <div class="card">
-        <div class="empty-state">
-            <div class="empty-state-icon">📊</div>
-            <h3 class="empty-state-title">No subscriptions yet</h3>
-            <p class="empty-state-text">Get started by creating a category and adding your first subscription.</p>
-            <button class="btn btn-primary" onclick="openModal('categoryModal')">
-                Create First Category
-            </button>
-        </div>
-    </div>
-    {% endif %}
 </div>
+
+<script>
+function filterExpiringSubscriptions() {
+    const days = parseInt(document.getElementById('expiring-days-filter').value);
+    const rows = document.querySelectorAll('.expiring-row');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const rowDays = parseInt(row.dataset.days);
+        let show = false;
+        
+        if (days === 999) {
+            show = rowDays > 90;
+        } else {
+            show = rowDays <= days && rowDays >= 0;
+        }
+        
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+    
+    document.getElementById('no-expiring-message').style.display = visibleCount === 0 ? 'block' : 'none';
+}
+</script>
 
 {% endblock %}

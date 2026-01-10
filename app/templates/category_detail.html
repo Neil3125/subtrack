@@ -22,6 +22,36 @@
         </div>
     </div>
 
+    <!-- Category Stats Cards -->
+    <div class="grid grid-cols-4 mb-8">
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 0ms;">
+            <div class="text-sm text-secondary mb-2">Total Subscriptions</div>
+            <div class="text-3xl font-bold text-primary mb-2">{{ subscriptions|length }}</div>
+            <div class="text-xs text-secondary">In this category</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 100ms;">
+            <div class="text-sm text-secondary mb-2">Monthly Cost</div>
+            <div class="text-3xl font-bold text-success mb-2">${{ "%.2f"|format(subscriptions|selectattr('status.value', 'equalto', 'active')|sum(attribute='cost')) }}</div>
+            <div class="text-xs text-secondary">Active subscriptions</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 200ms; position: relative;">
+            <div class="text-sm text-secondary mb-2">Expiring Soon</div>
+            <div class="text-3xl font-bold text-warning mb-2">{{ category_stats.expiring_soon }}</div>
+            {% if category_stats.expiring_soon > 0 %}
+            <span class="notification-badge">!</span>
+            {% endif %}
+            <div class="text-xs text-secondary">Within 30 days</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 300ms; position: relative;">
+            <div class="text-sm text-secondary mb-2">Overdue</div>
+            <div class="text-3xl font-bold text-danger mb-2">{{ category_stats.overdue }}</div>
+            {% if category_stats.overdue > 0 %}
+            <span class="notification-badge" style="background: var(--color-danger);">{{ category_stats.overdue }}</span>
+            {% endif %}
+            <div class="text-xs text-secondary">Requires attention</div>
+        </div>
+    </div>
+
     <!-- Groups -->
     {% if groups %}
     <div class="card card-hover mb-8 animate-fade-in">

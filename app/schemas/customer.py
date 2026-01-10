@@ -8,6 +8,7 @@ class CustomerBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     email: Optional[str] = None
     phone: Optional[str] = None
+    country: Optional[str] = None
     tags: Optional[str] = None
     notes: Optional[str] = None
 
@@ -23,6 +24,7 @@ class CustomerUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=200)
     email: Optional[str] = None
     phone: Optional[str] = None
+    country: Optional[str] = None
     tags: Optional[str] = None
     notes: Optional[str] = None
     category_id: Optional[int] = None
@@ -34,6 +36,7 @@ class CustomerResponse(CustomerBase):
     id: int
     category_id: int
     group_id: Optional[int]
+    country: Optional[str] = None
     
     class Config:
         from_attributes = True

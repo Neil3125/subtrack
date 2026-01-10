@@ -48,6 +48,16 @@
                     <div class="font-medium">{{ customer.phone or 'Not provided' }}</div>
                 </div>
                 <div>
+                    <div class="text-sm text-secondary mb-1">Country</div>
+                    <div class="font-medium">
+                        {% if customer.country %}
+                        <span class="badge badge-secondary">🌍 {{ customer.country }}</span>
+                        {% else %}
+                        Not specified
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
                     <div class="text-sm text-secondary mb-1">Tags</div>
                     <div>
                         {% if customer.tags %}
@@ -59,7 +69,7 @@
                         {% endif %}
                     </div>
                 </div>
-                <div>
+                <div style="grid-column: span 2;">
                     <div class="text-sm text-secondary mb-1">Notes</div>
                     <div>{{ customer.notes or 'No notes' }}</div>
                 </div>

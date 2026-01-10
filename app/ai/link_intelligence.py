@@ -48,7 +48,7 @@ class LinkAnalyzer:
         for i, customer1 in enumerate(customers):
             for customer2 in customers[i+1:]:
                 confidence, evidence = self._analyze_customer_pair(customer1, customer2)
-                if confidence > 0.3:  # Threshold for suggestion
+                if confidence > 0.15:  # Lowered threshold for better detection
                     links.append({
                         'source_type': EntityType.CUSTOMER,
                         'source_id': customer1.id,
@@ -75,7 +75,7 @@ class LinkAnalyzer:
         
         # Similar names
         name_sim = calculate_name_similarity(c1.name, c2.name)
-        if name_sim > 0.7:
+        if name_sim > 0.6:  # Lowered threshold
             confidence += 0.3 * name_sim
             evidence_parts.append(f"Similar names (similarity: {name_sim:.2f})")
         
@@ -84,14 +84,29 @@ class LinkAnalyzer:
             confidence += 0.5
             evidence_parts.append("Same phone number")
         
+        # Same country
+        if c1.country and c2.country and c1.country == c2.country:
+            confidence += 0.15
+            evidence_parts.append(f"Same country: {c1.country}")
+        
         # Shared tags
         if c1.tags and c2.tags:
-            tags1 = set(c1.tags.split(','))
-            tags2 = set(c2.tags.split(','))
+            tags1 = set(t.strip().lower() for t in c1.tags.split(','))
+            tags2 = set(t.strip().lower() for t in c2.tags.split(','))
             shared_tags = tags1 & tags2
             if shared_tags:
-                confidence += 0.2
+                confidence += 0.2 + (0.05 * len(shared_tags))  # More shared tags = higher confidence
                 evidence_parts.append(f"Shared tags: {', '.join(shared_tags)}")
+        
+        # Same category (weaker signal but still relevant)
+        if c1.category_id == c2.category_id:
+            confidence += 0.1
+            evidence_parts.append(f"Same category")
+        
+        # Same group (strong signal)
+        if c1.group_id and c2.group_id and c1.group_id == c2.group_id:
+            confidence += 0.3
+            evidence_parts.append(f"Same group")
         
         # Cap confidence at 1.0
         confidence = min(confidence, 1.0)
@@ -105,17 +120,17 @@ class LinkAnalyzer:
         
         for i, sub1 in enumerate(subscriptions):
             for sub2 in subscriptions[i+1:]:
-                if sub1.customer_id != sub2.customer_id:  # Only link different customers
-                    confidence, evidence = self._analyze_subscription_pair(sub1, sub2)
-                    if confidence > 0.4:
-                        links.append({
-                            'source_type': EntityType.SUBSCRIPTION,
-                            'source_id': sub1.id,
-                            'target_type': EntityType.SUBSCRIPTION,
-                            'target_id': sub2.id,
-                            'confidence': confidence,
-                            'evidence_text': evidence
-                        })
+                # Can link same or different customers
+                confidence, evidence = self._analyze_subscription_pair(sub1, sub2)
+                if confidence > 0.2:  # Lowered threshold
+                    links.append({
+                        'source_type': EntityType.SUBSCRIPTION,
+                        'source_id': sub1.id,
+                        'target_type': EntityType.SUBSCRIPTION,
+                        'target_id': sub2.id,
+                        'confidence': confidence,
+                        'evidence_text': evidence
+                    })
         
         return links
     
@@ -124,19 +139,30 @@ class LinkAnalyzer:
         evidence_parts = []
         confidence = 0.0
         
-        # Same vendor and plan
+        # Same vendor
         if s1.vendor_name.lower() == s2.vendor_name.lower():
-            confidence += 0.5
+            confidence += 0.4
             evidence_parts.append(f"Same vendor: {s1.vendor_name}")
             
+            # Same plan within same vendor
             if s1.plan_name and s2.plan_name and s1.plan_name.lower() == s2.plan_name.lower():
                 confidence += 0.2
                 evidence_parts.append(f"Same plan: {s1.plan_name}")
         
         # Similar costs and billing cycles (bulk purchase indicator)
         if s1.cost == s2.cost and s1.billing_cycle == s2.billing_cycle:
-            confidence += 0.2
+            confidence += 0.15
             evidence_parts.append(f"Same pricing: {s1.cost} {s1.currency}/{s1.billing_cycle.value}")
+        
+        # Same country
+        if s1.country and s2.country and s1.country == s2.country:
+            confidence += 0.1
+            evidence_parts.append(f"Same country: {s1.country}")
+        
+        # Same category
+        if s1.category_id == s2.category_id:
+            confidence += 0.1
+            evidence_parts.append(f"Same category")
         
         # Similar renewal patterns (within 7 days)
         if s1.next_renewal_date and s2.next_renewal_date:
@@ -144,6 +170,14 @@ class LinkAnalyzer:
             if days_diff <= 7:
                 confidence += 0.15
                 evidence_parts.append(f"Similar renewal dates (within {days_diff} days)")
+            elif days_diff <= 30:
+                confidence += 0.05
+                evidence_parts.append(f"Renewal dates within same month")
+        
+        # Same customer (different subscriptions for same customer)
+        if s1.customer_id == s2.customer_id:
+            confidence += 0.2
+            evidence_parts.append(f"Same customer")
         
         confidence = min(confidence, 1.0)
         

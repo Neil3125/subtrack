@@ -15,6 +15,7 @@ class Customer(Base):
     name = Column(String(200), nullable=False, index=True)
     email = Column(String(255), nullable=True, index=True)
     phone = Column(String(50), nullable=True)
+    country = Column(String(100), nullable=True, index=True)
     tags = Column(Text, nullable=True)  # Comma-separated tags
     notes = Column(Text, nullable=True)
     

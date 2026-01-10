@@ -25,11 +25,27 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
         Subscription.status == SubscriptionStatus.ACTIVE
     ).count()
     
-    # Calculate monthly cost (simplified)
+    # Calculate monthly cost and annual revenue
     subscriptions = db.query(Subscription).filter(
         Subscription.status == SubscriptionStatus.ACTIVE
     ).all()
     monthly_cost = sum(sub.cost for sub in subscriptions)
+    
+    # Calculate annual revenue based on billing cycles
+    annual_revenue = 0
+    for sub in subscriptions:
+        if sub.billing_cycle.value == 'monthly':
+            annual_revenue += sub.cost * 12
+        elif sub.billing_cycle.value == 'yearly':
+            annual_revenue += sub.cost
+        elif sub.billing_cycle.value == 'quarterly':
+            annual_revenue += sub.cost * 4
+        elif sub.billing_cycle.value == 'weekly':
+            annual_revenue += sub.cost * 52
+        elif sub.billing_cycle.value == 'biannual':
+            annual_revenue += sub.cost * 2
+        else:
+            annual_revenue += sub.cost * 12  # Default to monthly
     
     # Get expiring soon
     today = date.today()
@@ -46,9 +62,15 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
         Subscription.next_renewal_date < today
     ).all()
     
+    # Get all active subscriptions for the modal
+    all_active = db.query(Subscription).filter(
+        Subscription.status == SubscriptionStatus.ACTIVE
+    ).all()
+    
     stats = {
         'total_active': total_active,
         'monthly_cost': monthly_cost,
+        'annual_revenue': annual_revenue,
         'expiring_soon': len(expiring_soon),
         'overdue': len(overdue)
     }
@@ -57,8 +79,9 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "categories": categories,
         "stats": stats,
-        "expiring_soon": expiring_soon[:10],  # Limit to 10
-        "overdue": overdue[:10],
+        "expiring_soon": expiring_soon,
+        "overdue": overdue,
+        "all_active": all_active,
         "insights": None
     })
 
@@ -89,14 +112,53 @@ async def groups_list(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/customers", response_class=HTMLResponse)
 async def customers_list(request: Request, db: Session = Depends(get_db)):
-    """List all customers."""
+    """List all customers with statistics."""
     categories = db.query(Category).all()
     customers = db.query(Customer).all()
     
-    return templates.TemplateResponse("categories_list.html", {
+    # Calculate statistics
+    total_customers = len(customers)
+    categories_with_customers = len(set(c.category_id for c in customers))
+    unique_countries = list(set(c.country for c in customers if c.country))
+    countries_count = len(unique_countries)
+    in_groups_count = len([c for c in customers if c.group_id])
+    
+    # Category breakdown
+    from collections import defaultdict
+    category_counts = defaultdict(int)
+    for c in customers:
+        category_counts[c.category_id] += 1
+    
+    category_breakdown = []
+    for cat in categories:
+        if cat.id in category_counts:
+            category_breakdown.append({
+                'name': cat.name,
+                'count': category_counts[cat.id]
+            })
+    category_breakdown.sort(key=lambda x: x['count'], reverse=True)
+    
+    # Country breakdown
+    country_counts = defaultdict(int)
+    for c in customers:
+        country_counts[c.country or 'Not Specified'] += 1
+    
+    country_breakdown = [
+        {'country': country, 'count': count}
+        for country, count in sorted(country_counts.items(), key=lambda x: x[1], reverse=True)
+    ]
+    
+    return templates.TemplateResponse("customers_page.html", {
         "request": request,
         "categories": categories,
-        "customers": customers
+        "customers": customers,
+        "total_customers": total_customers,
+        "categories_count": categories_with_customers,
+        "countries_count": countries_count,
+        "in_groups_count": in_groups_count,
+        "unique_countries": sorted(unique_countries),
+        "category_breakdown": category_breakdown,
+        "country_breakdown": country_breakdown
     })
 
 
@@ -132,13 +194,27 @@ async def category_detail(category_id: int, request: Request, db: Session = Depe
     # Get subscriptions in this category
     subscriptions = db.query(Subscription).filter(Subscription.category_id == category_id).all()
     
+    # Calculate category-specific stats
+    today = date.today()
+    threshold_date = today + timedelta(days=30)
+    
+    active_subs = [s for s in subscriptions if s.status == SubscriptionStatus.ACTIVE]
+    expiring_soon = len([s for s in active_subs if s.next_renewal_date and today <= s.next_renewal_date <= threshold_date])
+    overdue = len([s for s in active_subs if s.next_renewal_date and s.next_renewal_date < today])
+    
+    category_stats = {
+        'expiring_soon': expiring_soon,
+        'overdue': overdue
+    }
+    
     return templates.TemplateResponse("category_detail.html", {
         "request": request,
         "categories": categories,
         "category": category,
         "groups": groups,
         "customers": customers,
-        "subscriptions": subscriptions
+        "subscriptions": subscriptions,
+        "category_stats": category_stats
     })
 
 

@@ -1,6 +1,7 @@
 """Customer API routes."""
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import distinct
 from typing import List, Optional
 from app.database import get_db
 from app.models import Customer, Category, Group
@@ -30,18 +31,31 @@ def create_customer(customer: CustomerCreate, db: Session = Depends(get_db)):
     return db_customer
 
 
+@router.get("/countries", response_model=List[str])
+def get_unique_countries(db: Session = Depends(get_db)):
+    """Get list of unique countries from all customers."""
+    countries = db.query(distinct(Customer.country)).filter(
+        Customer.country.isnot(None),
+        Customer.country != ""
+    ).all()
+    return sorted([c[0] for c in countries if c[0]])
+
+
 @router.get("", response_model=List[CustomerResponse])
 def list_customers(
     category_id: Optional[int] = None,
     group_id: Optional[int] = None,
+    country: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    """List all customers, optionally filtered by category or group."""
+    """List all customers, optionally filtered by category, group, or country."""
     query = db.query(Customer)
     if category_id:
         query = query.filter(Customer.category_id == category_id)
     if group_id:
         query = query.filter(Customer.group_id == group_id)
+    if country:
+        query = query.filter(Customer.country == country)
     return query.all()
 
 

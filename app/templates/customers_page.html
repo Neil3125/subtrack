@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Customers - SubTrack Web{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="gradient-text">👥 All Customers</h1>
+            <p class="text-secondary">Manage customers across all categories</p>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('customerModal')">
+            ➕ Add Customer
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-4 mb-8">
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 0ms;">
+            <div class="text-sm text-secondary mb-2">Total Customers</div>
+            <div class="text-3xl font-bold text-primary mb-2">{{ total_customers }}</div>
+            <div class="text-xs text-secondary">Across all categories</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 100ms;">
+            <div class="text-sm text-secondary mb-2">Categories</div>
+            <div class="text-3xl font-bold text-success mb-2">{{ categories_count }}</div>
+            <div class="text-xs text-secondary">With customers</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 200ms;">
+            <div class="text-sm text-secondary mb-2">Countries</div>
+            <div class="text-3xl font-bold text-warning mb-2">{{ countries_count }}</div>
+            <div class="text-xs text-secondary">Unique locations</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 300ms;">
+            <div class="text-sm text-secondary mb-2">In Groups</div>
+            <div class="text-3xl font-bold text-info mb-2">{{ in_groups_count }}</div>
+            <div class="text-xs text-secondary">Customers in groups</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-6">
+        <div class="flex gap-4 items-end flex-wrap">
+            <div class="form-group flex-1" style="min-width: 200px;">
+                <label class="form-label">Filter by Category</label>
+                <select class="form-select" id="filter-category" onchange="filterCustomers()">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group flex-1" style="min-width: 200px;">
+                <label class="form-label">Filter by Country</label>
+                <select class="form-select" id="filter-country" onchange="filterCustomers()">
+                    <option value="">All Countries</option>
+                    {% for country in unique_countries %}
+                    <option value="{{ country }}">{{ country }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group flex-1" style="min-width: 200px;">
+                <label class="form-label">Search</label>
+                <input type="text" class="form-input" id="filter-search" placeholder="Search by name, email..." oninput="filterCustomers()">
+            </div>
+            <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
+        </div>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">📋 Customer List</h2>
+            <span class="badge badge-primary" id="visible-count">{{ customers|length }} customers</span>
+        </div>
+        {% if customers %}
+        <div class="table-container">
+            <table class="table" id="customers-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Country</th>
+                        <th>Category</th>
+                        <th>Group</th>
+                        <th>Subscriptions</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr class="customer-row" 
+                        data-category="{{ customer.category_id }}"
+                        data-country="{{ customer.country or '' }}"
+                        data-name="{{ customer.name|lower }}"
+                        data-email="{{ (customer.email or '')|lower }}">
+                        <td class="font-medium">
+                            <a href="/customers/{{ customer.id }}" class="text-primary hover:underline">
+                                {{ customer.name }}
+                            </a>
+                        </td>
+                        <td>{{ customer.email or '-' }}</td>
+                        <td>{{ customer.phone or '-' }}</td>
+                        <td>
+                            {% if customer.country %}
+                            <span class="badge badge-secondary">{{ customer.country }}</span>
+                            {% else %}
+                            <span class="text-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/categories/{{ customer.category.id }}" class="badge badge-primary">
+                                {{ customer.category.name }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if customer.group %}
+                            <a href="/groups/{{ customer.group.id }}" class="badge badge-success">
+                                {{ customer.group.name }}
+                            </a>
+                            {% else %}
+                            <span class="text-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-info">{{ customer.subscriptions|length }}</span>
+                        </td>
+                        <td>
+                            <div class="flex gap-1">
+                                <a href="/customers/{{ customer.id }}" class="btn btn-sm btn-secondary" title="View">👁️</a>
+                                <button class="btn btn-sm btn-secondary" onclick="loadEditData('customer', {{ customer.id }})" title="Edit">✏️</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteItem('customer', {{ customer.id }}, '{{ customer.name }}')" title="Delete">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <h3 class="empty-state-title">No customers yet</h3>
+            <p class="empty-state-text">Add your first customer to get started.</p>
+            <button class="btn btn-primary" onclick="openModal('customerModal')">
+                Add Customer
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Customers by Category Breakdown -->
+    {% if category_breakdown %}
+    <div class="card mt-6">
+        <div class="card-header">
+            <h2 class="card-title">📊 Customers by Category</h2>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {% for item in category_breakdown %}
+            <div class="card card-hover" style="background: var(--color-bg-secondary);">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-medium">{{ item.name }}</span>
+                    <span class="badge badge-primary">{{ item.count }}</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar" style="width: {{ (item.count / total_customers * 100) if total_customers > 0 else 0 }}%;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Customers by Country Breakdown -->
+    {% if country_breakdown %}
+    <div class="card mt-6">
+        <div class="card-header">
+            <h2 class="card-title">🌍 Customers by Country</h2>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {% for item in country_breakdown %}
+            <div class="card card-hover" style="background: var(--color-bg-secondary);">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-medium">{{ item.country or 'Not Specified' }}</span>
+                    <span class="badge badge-secondary">{{ item.count }}</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar" style="width: {{ (item.count / total_customers * 100) if total_customers > 0 else 0 }}%; background: var(--color-success);"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function filterCustomers() {
+    const categoryFilter = document.getElementById('filter-category').value;
+    const countryFilter = document.getElementById('filter-country').value;
+    const searchFilter = document.getElementById('filter-search').value.toLowerCase();
+    
+    const rows = document.querySelectorAll('.customer-row');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const category = row.dataset.category;
+        const country = row.dataset.country;
+        const name = row.dataset.name;
+        const email = row.dataset.email;
+        
+        let show = true;
+        
+        if (categoryFilter && category !== categoryFilter) show = false;
+        if (countryFilter && country !== countryFilter) show = false;
+        if (searchFilter && !name.includes(searchFilter) && !email.includes(searchFilter)) show = false;
+        
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+    
+    document.getElementById('visible-count').textContent = `${visibleCount} customers`;
+}
+
+function clearFilters() {
+    document.getElementById('filter-category').value = '';
+    document.getElementById('filter-country').value = '';
+    document.getElementById('filter-search').value = '';
+    filterCustomers();
+}
+</script>
+{% endblock %}

@@ -158,8 +158,13 @@
                         </a>
                     </li>
                     <li class="sidebar-nav-item">
-                        <a href="/categories" class="sidebar-nav-link {% if '/categories' in request.path %}active{% endif %}">
+                        <a href="/categories" class="sidebar-nav-link {% if '/categories' in request.path and '/customers' not in request.path %}active{% endif %}">
                             📁 Categories
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="/customers" class="sidebar-nav-link {% if request.path == '/customers' %}active{% endif %}">
+                            👥 Customers
                         </a>
                     </li>
                     <li class="sidebar-nav-item">
@@ -400,6 +405,12 @@
                         <input type="tel" name="phone" class="form-input" placeholder="+1-555-0000">
                     </div>
                     <div class="form-group">
+                        <label class="form-label">Country</label>
+                        <input type="text" name="country" class="form-input country-autocomplete" placeholder="Start typing country..." list="country-suggestions" autocomplete="off">
+                        <datalist id="country-suggestions"></datalist>
+                        <small class="text-secondary">Type to see suggestions from existing customers</small>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Tags</label>
                         <input type="text" name="tags" class="form-input" placeholder="vip, enterprise, etc.">
                     </div>
@@ -620,6 +631,12 @@
                     <div class="form-group">
                         <label class="form-label">Phone</label>
                         <input type="tel" name="phone" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Country</label>
+                        <input type="text" name="country" class="form-input country-autocomplete" placeholder="Start typing country..." list="country-suggestions-edit" autocomplete="off">
+                        <datalist id="country-suggestions-edit"></datalist>
+                        <small class="text-secondary">Type to see suggestions from existing customers</small>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Tags</label>
