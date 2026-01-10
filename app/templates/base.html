@@ -62,21 +62,23 @@
         <div class="navbar-search">
             <div class="search-wrapper">
                 <input 
-                    type="search" 
+                    type="text" 
                     class="search-input" 
                     placeholder="Search subscriptions, customers, vendors..."
                     hx-get="/search"
                     hx-trigger="keyup changed delay:300ms"
                     hx-target="#search-results"
                     hx-swap="innerHTML"
-                    name="q"
-                    autocomplete="off"
+                    name="search_query"
+                    autocomplete="new-password"
                     autocorrect="off"
                     autocapitalize="off"
                     spellcheck="false"
                     data-form-type="other"
                     data-lpignore="true"
+                    data-1p-ignore="true"
                     aria-label="Search"
+                    role="searchbox"
                 >
                 <span class="search-icon">🔍</span>
             </div>

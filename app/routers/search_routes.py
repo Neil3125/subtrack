@@ -12,7 +12,7 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/search", response_class=HTMLResponse)
-async def search_html(request: Request, q: str = Query("", min_length=0), db: Session = Depends(get_db)):
+async def search_html(request: Request, q: str = Query("", min_length=0, alias="search_query"), db: Session = Depends(get_db)):
     """Search with HTML response for HTMX."""
     if not q or len(q) < 2:
         return ""
