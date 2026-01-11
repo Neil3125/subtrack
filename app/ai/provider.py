@@ -59,12 +59,32 @@ class DummyAIProvider(AIProvider):
 
 
 def get_ai_provider() -> AIProvider:
-    """Get the configured AI provider - uses Google Gemini exclusively."""
+    """Get the configured AI provider.
+
+    SubTrack currently supports Google Gemini.
+
+    This function also hardens configuration to avoid common misconfigurations
+    (e.g., pointing Gemini at an OpenAI base URL, which results in HTTP 405).
+    """
     if settings.subtrack_ai_api_key:
         from app.ai.gemini_provider import GeminiProvider
+
+        base_url = (settings.subtrack_ai_base_url or "").strip()
+        model = (settings.subtrack_ai_model or "").strip()
+
+        # Guard against accidental OpenAI base URL configuration
+        if "api.openai.com" in base_url or base_url.rstrip("/").endswith("/v1"):
+            base_url = "https://generativelanguage.googleapis.com/v1beta"
+
+        # Guard against empty or clearly non-Gemini (OpenAI) model names.
+        # (HTTP 405 issues are typically caused by the wrong base URL, not the model.)
+        if not model or model.lower().startswith("gpt-"):
+            model = "gemini-2.0-flash"
+
         return GeminiProvider(
             api_key=settings.subtrack_ai_api_key,
-            model=settings.subtrack_ai_model,
-            base_url=settings.subtrack_ai_base_url
+            model=model,
+            base_url=base_url,
         )
+
     return DummyAIProvider()

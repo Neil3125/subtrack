@@ -889,8 +889,9 @@ GUIDELINES:
             "error": False
         })
         
-    except Exception as e:
+    except Exception:
+        # Don't leak low-level provider errors (e.g., HTTP 405) to end users.
         return JSONResponse(content={
-            "response": f"Sorry, I encountered an error: {str(e)}. Please try again.",
+            "response": "Sorry — the AI service is not responding correctly right now. Please try again in a moment.",
             "error": True
         })
