@@ -36,7 +36,9 @@ class Settings(BaseSettings):
     
     # AI Provider - Google Gemini (free tier available)
     subtrack_ai_provider: str = "gemini"
-    subtrack_ai_api_key: Optional[str] = "AIzaSyCNiWJ2ZPqmGcQRR9UAXeyTPRseOm00QSM"
+    # IMPORTANT: do not hardcode real API keys in source control.
+    # Set SUBTRACK_AI_API_KEY in your environment/.env instead.
+    subtrack_ai_api_key: Optional[str] = None
     subtrack_ai_model: str = "gemma-3-27b-it"
     subtrack_ai_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     

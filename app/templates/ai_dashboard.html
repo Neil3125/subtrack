@@ -32,27 +32,22 @@
             </div>
             <p class="ai-feature-desc">Paste a subscription URL to automatically extract vendor, pricing, and plan details.</p>
             
-            <form id="link-extract-form">
+            <div id="link-extract-form">
                 <div class="input-group">
                     <input type="url" 
                            id="extract-url-input"
                            placeholder="https://example.com/pricing" 
-                           class="input"
-                           required>
-                    <button type="submit" 
-                            class="btn btn-primary"
-                            hx-post="/api/ai/extract-from-url"
-                            hx-target="#link-extract-result"
-                            hx-indicator="#link-extract-loading"
-                            hx-include="#extract-url-input"
-                            hx-vals='js:{url: document.getElementById("extract-url-input").value}'>
-                        <span id="link-extract-loading" class="htmx-indicator">
+                           class="input">
+                    <button type="button" 
+                            id="extract-btn"
+                            class="btn btn-primary">
+                        <span id="link-extract-loading" style="display:none;">
                             <span class="loading-spinner"></span>
                         </span>
                         <span class="btn-text">Extract</span>
                     </button>
                 </div>
-            </form>
+            </div>
             
             <div id="link-extract-result" class="ai-result-container"></div>
         </div>
@@ -99,6 +94,37 @@
             <div id="forecast-result" class="ai-result-container"></div>
         </div>
 
+        <!-- Ask SubTrack (Chat) -->
+        <div class="ai-feature-card">
+            <div class="ai-feature-header">
+                <span class="ai-feature-icon">💬</span>
+                <h4>Ask SubTrack</h4>
+            </div>
+            <p class="ai-feature-desc">Ask questions about SubTrack or your subscription data and get instant answers.</p>
+            
+            <div class="ai-page-chat">
+                <div class="ai-page-chat-messages" id="ai-page-chat-messages">
+                    <div class="ai-result ai-result-success">
+                        <div class="ai-success">
+                            <strong>Hi! I’m your SubTrack assistant.</strong>
+                            <div class="text-secondary text-sm">Try: “What are my most expensive subscriptions?”</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="ai-page-chat-suggestions">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="aiPageChatSend('Summarize my current subscription spending')">Spending summary</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="aiPageChatSend('What features does SubTrack have?')">App features</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="aiPageChatSend('Find potential duplicates in my subscriptions')">Find duplicates</button>
+                </div>
+
+                <div class="ai-page-chat-input">
+                    <input id="ai-page-chat-input" class="input" placeholder="Ask a question..." onkeypress="if(event.key==='Enter'){ aiPageChatSend(); }" />
+                    <button id="ai-page-chat-send" class="btn btn-primary" type="button" onclick="aiPageChatSend()">Send</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Auto-Categorizer -->
         <div class="ai-feature-card">
             <div class="ai-feature-header">
@@ -107,32 +133,28 @@
             </div>
             <p class="ai-feature-desc">Get AI-suggested categories for any subscription vendor.</p>
             
-            <form id="categorize-form">
+            <div id="categorize-form">
                 <div class="input-group mb-2">
                     <input type="text" 
                            id="categorize-vendor-input"
                            placeholder="Vendor name (e.g., Adobe)" 
-                           class="input"
-                           required>
+                           class="input">
                 </div>
                 <div class="input-group">
                     <input type="text" 
                            id="categorize-plan-input"
                            placeholder="Plan name (optional)" 
                            class="input">
-                    <button type="submit" 
-                            class="btn btn-primary"
-                            hx-post="/api/ai/categorize-subscription"
-                            hx-target="#categorize-result"
-                            hx-indicator="#categorize-loading"
-                            hx-vals='js:{vendor_name: document.getElementById("categorize-vendor-input").value, plan_name: document.getElementById("categorize-plan-input").value}'>
-                        <span id="categorize-loading" class="htmx-indicator">
+                    <button type="button" 
+                            id="categorize-btn"
+                            class="btn btn-primary">
+                        <span id="categorize-loading" class="htmx-indicator" style="display:none;">
                             <span class="loading-spinner"></span>
                         </span>
                         <span class="btn-text">Suggest</span>
                     </button>
                 </div>
-            </form>
+            </div>
             
             <div id="categorize-result" class="ai-result-container"></div>
         </div>
@@ -213,13 +235,85 @@
 </div>
 
 <script>
-// Handle form submissions
-document.getElementById('link-extract-form')?.addEventListener('submit', function(e) {
-    e.preventDefault();
+// Helper function to show loading state
+function setLoading(buttonId, loadingId, isLoading) {
+    const btn = document.getElementById(buttonId);
+    const loading = document.getElementById(loadingId);
+    const btnText = btn?.querySelector('.btn-text');
+    
+    if (isLoading) {
+        if (loading) loading.style.display = 'inline-flex';
+        if (btnText) btnText.style.display = 'none';
+        if (btn) btn.disabled = true;
+    } else {
+        if (loading) loading.style.display = 'none';
+        if (btnText) btnText.style.display = 'inline';
+        if (btn) btn.disabled = false;
+    }
+}
+
+// Link Intelligence - Extract from URL
+document.getElementById('extract-btn')?.addEventListener('click', async function() {
+    const url = document.getElementById('extract-url-input').value.trim();
+    if (!url) {
+        document.getElementById('link-extract-result').innerHTML = `
+            <div class="ai-result ai-result-error">
+                <div class="ai-error"><span class="ai-error-icon">⚠️</span><div><strong>Please enter a URL</strong></div></div>
+            </div>`;
+        return;
+    }
+    
+    setLoading('extract-btn', 'link-extract-loading', true);
+    
+    try {
+        const response = await fetch('/api/ai/extract-from-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: url })
+        });
+        const html = await response.text();
+        document.getElementById('link-extract-result').innerHTML = html;
+    } catch (error) {
+        document.getElementById('link-extract-result').innerHTML = `
+            <div class="ai-result ai-result-error">
+                <div class="ai-error"><span class="ai-error-icon">⚠️</span><div><strong>Error: ${error.message}</strong></div></div>
+            </div>`;
+    }
+    
+    setLoading('extract-btn', 'link-extract-loading', false);
 });
 
-document.getElementById('categorize-form')?.addEventListener('submit', function(e) {
-    e.preventDefault();
+// Auto-Categorizer
+document.getElementById('categorize-btn')?.addEventListener('click', async function() {
+    const vendorName = document.getElementById('categorize-vendor-input').value.trim();
+    const planName = document.getElementById('categorize-plan-input').value.trim();
+    
+    if (!vendorName) {
+        document.getElementById('categorize-result').innerHTML = `
+            <div class="ai-result ai-result-error">
+                <div class="ai-error"><span class="ai-error-icon">⚠️</span><div><strong>Please enter a vendor name</strong></div></div>
+            </div>`;
+        return;
+    }
+    
+    setLoading('categorize-btn', 'categorize-loading', true);
+    
+    try {
+        const response = await fetch('/api/ai/categorize-subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vendor_name: vendorName, plan_name: planName || null })
+        });
+        const html = await response.text();
+        document.getElementById('categorize-result').innerHTML = html;
+    } catch (error) {
+        document.getElementById('categorize-result').innerHTML = `
+            <div class="ai-result ai-result-error">
+                <div class="ai-error"><span class="ai-error-icon">⚠️</span><div><strong>Error: ${error.message}</strong></div></div>
+            </div>`;
+    }
+    
+    setLoading('categorize-btn', 'categorize-loading', false);
 });
 
 // Apply extracted data to subscription form (if available)
@@ -229,6 +323,54 @@ function applyExtractedData(data) {
     
     // Show success message
     alert('Data saved! Go to Add Subscription to use these details.');
+}
+
+// Ask SubTrack (page chat)
+async function aiPageChatSend(prefillText=null) {
+    const input = document.getElementById('ai-page-chat-input');
+    const sendBtn = document.getElementById('ai-page-chat-send');
+    const messages = document.getElementById('ai-page-chat-messages');
+
+    const text = (prefillText !== null ? prefillText : (input?.value || '')).trim();
+    if (!text) return;
+
+    // Clear input if user typed it
+    if (prefillText === null && input) input.value = '';
+
+    // Add user bubble
+    const user = document.createElement('div');
+    user.className = 'ai-page-chat-bubble user';
+    user.textContent = text;
+    messages.appendChild(user);
+
+    // Typing indicator
+    const typing = document.createElement('div');
+    typing.className = 'ai-page-chat-bubble assistant';
+    typing.textContent = 'Thinking...';
+    messages.appendChild(typing);
+
+    messages.scrollTop = messages.scrollHeight;
+
+    if (sendBtn) sendBtn.disabled = true;
+
+    try {
+        const resp = await fetch('/api/ai/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+        });
+        const data = await resp.json();
+
+        typing.textContent = (data && data.response) ? data.response : 'No response received.';
+        typing.classList.add(data?.error ? 'error' : '');
+
+    } catch (e) {
+        typing.textContent = 'Sorry — I could not reach the AI service. Please try again.';
+        typing.classList.add('error');
+    } finally {
+        if (sendBtn) sendBtn.disabled = false;
+        messages.scrollTop = messages.scrollHeight;
+    }
 }
 
 // Apply category suggestion

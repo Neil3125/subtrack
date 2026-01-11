@@ -1,5 +1,5 @@
 """AI-powered routes."""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import Optional
 from pydantic import BaseModel
@@ -252,7 +252,7 @@ class AutoCategorizeRequest(BaseModel):
 
 
 @router.post("/extract-from-url")
-async def extract_from_url(request: ExtractURLRequest, db: Session = Depends(get_db)):
+async def extract_from_url(request: Request, db: Session = Depends(get_db)):
     """
     🔗 Smart Link Intelligence
     
@@ -261,8 +261,28 @@ async def extract_from_url(request: ExtractURLRequest, db: Session = Depends(get
     from fastapi.responses import HTMLResponse
     from fastapi.templating import Jinja2Templates
     
+    # Accept both JSON and form submissions (HTMX forms post form-encoded data)
+    url: Optional[str] = None
+    try:
+        payload = await request.json()
+        if isinstance(payload, dict):
+            url = payload.get("url")
+    except Exception:
+        # Not JSON
+        pass
+
+    if not url:
+        try:
+            form = await request.form()
+            url = form.get("url")
+        except Exception:
+            pass
+
+    if not url:
+        raise HTTPException(status_code=422, detail="Missing 'url' parameter")
+
     smart_features = SmartAIFeatures(db)
-    result = await smart_features.extract_from_url(request.url)
+    result = await smart_features.extract_from_url(url)
     
     # Render as HTML for HTMX
     templates = Jinja2Templates(directory="app/templates")
@@ -480,7 +500,7 @@ async def renewal_forecast(
 
 @router.post("/categorize-subscription")
 async def categorize_subscription(
-    request: AutoCategorizeRequest,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """
@@ -490,10 +510,33 @@ async def categorize_subscription(
     """
     from fastapi.responses import HTMLResponse
     
+    # Accept both JSON and form submissions
+    vendor_name: Optional[str] = None
+    plan_name: Optional[str] = None
+
+    try:
+        payload = await request.json()
+        if isinstance(payload, dict):
+            vendor_name = payload.get("vendor_name")
+            plan_name = payload.get("plan_name")
+    except Exception:
+        pass
+
+    if not vendor_name:
+        try:
+            form = await request.form()
+            vendor_name = form.get("vendor_name")
+            plan_name = form.get("plan_name")
+        except Exception:
+            pass
+
+    if not vendor_name:
+        raise HTTPException(status_code=422, detail="Missing 'vendor_name' parameter")
+
     smart_features = SmartAIFeatures(db)
     result = await smart_features.suggest_category(
-        request.vendor_name,
-        request.plan_name
+        vendor_name,
+        plan_name
     )
     
     # Build HTML response
@@ -672,9 +715,32 @@ async def clear_ai_expired_cache(db: Session = Depends(get_db)):
 
 
 @router.get("/status")
+async def get_ai_status():
+    """
+    Get AI provider status and configuration.
+    Returns HTML for HTMX integration.
+    """
+    from fastapi.responses import HTMLResponse
+    from app.config import settings
+    from app.ai.provider import get_ai_provider
+    
+    provider = get_ai_provider()
+    is_available = provider.is_available()
+    
+    html = f"""
+    <div class="ai-status-badge {'ai-online' if is_available else 'ai-offline'}">
+        <span>{'✓' if is_available else '✗'}</span>
+        <span>{settings.subtrack_ai_provider.title()} - {'Online' if is_available else 'Offline'}</span>
+        <span style="opacity: 0.7; font-size: 0.7rem;">({settings.ai_daily_limit} req/day)</span>
+    </div>
+    """
+    
+    return HTMLResponse(content=html)
+
+
 @router.get("/test-ai-direct")
 async def test_ai_direct():
-    """Direct test of AI API - bypasses cache and shows real usage."""
+    """Direct test of AI API - bypasses cache and shows real usage. Returns JSON for debugging."""
     from app.config import settings
     from app.ai.provider import get_ai_provider
     import time
@@ -719,28 +785,6 @@ async def test_ai_direct():
         result["message"] = "API call failed - see error for details"
     
     return result
-
-
-async def get_ai_status(db: Session = Depends(get_db)):
-    """
-    Get AI provider status and configuration.
-    """
-    from fastapi.responses import HTMLResponse
-    from app.config import settings
-    from app.ai.provider import get_ai_provider
-    
-    provider = get_ai_provider()
-    is_available = provider.is_available()
-    
-    html = f"""
-    <div class="ai-status-badge {'ai-online' if is_available else 'ai-offline'}">
-        <span>{'✓' if is_available else '✗'}</span>
-        <span>{settings.subtrack_ai_provider.title()} - {'Online' if is_available else 'Offline'}</span>
-        <span style="opacity: 0.7; font-size: 0.7rem;">({settings.ai_daily_limit} req/day)</span>
-    </div>
-    """
-    
-    return HTMLResponse(content=html)
 
 
 # ==================== AI CHATBOT ====================

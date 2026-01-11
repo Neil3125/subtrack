@@ -959,7 +959,7 @@
             // Add assistant response
             const assistantMsg = document.createElement('div');
             assistantMsg.className = 'ai-chat-message assistant';
-            assistantMsg.textContent = data.response;
+            assistantMsg.textContent = (data && data.response) ? data.response : 'No response received.';
             messagesContainer.appendChild(assistantMsg);
             
         } catch (error) {

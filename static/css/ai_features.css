@@ -34,7 +34,7 @@
 
 .ai-features-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
     margin-top: 1.5rem;
 }
@@ -47,7 +47,8 @@
     transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
-    min-height: 200px;
+    min-height: auto;
+    height: fit-content;
 }
 
 .ai-feature-card:hover {
@@ -572,6 +573,12 @@
 /* RESPONSIVE ADJUSTMENTS                         */
 /* ============================================== */
 
+@media (max-width: 1200px) {
+    .ai-features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
     .ai-features-grid {
         grid-template-columns: 1fr;
@@ -622,6 +629,72 @@
 .btn-sm {
     padding: 0.375rem 0.75rem;
     font-size: 0.8125rem;
+}
+
+/* ============================================== */
+/* AI PAGE CHAT (AI FEATURES PAGE)                */
+/* ============================================== */
+
+.ai-page-chat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.ai-page-chat-messages {
+    border: 1px solid var(--color-border);
+    background: var(--color-background);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    max-height: 320px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.ai-page-chat-bubble {
+    padding: 0.6rem 0.8rem;
+    border-radius: 1rem;
+    max-width: 90%;
+    font-size: 0.875rem;
+    line-height: 1.35;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.ai-page-chat-bubble.user {
+    align-self: flex-end;
+    background: var(--color-primary);
+    color: white;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.ai-page-chat-bubble.assistant {
+    align-self: flex-start;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-bottom-left-radius: 0.25rem;
+}
+
+.ai-page-chat-bubble.assistant.error {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.06);
+}
+
+.ai-page-chat-input {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.ai-page-chat-input .input {
+    flex: 1;
+}
+
+.ai-page-chat-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 /* ============================================== */
