@@ -741,3 +741,112 @@ async def get_ai_status(db: Session = Depends(get_db)):
     """
     
     return HTMLResponse(content=html)
+
+
+# ==================== AI CHATBOT ====================
+
+class ChatMessage(BaseModel):
+    """Request schema for chat messages."""
+    message: str
+
+
+@router.post("/chat")
+async def ai_chat(request: ChatMessage, db: Session = Depends(get_db)):
+    """
+    🤖 AI Chatbot
+    
+    Chat with an AI assistant that knows about SubTrack and your subscription data.
+    """
+    from fastapi.responses import JSONResponse
+    from app.ai.provider import get_ai_provider
+    from app.models import Subscription, Customer, Category
+    from sqlalchemy import func
+    
+    provider = get_ai_provider()
+    
+    if not provider.is_available():
+        return JSONResponse(content={
+            "response": "AI is not currently available. Please check your API configuration.",
+            "error": True
+        })
+    
+    # Gather context about the user's data
+    try:
+        # Get subscription stats
+        total_subs = db.query(func.count(Subscription.id)).scalar() or 0
+        active_subs = db.query(func.count(Subscription.id)).filter(
+            Subscription.status == "active"
+        ).scalar() or 0
+        
+        total_monthly = db.query(func.sum(Subscription.cost)).filter(
+            Subscription.status == "active",
+            Subscription.billing_cycle == "monthly"
+        ).scalar() or 0
+        
+        total_yearly = db.query(func.sum(Subscription.cost)).filter(
+            Subscription.status == "active",
+            Subscription.billing_cycle == "yearly"
+        ).scalar() or 0
+        
+        monthly_equivalent = float(total_monthly) + (float(total_yearly) / 12)
+        
+        categories = db.query(Category).all()
+        category_names = [c.name for c in categories]
+        
+        # Get top subscriptions by cost
+        top_subs = db.query(Subscription).filter(
+            Subscription.status == "active"
+        ).order_by(Subscription.cost.desc()).limit(5).all()
+        
+        top_subs_info = ", ".join([f"{s.vendor_name} (${s.cost}/{s.billing_cycle.value if hasattr(s.billing_cycle, 'value') else s.billing_cycle})" for s in top_subs])
+        
+    except Exception as e:
+        # Fallback if database query fails
+        total_subs = 0
+        active_subs = 0
+        monthly_equivalent = 0
+        category_names = []
+        top_subs_info = "N/A"
+    
+    system_prompt = f"""You are SubTrack Assistant, a helpful AI assistant for the SubTrack subscription management application.
+
+ABOUT SUBTRACK:
+- SubTrack helps users track and manage their subscriptions
+- Features include: subscription tracking, cost analysis, renewal reminders, AI-powered insights
+- AI Features: Budget Surgeon (find savings), Link Intelligence (extract from URLs), Renewal Forecaster, Auto-Categorizer
+- Users can organize subscriptions by categories, groups, and customers
+
+USER'S CURRENT DATA:
+- Total subscriptions: {total_subs}
+- Active subscriptions: {active_subs}
+- Estimated monthly spend: ${monthly_equivalent:.2f}
+- Categories: {', '.join(category_names) if category_names else 'None set up yet'}
+- Top subscriptions: {top_subs_info}
+
+GUIDELINES:
+- Be helpful, friendly, and concise
+- Answer questions about SubTrack features and how to use them
+- Provide insights about the user's subscription data when relevant
+- Suggest ways to save money or optimize subscriptions
+- If asked about specific subscriptions, reference the data above
+- For technical issues, suggest checking settings or contacting support
+- Keep responses under 150 words unless more detail is needed"""
+
+    try:
+        response = await provider.generate_completion(
+            prompt=request.message,
+            system_prompt=system_prompt,
+            temperature=0.7,
+            max_tokens=300
+        )
+        
+        return JSONResponse(content={
+            "response": response.strip(),
+            "error": False
+        })
+        
+    except Exception as e:
+        return JSONResponse(content={
+            "response": f"Sorry, I encountered an error: {str(e)}. Please try again.",
+            "error": True
+        })
