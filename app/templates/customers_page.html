@@ -110,17 +110,33 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="/categories/{{ customer.category.id }}" class="badge badge-primary">
-                                {{ customer.category.name }}
-                            </a>
+                            {% if customer.categories %}
+                                {% for cat in customer.categories %}
+                                <a href="/categories/{{ cat.id }}" class="badge badge-primary" style="margin: 1px;">
+                                    {{ cat.name }}
+                                </a>
+                                {% endfor %}
+                            {% elif customer.primary_category %}
+                                <a href="/categories/{{ customer.primary_category.id }}" class="badge badge-primary">
+                                    {{ customer.primary_category.name }}
+                                </a>
+                            {% else %}
+                                <span class="text-secondary">-</span>
+                            {% endif %}
                         </td>
                         <td>
-                            {% if customer.group %}
-                            <a href="/groups/{{ customer.group.id }}" class="badge badge-success">
-                                {{ customer.group.name }}
-                            </a>
+                            {% if customer.groups %}
+                                {% for grp in customer.groups %}
+                                <a href="/groups/{{ grp.id }}" class="badge badge-success" style="margin: 1px;">
+                                    {{ grp.name }}
+                                </a>
+                                {% endfor %}
+                            {% elif customer.primary_group %}
+                                <a href="/groups/{{ customer.primary_group.id }}" class="badge badge-success">
+                                    {{ customer.primary_group.name }}
+                                </a>
                             {% else %}
-                            <span class="text-secondary">-</span>
+                                <span class="text-secondary">-</span>
                             {% endif %}
                         </td>
                         <td>

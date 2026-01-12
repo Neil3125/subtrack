@@ -1095,7 +1095,7 @@ a:hover {
 }
 
 .modal-body {
-  padding: 0;
+  padding: var(--space-4) var(--space-5);
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1 1 auto;
@@ -1103,14 +1103,10 @@ a:hover {
   overscroll-behavior: contain;
 }
 
-/* Add padding for modal body content that isn't a table */
-.modal-body > *:not(.table):not(.table-container) {
-  padding: var(--space-3) var(--space-5);
-}
-
 .modal-body > .table,
 .modal-body > .table-container {
-  margin: 0;
+  margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-5));
+  width: calc(100% + 2 * var(--space-5));
 }
 
 /* Custom scrollbar for modal body */
@@ -2077,18 +2073,20 @@ tr:hover {
 .actions-cell {
   white-space: nowrap;
   width: 1%;
-  min-width: 160px;
+  min-width: 100px;
 }
 
 .actions-wrapper {
-  display: flex;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.25rem;
-  justify-content: flex-end;
+  justify-items: center;
+  width: fit-content;
 }
 
 .actions-wrapper .btn {
   flex-shrink: 0;
+  min-width: 36px;
 }
 
 /* Responsive table adjustments */

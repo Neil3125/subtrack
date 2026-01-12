@@ -1291,20 +1291,42 @@ window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id') {
 };
 
 window.updateCustomerSelect = function(categoryId, customerSelectId = 'customer_id', selectedCustomerId = null) {
-  const customerSelect = document.querySelector(`select[name="${customerSelectId}"]`);
+  // Find the customer select - prefer searching within open modals first
+  let customerSelect = null;
+  
+  // Try to find within an open modal
+  const openModals = document.querySelectorAll('.modal[style*="display: flex"], .modal.show');
+  for (let modal of openModals) {
+    const select = modal.querySelector(`select[name="${customerSelectId}"]`);
+    if (select) {
+      customerSelect = select;
+      break;
+    }
+  }
+  
+  // Fallback to global search if not found in modals
+  if (!customerSelect) {
+    customerSelect = document.querySelector(`select[name="${customerSelectId}"]`);
+  }
+  
   if (!customerSelect) return;
 
-  // If no category selected, still load all customers so the dropdown isn't empty.
-  const url = categoryId ? `/api/customers?category_id=${categoryId}` : `/api/customers`;
-
-  fetch(url)
+  // Always load ALL customers to allow full selection flexibility
+  fetch('/api/customers')
     .then(response => response.json())
     .then(customers => {
       customerSelect.innerHTML = '<option value="">Select a customer</option>';
       customers.forEach(customer => {
         const option = document.createElement('option');
         option.value = customer.id;
-        option.textContent = customer.name;
+        // Show category info for context
+        let categoryDisplay = '';
+        if (customer.category_names) {
+          categoryDisplay = ` (${customer.category_names})`;
+        } else if (customer.categories && customer.categories.length > 0) {
+          categoryDisplay = ` (${customer.categories.map(c => c.name).join(', ')})`;
+        }
+        option.textContent = customer.name + categoryDisplay;
         if (selectedCustomerId && String(customer.id) === String(selectedCustomerId)) {
           option.selected = true;
         }
@@ -1335,7 +1357,14 @@ window.updateCustomerSelectForEdit = function(categoryId) {
       customers.forEach(customer => {
         const option = document.createElement('option');
         option.value = customer.id;
-        option.textContent = `${customer.name} (${customer.category ? customer.category.name : 'No category'})`;
+        // Use category_names for many-to-many relationships, fallback to categories array
+        let categoryDisplay = 'No category';
+        if (customer.category_names) {
+          categoryDisplay = customer.category_names;
+        } else if (customer.categories && customer.categories.length > 0) {
+          categoryDisplay = customer.categories.map(c => c.name).join(', ');
+        }
+        option.textContent = `${customer.name} (${categoryDisplay})`;
         if (String(customer.id) === String(currentCustomerId)) {
           option.selected = true;
         }
