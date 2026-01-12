@@ -696,12 +696,12 @@
 
     <!-- Edit Subscription Modal -->
     <div id="editSubscriptionModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-content" style="width: min(800px, 95vw);">
             <div class="modal-header">
                 <h2 class="modal-title">Edit Subscription</h2>
                 <button class="modal-close" onclick="closeModal('editSubscriptionModal')">×</button>
             </div>
-            <form onsubmit="handleFormSubmit(event, updateSubscription)">
+            <form onsubmit="handleFormSubmit(event, updateSubscription)" style="display: flex; flex-direction: column; min-height: 0; flex: 1;">
                 <div class="modal-body">
                     <!-- Customer Selection Section -->
                     <div class="form-section" style="background: var(--color-bg-secondary); padding: 1rem; border-radius: var(--radius-lg); margin-bottom: 1rem;">

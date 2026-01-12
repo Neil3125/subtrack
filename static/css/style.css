@@ -1011,41 +1011,37 @@ a:hover {
   display: none;
 }
 
+/* Modal overlay - position:fixed relative to viewport */
 .modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   display: none;
-  align-items: flex-start;
-  justify-content: center;
+  place-items: center;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: var(--z-modal);
   padding: 20px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: auto;
 }
 
 .modal[style*="display: flex"],
+.modal[style*="display: grid"],
 .modal.show {
-  display: flex !important;
+  display: grid !important;
 }
 
-/* Modal content wrapper - the box that contains everything */
+/* Modal dialog - the box that contains everything */
 .modal-content {
   background: var(--color-bg-elevated);
   border-radius: var(--radius-xl);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(91, 127, 255, 0.1);
   border: 1px solid var(--color-border);
-  max-width: 900px;
-  width: 100%;
-  margin: auto;
+  width: min(900px, 95vw);
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 40px);
+  min-height: 0;
 }
 
 .modal.show .modal-content {
@@ -1097,8 +1093,7 @@ a:hover {
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1 1 auto;
-  min-height: 100px;
-  max-height: calc(100vh - 200px);
+  min-height: 0;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
@@ -1149,10 +1144,6 @@ a:hover {
   .modal-content {
     max-height: calc(100vh - 20px);
   }
-  
-  .modal-body {
-    max-height: calc(100vh - 160px);
-  }
 }
 
 @media (max-width: 600px) {
@@ -1162,6 +1153,7 @@ a:hover {
   
   .modal-content {
     max-height: calc(100vh - 20px);
+    width: calc(100vw - 20px);
     border-radius: var(--radius-lg);
   }
   
@@ -1172,7 +1164,6 @@ a:hover {
   
   .modal-body {
     padding: var(--space-3) var(--space-4);
-    max-height: calc(100vh - 140px);
   }
   
   .modal-footer {
@@ -1973,8 +1964,8 @@ html {
   }
   
   .modal-content {
-    max-height: 90vh;
-    max-width: 100%;
+    max-height: calc(100vh - 16px);
+    width: calc(100vw - 16px);
     border-radius: var(--radius-lg);
   }
   
@@ -1984,10 +1975,6 @@ html {
   
   .modal-title {
     font-size: var(--font-size-lg);
-  }
-  
-  .modal-body > *:not(.table):not(.table-container) {
-    padding: var(--space-3) var(--space-4);
   }
   
   .fab {

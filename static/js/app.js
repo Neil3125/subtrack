@@ -75,8 +75,8 @@ function openModal(modalId) {
       document.body.style.paddingRight = `${scrollbarWidth}px`;
     }
 
-    // Use flex display to maintain centering (not 'block' which breaks flexbox centering)
-    modal.style.display = 'flex';
+    // Use grid display for proper centering and scrollable modal body
+    modal.style.display = 'grid';
 
     // Track this modal
     window.openModals.push(modalId);
@@ -924,24 +924,34 @@ window.loadEditData = function(type, id) {
         const customerField = form.querySelector('select[name="customer_id"]');
         const categoryId = categoryField ? categoryField.value : null;
         const customerId = data.customer_id;
+        const saveBtn = form.querySelector('button[type="submit"]');
 
-        // Load customers for the current category with preselection
-        if (categoryId && customerId) {
-          fetch(`/partials/customer-options?category_id=${categoryId}&selected_customer_id=${customerId}`)
+        // Function to load customers and update save button state
+        const loadCustomersForCategory = (catId, selectedCustId) => {
+          const url = selectedCustId 
+            ? `/partials/customer-options?category_id=${catId}&selected_customer_id=${selectedCustId}`
+            : `/partials/customer-options?category_id=${catId}`;
+          
+          fetch(url)
             .then(response => response.text())
             .then(html => {
               customerField.innerHTML = html;
               
-              // Check if there are no customers
+              // Check if there are valid customers
               const options = customerField.querySelectorAll('option');
               const hasCustomers = Array.from(options).some(opt => opt.value && opt.value !== '');
               
               if (!hasCustomers) {
                 // Disable save button if no customers available
-                const saveBtn = form.querySelector('button[type="submit"]');
                 if (saveBtn) {
                   saveBtn.disabled = true;
                   saveBtn.title = 'No customers available in this category';
+                }
+              } else {
+                // Re-enable save button if customers are available
+                if (saveBtn) {
+                  saveBtn.disabled = false;
+                  saveBtn.title = '';
                 }
               }
             })
@@ -949,6 +959,19 @@ window.loadEditData = function(type, id) {
               console.error('Error loading customers:', error);
               customerField.innerHTML = '<option value="">Error loading customers</option>';
             });
+        };
+
+        // Load customers for the current category with preselection
+        if (categoryId) {
+          loadCustomersForCategory(categoryId, customerId);
+        }
+
+        // Listen for category changes to reload customers
+        if (categoryField && !categoryField.dataset.customerHooked) {
+          categoryField.addEventListener('change', function() {
+            loadCustomersForCategory(this.value, null);
+          });
+          categoryField.dataset.customerHooked = 'true';
         }
       }
       
@@ -1331,7 +1354,7 @@ window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id') {
   let groupSelect = null;
   
   // Try to find within an open modal (check both flex and block display)
-  const openModals = document.querySelectorAll('.modal[style*="display: flex"], .modal[style*="display: block"], .modal.show');
+  const openModals = document.querySelectorAll('.modal[style*="display: grid"], .modal[style*="display: flex"], .modal[style*="display: block"], .modal.show');
   for (let modal of openModals) {
     const select = modal.querySelector(`select[name="${groupSelectId}"]`);
     if (select) {
@@ -1371,7 +1394,7 @@ window.updateCustomerSelect = function(categoryId, customerSelectId = 'customer_
   let customerSelect = null;
   
   // Try to find within an open modal
-  const openModals = document.querySelectorAll('.modal[style*="display: flex"], .modal.show');
+  const openModals = document.querySelectorAll('.modal[style*="display: grid"], .modal[style*="display: flex"], .modal.show');
   for (let modal of openModals) {
     const select = modal.querySelector(`select[name="${customerSelectId}"]`);
     if (select) {
