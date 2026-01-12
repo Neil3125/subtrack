@@ -2,10 +2,14 @@
 from sqlalchemy import Column, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
+from app.models.associations import customer_groups
 
 
 class Group(Base):
-    """Group model for organizing customers within a category."""
+    """Group model for organizing customers within a category.
+    
+    Now supports many-to-many relationship with customers.
+    """
     
     __tablename__ = "groups"
     
@@ -16,7 +20,14 @@ class Group(Base):
     
     # Relationships
     category = relationship("Category", back_populates="groups")
-    customers = relationship("Customer", back_populates="group", cascade="all, delete-orphan")
+    
+    # Many-to-many relationship with customers
+    related_customers = relationship(
+        "Customer",
+        secondary=customer_groups,
+        back_populates="groups",
+        lazy="selectin"
+    )
     
     def __repr__(self):
         return f"<Group(id={self.id}, name='{self.name}', category_id={self.category_id})>"

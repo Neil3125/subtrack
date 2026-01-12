@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
@@ -133,9 +133,6 @@
                     <a href="/reports" class="dropdown-item">
                         <span>📤</span> Reports & Exports
                     </a>
-                    <button onclick="openModal('aiConfigModal'); loadAIConfig();" class="dropdown-item">
-                        <span>🤖</span> AI Configuration
-                    </button>
                     <button onclick="openShortcutsModal()" class="dropdown-item">
                         <span>⌨️</span> Keyboard Shortcuts
                     </button>
@@ -427,8 +424,8 @@
                         <input type="tel" name="phone" class="form-input" placeholder="+1-555-0000">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Country</label>
-                        <input type="text" name="country" class="form-input country-autocomplete" placeholder="Start typing country..." list="country-suggestions" autocomplete="off">
+                        <label class="form-label">Country *</label>
+                        <input type="text" name="country" class="form-input country-autocomplete" placeholder="Start typing country..." list="country-suggestions" autocomplete="off" required>
                         <datalist id="country-suggestions"></datalist>
                         <small class="text-secondary">Type to see suggestions from existing customers</small>
                     </div>
@@ -659,8 +656,8 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Country</label>
-                        <input type="text" name="country" class="form-input country-autocomplete" placeholder="Start typing country..." list="country-suggestions-edit" autocomplete="off">
+                        <label class="form-label">Country *</label>
+                        <input type="text" name="country" class="form-input country-autocomplete" placeholder="Start typing country..." list="country-suggestions-edit" autocomplete="off" required>
                         <datalist id="country-suggestions-edit"></datalist>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
@@ -693,146 +690,146 @@
         </div>
     </div>
 
-    <!-- AI Configuration Modal -->
-    <div id="aiConfigModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">🤖 AI Configuration</h2>
-                <button class="modal-close" onclick="closeModal('aiConfigModal')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="info-box info-box-info mb-4">
-                    <strong>ℹ️ AI Provider:</strong> SubTrack uses Google Gemini for AI features
-                </div>
-                <div class="form-group">
-                    <label class="form-label">API Key</label>
-                    <input type="password" id="ai-api-key" class="form-input" placeholder="Enter your Google AI Studio API key">
-                    <small class="text-secondary">Get your free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Model</label>
-                    <select id="ai-model" class="form-select">
-                        <option value="gemma-3-27b-it">Gemma 3 27B (Recommended)</option>
-                        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="ai-enabled">
-                        <span class="toggle-slider"></span>
-                        <span class="toggle-label">Enable AI Features</span>
-                    </label>
-                </div>
-                <div class="info-box info-box-success">
-                    <strong>✅ Deterministic Mode:</strong> AI features work without an API key using rule-based intelligence
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('aiConfigModal')">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveAIConfig()">Save Configuration</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Edit Subscription Modal -->
     <div id="editSubscriptionModal" class="modal" style="display: none;">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
                 <h2 class="modal-title">Edit Subscription</h2>
                 <button class="modal-close" onclick="closeModal('editSubscriptionModal')">×</button>
             </div>
             <form onsubmit="handleFormSubmit(event, updateSubscription)">
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-label">Category *</label>
-                        <select name="category_id" class="form-select" required onchange="updateCustomerSelect(this.value)">
-                            {% for category in categories|default([]) %}
-                            <option value="{{ category.id }}">{{ category.name }}</option>
-                            {% endfor %}
-                        </select>
+                    <!-- Customer Selection Section -->
+                    <div class="form-section" style="background: var(--color-bg-secondary); padding: 1rem; border-radius: var(--radius-lg); margin-bottom: 1rem;">
+                        <h4 style="margin: 0 0 0.75rem 0; font-size: 0.875rem; color: var(--color-text-secondary);">👤 Customer Assignment</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Category *</label>
+                                <select name="category_id" class="form-select" required onchange="updateCustomerSelectForEdit(this.value)">
+                                    {% for category in categories|default([]) %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Customer *</label>
+                                <select name="customer_id" class="form-select" required>
+                                    <option value="">Select a customer</option>
+                                </select>
+                                <small class="text-secondary">Change customer to reassign this subscription</small>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Customer *</label>
-                        <select name="customer_id" class="form-select" required>
-                            <option value="">Select a customer</option>
-                        </select>
+
+                    <!-- Vendor & Plan Section -->
+                    <div class="form-section" style="background: var(--color-bg-secondary); padding: 1rem; border-radius: var(--radius-lg); margin-bottom: 1rem;">
+                        <h4 style="margin: 0 0 0.75rem 0; font-size: 0.875rem; color: var(--color-text-secondary);">📋 Service & Plan Details</h4>
+                        <div class="form-group">
+                            <label class="form-label">Vendor Name *</label>
+                            <input type="text" name="vendor_name" class="form-input" required>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Plan Name</label>
+                                <input type="text" name="plan_name" class="form-input" placeholder="e.g., Basic, Pro, Enterprise">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Quick Plan Select</label>
+                                <select class="form-select" onchange="applyPlanPreset(this.value)">
+                                    <option value="">-- Select a preset --</option>
+                                    <option value="basic">Basic Plan</option>
+                                    <option value="standard">Standard Plan</option>
+                                    <option value="professional">Professional Plan</option>
+                                    <option value="enterprise">Enterprise Plan</option>
+                                    <option value="custom">Custom Plan</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Vendor Name *</label>
-                        <input type="text" name="vendor_name" class="form-input" required>
+
+                    <!-- Pricing Section -->
+                    <div class="form-section" style="background: var(--color-bg-secondary); padding: 1rem; border-radius: var(--radius-lg); margin-bottom: 1rem;">
+                        <h4 style="margin: 0 0 0.75rem 0; font-size: 0.875rem; color: var(--color-text-secondary);">💰 Pricing & Billing</h4>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Cost *</label>
+                                <input type="number" step="0.01" name="cost" class="form-input" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Currency</label>
+                                <select name="currency" class="form-select">
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="CAD">CAD</option>
+                                    <option value="AUD">AUD</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Billing Cycle *</label>
+                                <select name="billing_cycle" class="form-select" required onchange="updateRenewalDateFromCycle(this.value)">
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly">Quarterly</option>
+                                    <option value="yearly">Yearly</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="biannual">Biannual</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Plan Name</label>
-                        <input type="text" name="plan_name" class="form-input">
+
+                    <!-- Dates Section -->
+                    <div class="form-section" style="background: var(--color-bg-secondary); padding: 1rem; border-radius: var(--radius-lg); margin-bottom: 1rem;">
+                        <h4 style="margin: 0 0 0.75rem 0; font-size: 0.875rem; color: var(--color-text-secondary);">📅 Dates & Renewal</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Start Date *</label>
+                                <input type="date" name="start_date" class="form-input" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Next Renewal Date *</label>
+                                <input type="date" name="next_renewal_date" class="form-input" required>
+                                <small class="text-secondary">Auto-calculated when changing billing cycle</small>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Status & Location Section -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="form-group">
-                            <label class="form-label">Cost *</label>
-                            <input type="number" step="0.01" name="cost" class="form-input" required>
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="active">✅ Active</option>
+                                <option value="paused">⏸️ Paused</option>
+                                <option value="cancelled">❌ Cancelled</option>
+                                <option value="expired">⏰ Expired</option>
+                            </select>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Currency</label>
-                            <select name="currency" class="form-select">
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="GBP">GBP</option>
+                            <label class="form-label">Country</label>
+                            <select name="country" class="form-select">
+                                <option value="">Select a country</option>
+                                <option value="United States">United States</option>
+                                <option value="United Kingdom">United Kingdom</option>
+                                <option value="Canada">Canada</option>
+                                <option value="Australia">Australia</option>
+                                <option value="Germany">Germany</option>
+                                <option value="France">France</option>
+                                <option value="Netherlands">Netherlands</option>
+                                <option value="Japan">Japan</option>
+                                <option value="Singapore">Singapore</option>
+                                <option value="India">India</option>
+                                <option value="Brazil">Brazil</option>
+                                <option value="South Africa">South Africa</option>
+                                <option value="UAE">UAE</option>
+                                <option value="Other">Other</option>
                             </select>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Billing Cycle *</label>
-                        <select name="billing_cycle" class="form-select" required>
-                            <option value="monthly">Monthly</option>
-                            <option value="quarterly">Quarterly</option>
-                            <option value="yearly">Yearly</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="biannual">Biannual</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label class="form-label">Start Date *</label>
-                            <input type="date" name="start_date" class="form-input" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Next Renewal *</label>
-                            <input type="date" name="next_renewal_date" class="form-input" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Status</label>
-                        <select name="status" class="form-select">
-                            <option value="active">Active</option>
-                            <option value="cancelled">Cancelled</option>
-                            <option value="paused">Paused</option>
-                            <option value="expired">Expired</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Country</label>
-                        <select name="country" class="form-select">
-                            <option value="">Select a country</option>
-                            <option value="United States">United States</option>
-                            <option value="United Kingdom">United Kingdom</option>
-                            <option value="Canada">Canada</option>
-                            <option value="Australia">Australia</option>
-                            <option value="Germany">Germany</option>
-                            <option value="France">France</option>
-                            <option value="Netherlands">Netherlands</option>
-                            <option value="Japan">Japan</option>
-                            <option value="Singapore">Singapore</option>
-                            <option value="India">India</option>
-                            <option value="Brazil">Brazil</option>
-                            <option value="South Africa">South Africa</option>
-                            <option value="UAE">UAE</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label class="form-label">Notes</label>
-                        <textarea name="notes" class="form-textarea"></textarea>
+                        <textarea name="notes" class="form-textarea" placeholder="Additional notes about this subscription..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -843,141 +840,17 @@
         </div>
     </div>
 
-    <!-- AI Chatbot -->
-    <div class="ai-chatbot-container" id="ai-chatbot">
-        <div class="ai-chatbot-window" id="chatbot-window">
-            <div class="ai-chatbot-header">
-                <h4>🤖 SubTrack Assistant</h4>
-                <button class="ai-chatbot-close" onclick="toggleChatbot()">✕</button>
-            </div>
-            <div class="ai-chatbot-messages" id="chatbot-messages">
-                <div class="ai-chat-message assistant">
-                    Hi! I'm your SubTrack Assistant. I can help you with:
-                    <br>• Understanding your subscriptions
-                    <br>• Finding ways to save money
-                    <br>• Using SubTrack features
-                    <br><br>How can I help you today?
-                </div>
-            </div>
-            <div class="ai-chatbot-suggestions" id="chatbot-suggestions">
-                <span class="ai-suggestion-chip" onclick="sendSuggestion('What are my top subscriptions?')">Top subscriptions</span>
-                <span class="ai-suggestion-chip" onclick="sendSuggestion('How can I save money?')">Save money</span>
-                <span class="ai-suggestion-chip" onclick="sendSuggestion('How do I use Budget Surgeon?')">Budget Surgeon</span>
-            </div>
-            <div class="ai-chatbot-input">
-                <input type="text" id="chatbot-input" placeholder="Ask me anything..." onkeypress="handleChatKeypress(event)">
-                <button onclick="sendChatMessage()" id="chatbot-send-btn">➤</button>
-            </div>
-        </div>
-        <button class="ai-chatbot-toggle" id="chatbot-toggle" onclick="toggleChatbot()" title="Chat with AI Assistant">
-            💬
-        </button>
-    </div>
 
     <script src="/static/js/app.js"></script>
     
-    <!-- AI Chatbot Script -->
     <script>
-    let chatbotOpen = false;
-    
-    function toggleChatbot() {
-        const window = document.getElementById('chatbot-window');
-        const toggle = document.getElementById('chatbot-toggle');
-        chatbotOpen = !chatbotOpen;
-        
-        if (chatbotOpen) {
-            window.classList.add('open');
-            toggle.classList.add('active');
-            toggle.innerHTML = '✕';
-            document.getElementById('chatbot-input').focus();
-        } else {
-            window.classList.remove('open');
-            toggle.classList.remove('active');
-            toggle.innerHTML = '💬';
-        }
+    // Helper functions for modals
+    function openShortcutsModal() {
+        openModal('shortcutsModal');
     }
     
-    function handleChatKeypress(event) {
-        if (event.key === 'Enter') {
-            sendChatMessage();
-        }
-    }
-    
-    function sendSuggestion(text) {
-        document.getElementById('chatbot-input').value = text;
-        sendChatMessage();
-    }
-    
-    async function sendChatMessage() {
-        const input = document.getElementById('chatbot-input');
-        const message = input.value.trim();
-        
-        if (!message) return;
-        
-        const messagesContainer = document.getElementById('chatbot-messages');
-        const sendBtn = document.getElementById('chatbot-send-btn');
-        
-        // Add user message
-        const userMsg = document.createElement('div');
-        userMsg.className = 'ai-chat-message user';
-        userMsg.textContent = message;
-        messagesContainer.appendChild(userMsg);
-        
-        // Clear input
-        input.value = '';
-        
-        // Disable send button
-        sendBtn.disabled = true;
-        
-        // Add typing indicator
-        const typingMsg = document.createElement('div');
-        typingMsg.className = 'ai-chat-message assistant typing';
-        typingMsg.id = 'typing-indicator';
-        typingMsg.innerHTML = '<span class="ai-typing-dot"></span><span class="ai-typing-dot"></span><span class="ai-typing-dot"></span>';
-        messagesContainer.appendChild(typingMsg);
-        
-        // Scroll to bottom
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
-        // Hide suggestions after first message
-        document.getElementById('chatbot-suggestions').style.display = 'none';
-        
-        try {
-            const response = await fetch('/api/ai/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ message: message })
-            });
-            
-            const data = await response.json();
-            
-            // Remove typing indicator
-            document.getElementById('typing-indicator')?.remove();
-            
-            // Add assistant response
-            const assistantMsg = document.createElement('div');
-            assistantMsg.className = 'ai-chat-message assistant';
-            assistantMsg.textContent = (data && data.response) ? data.response : 'No response received.';
-            messagesContainer.appendChild(assistantMsg);
-            
-        } catch (error) {
-            // Remove typing indicator
-            document.getElementById('typing-indicator')?.remove();
-            
-            // Add error message
-            const errorMsg = document.createElement('div');
-            errorMsg.className = 'ai-chat-message assistant';
-            errorMsg.textContent = 'Sorry, I encountered an error. Please try again.';
-            messagesContainer.appendChild(errorMsg);
-        }
-        
-        // Re-enable send button
-        sendBtn.disabled = false;
-        
-        // Scroll to bottom
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    function openAboutModal() {
+        openModal('aboutModal');
     }
     </script>
     

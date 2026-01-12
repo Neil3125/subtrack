@@ -13,19 +13,40 @@ router = APIRouter()
 
 @router.post("", response_model=CustomerResponse, status_code=201)
 def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    """Create a new customer."""
-    # Verify category exists
-    category = db.query(Category).filter(Category.id == customer.category_id).first()
-    if not category:
-        raise HTTPException(status_code=404, detail="Category not found")
+    """Create a new customer with support for multiple categories and groups."""
     
-    # Verify group exists if provided
-    if customer.group_id:
-        group = db.query(Group).filter(Group.id == customer.group_id).first()
-        if not group:
-            raise HTTPException(status_code=404, detail="Group not found")
+    # Determine which fields to use (new many-to-many or legacy single)
+    category_ids = customer.category_ids if customer.category_ids else ([customer.category_id] if customer.category_id else [])
+    group_ids = customer.group_ids if customer.group_ids else ([customer.group_id] if customer.group_id else [])
     
-    db_customer = Customer(**customer.model_dump())
+    if not category_ids:
+        raise HTTPException(status_code=400, detail="At least one category is required")
+    
+    # Verify all categories exist
+    categories = db.query(Category).filter(Category.id.in_(category_ids)).all()
+    if len(categories) != len(category_ids):
+        raise HTTPException(status_code=404, detail="One or more categories not found")
+    
+    # Verify all groups exist if provided
+    groups = []
+    if group_ids:
+        groups = db.query(Group).filter(Group.id.in_(group_ids)).all()
+        if len(groups) != len(group_ids):
+            raise HTTPException(status_code=404, detail="One or more groups not found")
+    
+    # Create customer with basic fields
+    customer_data = customer.model_dump(exclude={'category_id', 'group_id', 'category_ids', 'group_ids'})
+    
+    # Set legacy fields for backward compatibility (use first category/group)
+    customer_data['category_id'] = category_ids[0] if category_ids else None
+    customer_data['group_id'] = group_ids[0] if group_ids else None
+    
+    db_customer = Customer(**customer_data)
+    
+    # Add many-to-many relationships
+    db_customer.categories = categories
+    db_customer.groups = groups
+    
     db.add(db_customer)
     db.commit()
     db.refresh(db_customer)
@@ -53,14 +74,23 @@ def list_customers(
     country: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    """List all customers, optionally filtered by category, group, or country."""
+    """List all customers, optionally filtered by category, group, or country.
+    
+    Now supports filtering by many-to-many relationships.
+    """
     query = db.query(Customer)
+    
     if category_id:
-        query = query.filter(Customer.category_id == category_id)
+        # Filter by customers that have this category in their many-to-many relationship
+        query = query.join(Customer.categories).filter(Category.id == category_id)
+    
     if group_id:
-        query = query.filter(Customer.group_id == group_id)
+        # Filter by customers that have this group in their many-to-many relationship
+        query = query.join(Customer.groups).filter(Group.id == group_id)
+    
     if country:
         query = query.filter(Customer.country == country)
+    
     return query.all()
 
 
@@ -75,14 +105,59 @@ def get_customer(customer_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{customer_id}", response_model=CustomerResponse)
 def update_customer(customer_id: int, customer: CustomerUpdate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    """Update a customer."""
+    """Update a customer with support for multiple categories and groups."""
     db_customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not db_customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     
     update_data = customer.model_dump(exclude_unset=True)
+    
+    # Handle many-to-many relationships separately
+    category_ids = update_data.pop('category_ids', None)
+    group_ids = update_data.pop('group_ids', None)
+    
+    # Handle legacy single category/group fields
+    legacy_category_id = update_data.pop('category_id', None)
+    legacy_group_id = update_data.pop('group_id', None)
+    
+    # Update basic fields
     for field, value in update_data.items():
         setattr(db_customer, field, value)
+    
+    # Update many-to-many relationships if provided
+    if category_ids is not None:
+        categories = db.query(Category).filter(Category.id.in_(category_ids)).all()
+        if len(categories) != len(category_ids):
+            raise HTTPException(status_code=404, detail="One or more categories not found")
+        db_customer.categories = categories
+        # Update legacy field
+        db_customer.category_id = category_ids[0] if category_ids else None
+    elif legacy_category_id is not None:
+        # Handle legacy single category update
+        category = db.query(Category).filter(Category.id == legacy_category_id).first()
+        if not category:
+            raise HTTPException(status_code=404, detail="Category not found")
+        db_customer.categories = [category]
+        db_customer.category_id = legacy_category_id
+    
+    if group_ids is not None:
+        groups = db.query(Group).filter(Group.id.in_(group_ids)).all()
+        if len(groups) != len(group_ids):
+            raise HTTPException(status_code=404, detail="One or more groups not found")
+        db_customer.groups = groups
+        # Update legacy field
+        db_customer.group_id = group_ids[0] if group_ids else None
+    elif legacy_group_id is not None:
+        # Handle legacy single group update
+        if legacy_group_id:
+            group = db.query(Group).filter(Group.id == legacy_group_id).first()
+            if not group:
+                raise HTTPException(status_code=404, detail="Group not found")
+            db_customer.groups = [group]
+            db_customer.group_id = legacy_group_id
+        else:
+            db_customer.groups = []
+            db_customer.group_id = None
     
     db.commit()
     db.refresh(db_customer)

@@ -88,10 +88,10 @@
             </div>
         </div>
 
-        <!-- AI & Intelligence Settings -->
+        <!-- Smart Links Settings -->
         <div class="card card-hover">
             <div class="card-header">
-                <h2 class="card-title">🤖 AI & Intelligence</h2>
+                <h2 class="card-title">🔗 Smart Links & Relationships</h2>
             </div>
             <div class="card-body">
                 <div class="flex items-center justify-between mb-4">
@@ -108,7 +108,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <div class="font-medium">Show Confidence Scores</div>
-                        <div class="text-sm text-secondary">Display AI confidence levels on links</div>
+                        <div class="text-sm text-secondary">Display confidence levels on links</div>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="show-confidence" checked onchange="saveSettings()">
@@ -122,12 +122,6 @@
                            onchange="saveSettings(); document.getElementById('confidence-value').textContent = this.value + '%'">
                     <small id="confidence-value">40%</small>
                     <div class="text-sm text-secondary">Minimum confidence to show suggested links</div>
-                </div>
-
-                <div class="mt-4">
-                    <button class="btn btn-primary" onclick="openModal('aiConfigModal'); loadAIConfig();">
-                        🤖 Configure AI Provider
-                    </button>
                 </div>
             </div>
         </div>

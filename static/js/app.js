@@ -1317,6 +1317,92 @@ window.updateCustomerSelect = function(categoryId, customerSelectId = 'customer_
     });
 };
 
+// Update customer select specifically for edit subscription modal
+window.updateCustomerSelectForEdit = function(categoryId) {
+  const modal = document.getElementById('editSubscriptionModal');
+  if (!modal) return;
+  
+  const customerSelect = modal.querySelector('select[name="customer_id"]');
+  if (!customerSelect) return;
+  
+  const currentCustomerId = customerSelect.value;
+  
+  // Load all customers (not filtered by category) to allow reassignment
+  fetch('/api/customers')
+    .then(response => response.json())
+    .then(customers => {
+      customerSelect.innerHTML = '<option value="">Select a customer</option>';
+      customers.forEach(customer => {
+        const option = document.createElement('option');
+        option.value = customer.id;
+        option.textContent = `${customer.name} (${customer.category ? customer.category.name : 'No category'})`;
+        if (String(customer.id) === String(currentCustomerId)) {
+          option.selected = true;
+        }
+        customerSelect.appendChild(option);
+      });
+    })
+    .catch(error => {
+      console.error('Error loading customers:', error);
+    });
+};
+
+// Apply plan preset to plan name field
+window.applyPlanPreset = function(preset) {
+  if (!preset) return;
+  
+  const modal = document.getElementById('editSubscriptionModal');
+  if (!modal) return;
+  
+  const planNameInput = modal.querySelector('input[name="plan_name"]');
+  if (planNameInput) {
+    const presetNames = {
+      'basic': 'Basic',
+      'standard': 'Standard',
+      'professional': 'Professional',
+      'enterprise': 'Enterprise',
+      'custom': 'Custom'
+    };
+    planNameInput.value = presetNames[preset] || preset;
+  }
+};
+
+// Update renewal date based on billing cycle change
+window.updateRenewalDateFromCycle = function(cycle) {
+  const modal = document.getElementById('editSubscriptionModal');
+  if (!modal) return;
+  
+  const startDateInput = modal.querySelector('input[name="start_date"]');
+  const renewalDateInput = modal.querySelector('input[name="next_renewal_date"]');
+  
+  if (!startDateInput || !renewalDateInput || !startDateInput.value) return;
+  
+  const startDate = new Date(startDateInput.value);
+  let renewalDate = new Date(startDate);
+  
+  switch (cycle) {
+    case 'weekly':
+      renewalDate.setDate(renewalDate.getDate() + 7);
+      break;
+    case 'monthly':
+      renewalDate.setMonth(renewalDate.getMonth() + 1);
+      break;
+    case 'quarterly':
+      renewalDate.setMonth(renewalDate.getMonth() + 3);
+      break;
+    case 'biannual':
+      renewalDate.setMonth(renewalDate.getMonth() + 6);
+      break;
+    case 'yearly':
+      renewalDate.setFullYear(renewalDate.getFullYear() + 1);
+      break;
+  }
+  
+  // Format date as YYYY-MM-DD for input
+  const formattedDate = renewalDate.toISOString().split('T')[0];
+  renewalDateInput.value = formattedDate;
+};
+
 // ==================== Sidebar Toggle ====================
 window.toggleSidebar = function() {
   const sidebar = document.querySelector('.sidebar');

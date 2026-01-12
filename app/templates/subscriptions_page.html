@@ -192,8 +192,8 @@
                             <span class="text-secondary">-</span>
                             {% endif %}
                         </td>
-                        <td>
-                            <div class="flex gap-1">
+                        <td class="actions-cell">
+                            <div class="actions-wrapper">
                                 <a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary" title="View">👁️</a>
                                 <button class="btn btn-sm btn-secondary" onclick="loadEditData('subscription', {{ sub.id }})" title="Edit">✏️</button>
                                 <button class="btn btn-sm btn-success" onclick="renewSubscription({{ sub.id }})" title="Renew">🔄</button>
