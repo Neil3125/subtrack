@@ -1019,13 +1019,13 @@ a:hover {
   right: 0;
   bottom: 0;
   display: none;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: var(--z-modal);
-  padding: 2rem;
+  padding: 1rem;
   overflow-y: auto;
 }
 
@@ -1043,9 +1043,7 @@ a:hover {
   border: 1px solid var(--color-border);
   max-width: 900px;
   width: 100%;
-  max-height: calc(100vh - 4rem);
-  margin-top: 2rem;
-  margin-bottom: 2rem;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1063,6 +1061,9 @@ a:hover {
   align-items: center;
   flex-shrink: 0;
   background: var(--color-bg-elevated);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .modal-title {
@@ -1099,6 +1100,7 @@ a:hover {
   flex: 1 1 auto;
   min-height: 0;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-body > .table,
@@ -1134,6 +1136,9 @@ a:hover {
   gap: var(--space-3);
   flex-shrink: 0;
   background: var(--color-bg-elevated);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 /* Theme Toggle */
@@ -1472,6 +1477,13 @@ a:hover {
   font-size: var(--font-size-xl);
   transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
   z-index: 100;
+}
+
+/* Hide FAB on desktop to prevent overlap with tables */
+@media (min-width: 1024px) {
+  .fab {
+    display: none;
+  }
 }
 
 .fab:hover {
@@ -2056,23 +2068,33 @@ tr:hover {
   background-color: var(--color-bg-secondary);
 }
 
-/* Subscriptions table layout fixes */
+/* Table responsive wrapper */
 .table-container {
   overflow-x: auto;
   width: 100%;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: var(--space-4);
+}
+
+/* Ensure all tables are wrapped properly */
+.card-body > .table:not(.table-container *) {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table {
   width: 100%;
-  min-width: 900px;
+  min-width: 800px;
   table-layout: auto;
 }
 
 .actions-cell {
   white-space: nowrap;
   width: 1%;
-  min-width: 90px;
+  min-width: 100px;
   text-align: center;
+  padding-right: var(--space-3) !important;
 }
 
 .actions-wrapper {
@@ -2080,6 +2102,7 @@ tr:hover {
   grid-template-columns: repeat(2, auto);
   gap: 4px;
   justify-content: center;
+  align-items: center;
 }
 
 .actions-wrapper .btn {
@@ -2090,7 +2113,7 @@ tr:hover {
 /* Responsive table adjustments */
 @media (max-width: 1200px) {
   .table {
-    min-width: 800px;
+    min-width: 700px;
   }
 }
 
@@ -2100,9 +2123,14 @@ tr:hover {
     font-size: var(--font-size-sm);
   }
   
+  .actions-cell {
+    min-width: 90px;
+  }
+  
   .actions-wrapper .btn {
     padding: 0.25rem 0.5rem;
     font-size: var(--font-size-xs);
+    min-width: 32px;
   }
 }
 

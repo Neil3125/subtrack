@@ -718,28 +718,89 @@ document.addEventListener('click', function(e) {
 
 // Toast notifications
 function showToast(message, type = 'info') {
+  // Create toast container if it doesn't exist
+  let toastContainer = document.getElementById('toast-container');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-container';
+    toastContainer.style.cssText = `
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 400px;
+      pointer-events: none;
+    `;
+    document.body.appendChild(toastContainer);
+  }
+  
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  toast.textContent = message;
   toast.style.cssText = `
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    padding: 16px 24px;
-    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+    padding: 14px 20px;
+    padding-right: 40px;
+    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
     color: white;
     border-radius: 8px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    animation: slideIn 0.3s ease-out;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideInRight 0.3s ease-out;
+    pointer-events: auto;
+    position: relative;
+    font-size: 14px;
+    line-height: 1.5;
   `;
   
-  document.body.appendChild(toast);
+  const messageSpan = document.createElement('span');
+  messageSpan.textContent = message;
+  toast.appendChild(messageSpan);
   
-  setTimeout(() => {
-    toast.style.animation = 'fadeOut 0.3s ease-out';
+  // Add close button
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '×';
+  closeBtn.style.cssText = `
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  `;
+  closeBtn.onmouseover = () => closeBtn.style.opacity = '1';
+  closeBtn.onmouseout = () => closeBtn.style.opacity = '0.8';
+  closeBtn.onclick = () => {
+    toast.style.animation = 'slideOutRight 0.2s ease-out';
+    setTimeout(() => toast.remove(), 200);
+  };
+  toast.appendChild(closeBtn);
+  
+  toastContainer.appendChild(toast);
+  
+  // Auto dismiss after 3 seconds
+  const autoDismiss = setTimeout(() => {
+    toast.style.animation = 'slideOutRight 0.3s ease-out';
     setTimeout(() => toast.remove(), 300);
   }, 3000);
+  
+  // Clear auto dismiss if manually closed
+  closeBtn.onclick = () => {
+    clearTimeout(autoDismiss);
+    toast.style.animation = 'slideOutRight 0.2s ease-out';
+    setTimeout(() => toast.remove(), 200);
+  };
 }
 
 // Debounce function for search
@@ -862,15 +923,34 @@ window.loadEditData = function(type, id) {
         const categoryField = form.querySelector('select[name="category_id"]');
         const customerField = form.querySelector('select[name="customer_id"]');
         const categoryId = categoryField ? categoryField.value : null;
-        const customerId = customerField ? customerField.value : null;
+        const customerId = data.customer_id;
 
-        // Populate customers (filtered by category when present) and re-select current customer.
-        updateCustomerSelect(categoryId, 'customer_id', customerId);
+        // Populate customers and pre-select the current customer
+        // Use a small delay to ensure the modal is fully rendered
+        setTimeout(() => {
+          updateCustomerSelectForEdit(categoryId);
+          
+          // After customers are loaded, select the current customer
+          setTimeout(() => {
+            const customerSelect = form.querySelector('select[name="customer_id"]');
+            if (customerSelect && customerId) {
+              customerSelect.value = customerId;
+            }
+          }, 100);
+        }, 50);
 
-        // Ensure future category changes keep customer list in sync.
+        // Ensure future category changes keep customer list in sync
         if (categoryField && !categoryField.dataset.customerHooked) {
           categoryField.addEventListener('change', function() {
-            updateCustomerSelect(this.value, 'customer_id');
+            const currentCustomerId = form.querySelector('select[name="customer_id"]').value;
+            updateCustomerSelectForEdit(this.value);
+            // Try to keep the same customer selected if they exist in the new category
+            setTimeout(() => {
+              const customerSelect = form.querySelector('select[name="customer_id"]');
+              if (customerSelect && currentCustomerId) {
+                customerSelect.value = currentCustomerId;
+              }
+            }, 100);
           });
           categoryField.dataset.customerHooked = 'true';
         }
