@@ -532,3 +532,32 @@ async def users_page(request: Request, db: Session = Depends(get_db)):
 
 
 # AI dashboard removed - AI chat features have been disabled
+
+
+@router.get("/partials/customer-options", response_class=HTMLResponse)
+async def customer_options_partial(
+    request: Request,
+    category_id: int = None,
+    selected_customer_id: int = None,
+    db: Session = Depends(get_db)
+):
+    """Render customer options for dropdown - used in subscription modals."""
+    query = db.query(Customer)
+    
+    # Filter by category if provided
+    if category_id:
+        query = query.filter(Customer.category_id == category_id)
+    
+    customers = query.order_by(Customer.name).all()
+    
+    # Build HTML options
+    html = '<option value="">Select a customer</option>'
+    
+    if not customers:
+        html += '<option value="" disabled>No customers in this category — create one first</option>'
+    else:
+        for customer in customers:
+            selected = 'selected' if selected_customer_id and customer.id == selected_customer_id else ''
+            html += f'<option value="{customer.id}" {selected}>{customer.name}</option>'
+    
+    return HTMLResponse(content=html)

@@ -925,34 +925,30 @@ window.loadEditData = function(type, id) {
         const categoryId = categoryField ? categoryField.value : null;
         const customerId = data.customer_id;
 
-        // Populate customers and pre-select the current customer
-        // Use a small delay to ensure the modal is fully rendered
-        setTimeout(() => {
-          updateCustomerSelectForEdit(categoryId);
-          
-          // After customers are loaded, select the current customer
-          setTimeout(() => {
-            const customerSelect = form.querySelector('select[name="customer_id"]');
-            if (customerSelect && customerId) {
-              customerSelect.value = customerId;
-            }
-          }, 100);
-        }, 50);
-
-        // Ensure future category changes keep customer list in sync
-        if (categoryField && !categoryField.dataset.customerHooked) {
-          categoryField.addEventListener('change', function() {
-            const currentCustomerId = form.querySelector('select[name="customer_id"]').value;
-            updateCustomerSelectForEdit(this.value);
-            // Try to keep the same customer selected if they exist in the new category
-            setTimeout(() => {
-              const customerSelect = form.querySelector('select[name="customer_id"]');
-              if (customerSelect && currentCustomerId) {
-                customerSelect.value = currentCustomerId;
+        // Load customers for the current category with preselection
+        if (categoryId && customerId) {
+          fetch(`/partials/customer-options?category_id=${categoryId}&selected_customer_id=${customerId}`)
+            .then(response => response.text())
+            .then(html => {
+              customerField.innerHTML = html;
+              
+              // Check if there are no customers
+              const options = customerField.querySelectorAll('option');
+              const hasCustomers = Array.from(options).some(opt => opt.value && opt.value !== '');
+              
+              if (!hasCustomers) {
+                // Disable save button if no customers available
+                const saveBtn = form.querySelector('button[type="submit"]');
+                if (saveBtn) {
+                  saveBtn.disabled = true;
+                  saveBtn.title = 'No customers available in this category';
+                }
               }
-            }, 100);
-          });
-          categoryField.dataset.customerHooked = 'true';
+            })
+            .catch(error => {
+              console.error('Error loading customers:', error);
+              customerField.innerHTML = '<option value="">Error loading customers</option>';
+            });
         }
       }
       
