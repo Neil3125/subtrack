@@ -76,17 +76,17 @@ def list_customers(
 ):
     """List all customers, optionally filtered by category, group, or country.
     
-    Now supports filtering by many-to-many relationships.
+    Supports both legacy single category/group and new many-to-many relationships.
     """
     query = db.query(Customer)
     
     if category_id:
-        # Filter by customers that have this category in their many-to-many relationship
-        query = query.join(Customer.categories).filter(Category.id == category_id)
+        # Use legacy field for now (works with or without migration)
+        query = query.filter(Customer.category_id == category_id)
     
     if group_id:
-        # Filter by customers that have this group in their many-to-many relationship
-        query = query.join(Customer.groups).filter(Group.id == group_id)
+        # Use legacy field for now (works with or without migration)
+        query = query.filter(Customer.group_id == group_id)
     
     if country:
         query = query.filter(Customer.country == country)

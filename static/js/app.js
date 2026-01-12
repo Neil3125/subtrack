@@ -1254,8 +1254,8 @@ window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id') {
   // Find the group select - prefer searching within open modals first
   let groupSelect = null;
   
-  // Try to find within an open modal
-  const openModals = document.querySelectorAll('.modal[style*="display: block"]');
+  // Try to find within an open modal (check both flex and block display)
+  const openModals = document.querySelectorAll('.modal[style*="display: flex"], .modal[style*="display: block"], .modal.show');
   for (let modal of openModals) {
     const select = modal.querySelector(`select[name="${groupSelectId}"]`);
     if (select) {

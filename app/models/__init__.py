@@ -1,5 +1,4 @@
 """SQLAlchemy models."""
-from app.models.associations import customer_categories, customer_groups
 from app.models.category import Category
 from app.models.group import Group
 from app.models.customer import Customer
@@ -9,4 +8,4 @@ from app.models.user import User
 from app.models.saved_report import SavedReport
 from app.models.ai_cache import AIRequestCache
 
-__all__ = ["customer_categories", "customer_groups", "Category", "Group", "Customer", "Subscription", "Link", "User", "SavedReport", "AIRequestCache"]
+__all__ = ["Category", "Group", "Customer", "Subscription", "Link", "User", "SavedReport", "AIRequestCache"]

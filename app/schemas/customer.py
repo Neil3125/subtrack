@@ -64,21 +64,45 @@ class CustomerUpdate(BaseModel):
     group_ids: Optional[List[int]] = None
 
 
-class CustomerResponse(CustomerBase):
+class CustomerResponse(BaseModel):
     """Schema for customer response."""
     id: int
+    name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    country: Optional[str] = None
+    tags: Optional[str] = None
+    notes: Optional[str] = None
     
     # Legacy fields for backward compatibility
     category_id: Optional[int] = None
     group_id: Optional[int] = None
     
-    # Many-to-many relationships
+    # Many-to-many relationships (will be empty if migration not run)
     categories: List[CategoryInfo] = []
     groups: List[GroupInfo] = []
     
-    # Helper properties
-    category_names: str = ""
-    group_names: str = ""
+    # Computed fields for display
+    category_names: Optional[str] = ""
+    group_names: Optional[str] = ""
     
     class Config:
         from_attributes = True
+    
+    def __init__(self, **data):
+        # Handle SQLAlchemy model conversion
+        if 'categories' in data and data['categories']:
+            # Check if it's a list of ORM objects
+            cats = data['categories']
+            if cats and hasattr(cats[0], 'id'):
+                data['categories'] = [{'id': c.id, 'name': c.name} for c in cats]
+                data['category_names'] = ', '.join([c.name for c in cats])
+        
+        if 'groups' in data and data['groups']:
+            # Check if it's a list of ORM objects
+            grps = data['groups']
+            if grps and hasattr(grps[0], 'id'):
+                data['groups'] = [{'id': g.id, 'name': g.name, 'category_id': g.category_id} for g in grps]
+                data['group_names'] = ', '.join([g.name for g in grps])
+        
+        super().__init__(**data)

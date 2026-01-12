@@ -2,14 +2,10 @@
 from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy.orm import relationship
 from app.database import Base
-from app.models.associations import customer_categories
 
 
 class Category(Base):
-    """Category model for organizing subscriptions.
-    
-    Now supports many-to-many relationship with customers.
-    """
+    """Category model for organizing subscriptions."""
     
     __tablename__ = "categories"
     
@@ -19,15 +15,7 @@ class Category(Base):
     
     # Relationships
     groups = relationship("Group", back_populates="category", cascade="all, delete-orphan")
-    
-    # Many-to-many relationship with customers
-    related_customers = relationship(
-        "Customer",
-        secondary=customer_categories,
-        back_populates="categories",
-        lazy="selectin"
-    )
-    
+    customers = relationship("Customer", back_populates="category", viewonly=True)
     subscriptions = relationship("Subscription", back_populates="category", cascade="all, delete-orphan")
     
     def __repr__(self):

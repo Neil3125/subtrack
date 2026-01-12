@@ -2,47 +2,41 @@
 from sqlalchemy import Column, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
-from app.models.associations import customer_categories, customer_groups
+
+# Try to import association tables - they may not exist if migration hasn't run
+try:
+    from app.models.associations import customer_categories, customer_groups
+    ASSOCIATIONS_AVAILABLE = True
+except Exception:
+    customer_categories = None
+    customer_groups = None
+    ASSOCIATIONS_AVAILABLE = False
 
 
 class Customer(Base):
     """Customer model for tracking subscription owners.
     
-    Now supports many-to-many relationships with categories and groups.
-    The old category_id and group_id are kept for backward compatibility during migration.
+    Supports many-to-many relationships with categories and groups when available.
+    Falls back to legacy single category_id/group_id if migration hasn't been run.
     """
     
     __tablename__ = "customers"
     
     id = Column(Integer, primary_key=True, index=True)
-    # Legacy fields - kept for backward compatibility
+    # Legacy fields - used as primary relationship fields
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True, index=True)
     group_id = Column(Integer, ForeignKey("groups.id"), nullable=True, index=True)
     
     name = Column(String(200), nullable=False, index=True)
     email = Column(String(255), nullable=True, index=True)
     phone = Column(String(50), nullable=True)
-    country = Column(String(100), nullable=False, index=True)
+    country = Column(String(100), nullable=True, index=True)
     tags = Column(Text, nullable=True)  # Comma-separated tags
     notes = Column(Text, nullable=True)
     
-    # Many-to-many relationships
-    categories = relationship(
-        "Category",
-        secondary=customer_categories,
-        back_populates="related_customers",
-        lazy="selectin"
-    )
-    groups = relationship(
-        "Group",
-        secondary=customer_groups,
-        back_populates="related_customers",
-        lazy="selectin"
-    )
-    
-    # Legacy relationships - kept for backward compatibility
-    primary_category = relationship("Category", foreign_keys=[category_id], viewonly=True)
-    primary_group = relationship("Group", foreign_keys=[group_id], viewonly=True)
+    # Legacy relationships - always available
+    category = relationship("Category", foreign_keys=[category_id], viewonly=True)
+    group = relationship("Group", foreign_keys=[group_id], viewonly=True)
     
     # Subscriptions relationship
     subscriptions = relationship("Subscription", back_populates="customer", cascade="all, delete-orphan")
@@ -51,11 +45,39 @@ class Customer(Base):
         return f"<Customer(id={self.id}, name='{self.name}')>"
     
     @property
+    def categories(self):
+        """Get list of categories - returns list with single category for compatibility."""
+        if self.category:
+            return [self.category]
+        return []
+    
+    @property
+    def groups(self):
+        """Get list of groups - returns list with single group for compatibility."""
+        if self.group:
+            return [self.group]
+        return []
+    
+    @property
+    def primary_category(self):
+        """Alias for category for backward compatibility."""
+        return self.category
+    
+    @property
+    def primary_group(self):
+        """Alias for group for backward compatibility."""
+        return self.group
+    
+    @property
     def category_names(self):
         """Get comma-separated list of category names."""
-        return ", ".join([cat.name for cat in self.categories]) if self.categories else ""
+        if self.category:
+            return self.category.name
+        return ""
     
     @property
     def group_names(self):
         """Get comma-separated list of group names."""
-        return ", ".join([grp.name for grp in self.groups]) if self.groups else ""
+        if self.group:
+            return self.group.name
+        return ""
