@@ -7,7 +7,13 @@
     <nav class="breadcrumbs" style="margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
         <a href="/" style="color: var(--color-text-secondary);">Dashboard</a>
         <span style="margin: 0 var(--space-2); color: var(--color-text-tertiary);">/</span>
-        <a href="/categories/{{ customer.category.id }}" style="color: var(--color-text-secondary);">{{ customer.category.name }}</a>
+        {% if customer.categories and customer.categories|length > 0 %}
+        <a href="/categories/{{ customer.categories[0].id }}" style="color: var(--color-text-secondary);">{{ customer.categories[0].name }}</a>
+        {% elif customer.primary_category %}
+        <a href="/categories/{{ customer.primary_category.id }}" style="color: var(--color-text-secondary);">{{ customer.primary_category.name }}</a>
+        {% else %}
+        <span style="color: var(--color-text-secondary);">No Category</span>
+        {% endif %}
         <span style="margin: 0 var(--space-2); color: var(--color-text-tertiary);">/</span>
         <span style="color: var(--color-text);">{{ customer.name }}</span>
     </nav>
@@ -16,9 +22,19 @@
         <div>
             <h1>{{ customer.name }}</h1>
             <p class="text-secondary">
-                <a href="/categories/{{ customer.category.id }}">{{ customer.category.name }}</a>
-                {% if customer.group %}
-                / <a href="/groups/{{ customer.group.id }}">{{ customer.group.name }}</a>
+                {% if customer.categories and customer.categories|length > 0 %}
+                    {% for cat in customer.categories %}
+                    <a href="/categories/{{ cat.id }}">{{ cat.name }}</a>{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                {% elif customer.primary_category %}
+                    <a href="/categories/{{ customer.primary_category.id }}">{{ customer.primary_category.name }}</a>
+                {% endif %}
+                {% if customer.groups and customer.groups|length > 0 %}
+                    / {% for grp in customer.groups %}
+                    <a href="/groups/{{ grp.id }}">{{ grp.name }}</a>{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                {% elif customer.primary_group %}
+                    / <a href="/groups/{{ customer.primary_group.id }}">{{ customer.primary_group.name }}</a>
                 {% endif %}
             </p>
         </div>

@@ -1018,26 +1018,24 @@ a:hover {
   left: 0;
   right: 0;
   bottom: 0;
-  display: flex;
+  display: none;
   align-items: flex-start;
   justify-content: center;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: var(--z-modal);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.15s ease-out, visibility 0.15s ease-out;
   padding: 2rem;
   overflow-y: auto;
 }
 
+.modal[style*="display: flex"],
 .modal.show {
-  opacity: 1;
-  visibility: visible;
+  display: flex !important;
 }
 
-/* Modal content wrapper - this is what scrolls */
+
+/* Modal content wrapper */
 .modal-content {
   background: var(--color-bg-elevated);
   border-radius: var(--radius-xl);
@@ -1046,11 +1044,10 @@ a:hover {
   max-width: 900px;
   width: 100%;
   max-height: calc(100vh - 4rem);
+  margin: auto 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  transform: scale(0.98) translateY(10px);
-  transition: transform 0.2s ease-out;
+  overflow: visible;
 }
 
 .modal.show .modal-content {
@@ -1100,6 +1097,7 @@ a:hover {
   overflow-x: hidden;
   flex: 1 1 auto;
   min-height: 0;
+  max-height: calc(100vh - 12rem);
   overscroll-behavior: contain;
 }
 
@@ -2073,20 +2071,20 @@ tr:hover {
 .actions-cell {
   white-space: nowrap;
   width: 1%;
-  min-width: 100px;
+  min-width: 90px;
+  text-align: center;
 }
 
 .actions-wrapper {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.25rem;
-  justify-items: center;
-  width: fit-content;
+  display: inline-grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 4px;
+  justify-content: center;
 }
 
 .actions-wrapper .btn {
-  flex-shrink: 0;
-  min-width: 36px;
+  min-width: 38px;
+  padding: 0.35rem 0.5rem;
 }
 
 /* Responsive table adjustments */

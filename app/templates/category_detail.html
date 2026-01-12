@@ -110,8 +110,12 @@
                         <td>{{ customer.email or '-' }}</td>
                         <td>{{ customer.phone or '-' }}</td>
                         <td>
-                            {% if customer.group %}
-                            <span class="badge badge-secondary">{{ customer.group.name }}</span>
+                            {% if customer.groups and customer.groups|length > 0 %}
+                                {% for grp in customer.groups %}
+                                <span class="badge badge-secondary">{{ grp.name }}</span>
+                                {% endfor %}
+                            {% elif customer.primary_group %}
+                            <span class="badge badge-secondary">{{ customer.primary_group.name }}</span>
                             {% else %}
                             -
                             {% endif %}

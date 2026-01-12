@@ -44,7 +44,7 @@
             <span class="search-result-icon">👤</span>
             <div>
                 <div class="search-result-title">{{ customer.name }}</div>
-                <div class="search-result-subtitle">{{ customer.email or customer.category.name }}</div>
+                <div class="search-result-subtitle">{{ customer.email or customer.category_names or 'No category' }}</div>
             </div>
         </a>
         {% endfor %}
