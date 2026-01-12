@@ -1006,8 +1006,7 @@ a:hover {
   color: var(--color-text-secondary);
 }
 
-/* Modal System - Ultra Smooth */
-/* Modal backdrop is now built into .modal itself */
+/* Modal System - Fixed Scrolling */
 .modal-backdrop {
   display: none;
 }
@@ -1019,14 +1018,15 @@ a:hover {
   right: 0;
   bottom: 0;
   display: none;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: var(--z-modal);
-  padding: 1rem;
+  padding: 20px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .modal[style*="display: flex"],
@@ -1034,8 +1034,7 @@ a:hover {
   display: flex !important;
 }
 
-
-/* Modal content wrapper */
+/* Modal content wrapper - the box that contains everything */
 .modal-content {
   background: var(--color-bg-elevated);
   border-radius: var(--radius-xl);
@@ -1043,16 +1042,17 @@ a:hover {
   border: 1px solid var(--color-border);
   max-width: 900px;
   width: 100%;
-  max-height: 90vh;
+  margin: auto;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  max-height: calc(100vh - 40px);
 }
 
 .modal.show .modal-content {
   transform: scale(1) translateY(0);
 }
 
+/* Modal header - stays at top */
 .modal-header {
   padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--color-border);
@@ -1061,9 +1061,7 @@ a:hover {
   align-items: center;
   flex-shrink: 0;
   background: var(--color-bg-elevated);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
 .modal-title {
@@ -1093,12 +1091,14 @@ a:hover {
   color: var(--color-text);
 }
 
+/* Modal body - THIS IS THE SCROLLABLE PART */
 .modal-body {
   padding: var(--space-4) var(--space-5);
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1 1 auto;
-  min-height: 0;
+  min-height: 100px;
+  max-height: calc(100vh - 200px);
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
@@ -1128,6 +1128,7 @@ a:hover {
   background: var(--color-text-tertiary);
 }
 
+/* Modal footer - stays at bottom, ALWAYS VISIBLE */
 .modal-footer {
   padding: var(--space-4) var(--space-5);
   border-top: 1px solid var(--color-border);
@@ -1136,9 +1137,48 @@ a:hover {
   gap: var(--space-3);
   flex-shrink: 0;
   background: var(--color-bg-elevated);
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+/* Responsive modal for small screens */
+@media (max-height: 700px) {
+  .modal {
+    padding: 10px;
+  }
+  
+  .modal-content {
+    max-height: calc(100vh - 20px);
+  }
+  
+  .modal-body {
+    max-height: calc(100vh - 160px);
+  }
+}
+
+@media (max-width: 600px) {
+  .modal {
+    padding: 10px;
+  }
+  
+  .modal-content {
+    max-height: calc(100vh - 20px);
+    border-radius: var(--radius-lg);
+  }
+  
+  .modal-header {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  
+  .modal-body {
+    padding: var(--space-3) var(--space-4);
+    max-height: calc(100vh - 140px);
+  }
+  
+  .modal-footer {
+    padding: var(--space-3) var(--space-4);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
 }
 
 /* Theme Toggle */

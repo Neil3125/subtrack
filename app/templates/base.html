@@ -853,6 +853,38 @@
     </div>
 
 
+    <!-- Add Existing Customer Modal -->
+    <div id="addExistingCustomerModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Existing Customer to Category</h2>
+                <button class="modal-close" onclick="closeModal('addExistingCustomerModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="existing-customer-category-id" value="">
+                <div class="form-group">
+                    <label class="form-label">Select Customer *</label>
+                    <select id="existing-customer-select" class="form-select" required>
+                        <option value="">Loading customers...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Group (Optional)</label>
+                    <select id="existing-customer-group-select" class="form-select">
+                        <option value="">No group</option>
+                    </select>
+                </div>
+                <div class="info-box info-box-info">
+                    <strong>ℹ️ Note:</strong> This will update the customer's category assignment.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addExistingCustomerModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="assignExistingCustomerToCategory()">Add to Category</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/static/js/app.js"></script>
     
     <script>
@@ -863,6 +895,91 @@
     
     function openAboutModal() {
         openModal('aboutModal');
+    }
+    
+    // Add existing customer to category
+    function openAddExistingCustomerModal(categoryId) {
+        document.getElementById('existing-customer-category-id').value = categoryId;
+        
+        // Load all customers
+        fetch('/api/customers')
+            .then(response => response.json())
+            .then(customers => {
+                const select = document.getElementById('existing-customer-select');
+                select.innerHTML = '<option value="">Select a customer</option>';
+                
+                if (customers.length === 0) {
+                    select.innerHTML = '<option value="" disabled>No customers available</option>';
+                } else {
+                    customers.forEach(customer => {
+                        const categoryInfo = customer.category_names || 'No category';
+                        const option = document.createElement('option');
+                        option.value = customer.id;
+                        option.textContent = `${customer.name} (${categoryInfo})`;
+                        select.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading customers:', error);
+                document.getElementById('existing-customer-select').innerHTML = '<option value="">Error loading customers</option>';
+            });
+        
+        // Load groups for this category
+        fetch(`/api/groups?category_id=${categoryId}`)
+            .then(response => response.json())
+            .then(groups => {
+                const select = document.getElementById('existing-customer-group-select');
+                select.innerHTML = '<option value="">No group</option>';
+                groups.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group.id;
+                    option.textContent = group.name;
+                    select.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error loading groups:', error));
+        
+        openModal('addExistingCustomerModal');
+    }
+    
+    function assignExistingCustomerToCategory() {
+        const customerId = document.getElementById('existing-customer-select').value;
+        const categoryId = document.getElementById('existing-customer-category-id').value;
+        const groupId = document.getElementById('existing-customer-group-select').value;
+        
+        if (!customerId) {
+            showToast('Please select a customer', 'error');
+            return;
+        }
+        
+        const data = {
+            category_id: parseInt(categoryId)
+        };
+        
+        if (groupId) {
+            data.group_id = parseInt(groupId);
+        }
+        
+        fetch(`/api/customers/${customerId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                showToast('Customer added to category successfully', 'success');
+                closeModal('addExistingCustomerModal');
+                setTimeout(() => window.location.reload(), 500);
+            } else {
+                return response.json().then(err => {
+                    throw new Error(err.detail || 'Failed to add customer');
+                });
+            }
+        })
+        .catch(error => {
+            showToast(error.message, 'error');
+        });
     }
     </script>
     
