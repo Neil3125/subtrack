@@ -4,10 +4,31 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
 from app.models import Subscription, Customer, Category
+from app.models.activity_log import ActivityLog
 from app.schemas import SubscriptionCreate, SubscriptionUpdate, SubscriptionResponse
 from app.data_persistence import auto_save
 
 router = APIRouter()
+
+
+def log_activity(db: Session, action_type: str, entity_type: str, description: str,
+                 entity_id: int = None, entity_name: str = None, changes: dict = None,
+                 metadata: dict = None):
+    """Helper function to log activity."""
+    try:
+        ActivityLog.log_action(
+            db=db,
+            action_type=action_type,
+            entity_type=entity_type,
+            description=description,
+            entity_id=entity_id,
+            entity_name=entity_name,
+            changes=changes,
+            metadata=metadata
+        )
+    except Exception as e:
+        # Don't fail the main operation if logging fails
+        print(f"Activity logging error: {e}")
 
 
 @router.post("", response_model=SubscriptionResponse, status_code=201)
@@ -27,6 +48,17 @@ def create_subscription(subscription: SubscriptionCreate, background_tasks: Back
     db.add(db_subscription)
     db.commit()
     db.refresh(db_subscription)
+    
+    # Log activity
+    log_activity(
+        db=db,
+        action_type="created",
+        entity_type="subscription",
+        description=f"Created subscription '{db_subscription.vendor_name}' for {customer.name}",
+        entity_id=db_subscription.id,
+        entity_name=db_subscription.vendor_name,
+        metadata={"customer_name": customer.name, "cost": str(db_subscription.cost), "currency": db_subscription.currency}
+    )
     
     # Auto-save data to file
     background_tasks.add_task(auto_save, db)
@@ -68,12 +100,33 @@ def update_subscription(subscription_id: int, subscription: SubscriptionUpdate, 
     if not db_subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")
     
+    # Track changes for activity log
+    changes = {}
     update_data = subscription.model_dump(exclude_unset=True)
     for field, value in update_data.items():
+        old_value = getattr(db_subscription, field)
+        if old_value != value:
+            # Convert to string for JSON serialization
+            changes[field] = {
+                "old": str(old_value) if old_value is not None else None,
+                "new": str(value) if value is not None else None
+            }
         setattr(db_subscription, field, value)
     
     db.commit()
     db.refresh(db_subscription)
+    
+    # Log activity if there were changes
+    if changes:
+        log_activity(
+            db=db,
+            action_type="updated",
+            entity_type="subscription",
+            description=f"Updated subscription '{db_subscription.vendor_name}'",
+            entity_id=db_subscription.id,
+            entity_name=db_subscription.vendor_name,
+            changes=changes
+        )
     
     # Auto-save data to file
     background_tasks.add_task(auto_save, db)
@@ -88,8 +141,24 @@ def delete_subscription(subscription_id: int, background_tasks: BackgroundTasks,
     if not db_subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")
     
+    # Store info for logging before deletion
+    vendor_name = db_subscription.vendor_name
+    sub_id = db_subscription.id
+    customer_name = db_subscription.customer.name if db_subscription.customer else "Unknown"
+    
     db.delete(db_subscription)
     db.commit()
+    
+    # Log activity
+    log_activity(
+        db=db,
+        action_type="deleted",
+        entity_type="subscription",
+        description=f"Deleted subscription '{vendor_name}' from {customer_name}",
+        entity_id=sub_id,
+        entity_name=vendor_name,
+        metadata={"customer_name": customer_name}
+    )
     
     # Auto-save data to file
     background_tasks.add_task(auto_save, db)
@@ -107,6 +176,9 @@ def renew_subscription(subscription_id: int, background_tasks: BackgroundTasks, 
     db_subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
     if not db_subscription:
         raise HTTPException(status_code=404, detail="Subscription not found")
+    
+    # Store old date for logging
+    old_date = db_subscription.next_renewal_date
     
     # Calculate next renewal date based on billing cycle
     current_date = db_subscription.next_renewal_date or date.today()
@@ -129,6 +201,24 @@ def renew_subscription(subscription_id: int, background_tasks: BackgroundTasks, 
     
     db.commit()
     db.refresh(db_subscription)
+    
+    # Log activity
+    customer_name = db_subscription.customer.name if db_subscription.customer else "Unknown"
+    log_activity(
+        db=db,
+        action_type="renewed",
+        entity_type="subscription",
+        description=f"Renewed subscription '{db_subscription.vendor_name}' for {customer_name}",
+        entity_id=db_subscription.id,
+        entity_name=db_subscription.vendor_name,
+        changes={
+            "next_renewal_date": {
+                "old": old_date.isoformat() if old_date else None,
+                "new": new_date.isoformat()
+            }
+        },
+        metadata={"customer_name": customer_name, "billing_cycle": db_subscription.billing_cycle.value}
+    )
     
     # Auto-save data to file
     background_tasks.add_task(auto_save, db)

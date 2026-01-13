@@ -8,5 +8,6 @@ from app.models.user import User
 from app.models.saved_report import SavedReport
 from app.models.ai_cache import AIRequestCache
 from app.models.renewal_notice import RenewalNotice
+from app.models.activity_log import ActivityLog
 
-__all__ = ["Category", "Group", "Customer", "Subscription", "Link", "User", "SavedReport", "AIRequestCache", "RenewalNotice"]
+__all__ = ["Category", "Group", "Customer", "Subscription", "Link", "User", "SavedReport", "AIRequestCache", "RenewalNotice", "ActivityLog"]

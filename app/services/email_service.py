@@ -202,77 +202,132 @@ class EmailService:
         # Format the renewal date
         renewal_date_str = renewal_date.strftime("%B %d, %Y")
         
-        # Determine urgency
+        # Determine urgency messaging
         if days_until_renewal <= 0:
             urgency = "OVERDUE"
             urgency_color = "#dc2626"
+            urgency_bg = "#fef2f2"
+            urgency_message = f"This subscription renewal is <strong>{abs(days_until_renewal)} days overdue</strong>. Please take action immediately to avoid service interruption."
         elif days_until_renewal <= 7:
-            urgency = "URGENT"
+            urgency = "DUE SOON"
             urgency_color = "#ea580c"
+            urgency_bg = "#fff7ed"
+            urgency_message = f"Your subscription renews in <strong>{days_until_renewal} days</strong>. Please ensure your payment details are up to date."
         elif days_until_renewal <= 14:
-            urgency = "SOON"
-            urgency_color = "#f59e0b"
-        else:
             urgency = "UPCOMING"
+            urgency_color = "#f59e0b"
+            urgency_bg = "#fffbeb"
+            urgency_message = f"Your subscription renews in <strong>{days_until_renewal} days</strong>. This is a friendly reminder to review your subscription."
+        else:
+            urgency = "REMINDER"
             urgency_color = "#10b981"
+            urgency_bg = "#f0fdf4"
+            urgency_message = f"Your subscription renews in <strong>{days_until_renewal} days</strong>. No action is required at this time."
         
-        plan_info = f" ({subscription_plan})" if subscription_plan else ""
+        plan_display = f"{subscription_vendor} - {subscription_plan}" if subscription_plan else subscription_vendor
         
         return f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; }}
-                .content {{ background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }}
-                .urgency-badge {{ display: inline-block; background: {urgency_color}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }}
-                .detail-row {{ display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }}
-                .detail-label {{ color: #64748b; }}
-                .detail-value {{ font-weight: 600; }}
-                .amount {{ font-size: 24px; color: #1e40af; font-weight: bold; }}
-                .footer {{ background: #1e293b; color: #94a3b8; padding: 20px; border-radius: 0 0 10px 10px; font-size: 12px; }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1 style="margin: 0 0 10px 0;">📋 Subscription Renewal Notice</h1>
-                    <span class="urgency-badge">{urgency}</span>
-                </div>
-                <div class="content">
-                    <p>Hello <strong>{customer_name}</strong>,</p>
-                    <p>This is a reminder about your upcoming subscription renewal:</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Renewal Notice</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6; line-height: 1.6;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f3f4f6;">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin: 0 auto; max-width: 600px;">
                     
-                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <div class="detail-row">
-                            <span class="detail-label">Service</span>
-                            <span class="detail-value">{subscription_vendor}{plan_info}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Renewal Date</span>
-                            <span class="detail-value">{renewal_date_str}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Days Until Renewal</span>
-                            <span class="detail-value">{days_until_renewal} days</span>
-                        </div>
-                        <div class="detail-row" style="border-bottom: none;">
-                            <span class="detail-label">Amount</span>
-                            <span class="amount">{currency} {cost:.2f}</span>
-                        </div>
-                    </div>
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 40px 30px; border-radius: 12px 12px 0 0; text-align: center;">
+                            <h1 style="margin: 0 0 15px 0; color: #ffffff; font-size: 28px; font-weight: 600;">
+                                Subscription Renewal Notice
+                            </h1>
+                            <span style="display: inline-block; background: {urgency_color}; color: #ffffff; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px;">
+                                {urgency}
+                            </span>
+                        </td>
+                    </tr>
                     
-                    <p>Please ensure your payment method is up to date to avoid any service interruption.</p>
-                </div>
-                <div class="footer">
-                    <p>This email was sent by SubTrack - Subscription Management System</p>
-                    <p>You received this because you are registered as the contact for this subscription.</p>
-                </div>
-            </div>
-        </body>
-        </html>
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="background-color: #ffffff; padding: 40px;">
+                            
+                            <!-- Greeting -->
+                            <p style="margin: 0 0 25px 0; color: #374151; font-size: 16px;">
+                                Hi <strong>{customer_name}</strong>,
+                            </p>
+                            
+                            <!-- Urgency Message Box -->
+                            <div style="background-color: {urgency_bg}; border-left: 4px solid {urgency_color}; padding: 16px 20px; margin-bottom: 30px; border-radius: 0 8px 8px 0;">
+                                <p style="margin: 0; color: #374151; font-size: 15px;">
+                                    {urgency_message}
+                                </p>
+                            </div>
+                            
+                            <!-- Subscription Details Card -->
+                            <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+                                <h2 style="margin: 0 0 20px 0; color: #111827; font-size: 18px; font-weight: 600;">
+                                    Subscription Details
+                                </h2>
+                                
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                    <tr>
+                                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                                            <span style="color: #6b7280; font-size: 14px;">Service</span>
+                                        </td>
+                                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">
+                                            <span style="color: #111827; font-size: 14px; font-weight: 600;">{plan_display}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                                            <span style="color: #6b7280; font-size: 14px;">Renewal Date</span>
+                                        </td>
+                                        <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">
+                                            <span style="color: #111827; font-size: 14px; font-weight: 600;">{renewal_date_str}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 16px 0 0 0;">
+                                            <span style="color: #6b7280; font-size: 14px;">Amount Due</span>
+                                        </td>
+                                        <td style="padding: 16px 0 0 0; text-align: right;">
+                                            <span style="color: #667eea; font-size: 24px; font-weight: 700;">{currency} {cost:.2f}</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <!-- Help Text -->
+                            <p style="margin: 0; color: #6b7280; font-size: 14px;">
+                                If you have any questions about this renewal or need to make changes to your subscription, please contact your account manager.
+                            </p>
+                            
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #1f2937; padding: 30px 40px; border-radius: 0 0 12px 12px; text-align: center;">
+                            <p style="margin: 0 0 10px 0; color: #9ca3af; font-size: 13px;">
+                                This is an automated message from SubTrack
+                            </p>
+                            <p style="margin: 0; color: #6b7280; font-size: 12px;">
+                                You received this email because you are the registered contact for this subscription.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
         """
     
     def send_renewal_notice(
@@ -323,22 +378,35 @@ class EmailService:
         subject = f"[{urgency}] Subscription Renewal: {subscription_vendor}{plan_info} - {renewal_date_str}"
         
         # Plain text version
+        plan_display = f"{subscription_vendor} - {subscription_plan}" if subscription_plan else subscription_vendor
+        
+        if days_until_renewal <= 0:
+            urgency_text = f"This subscription renewal is {abs(days_until_renewal)} days overdue. Please take action immediately."
+        elif days_until_renewal <= 7:
+            urgency_text = f"Your subscription renews in {days_until_renewal} days. Please ensure your payment details are up to date."
+        elif days_until_renewal <= 14:
+            urgency_text = f"Your subscription renews in {days_until_renewal} days. This is a friendly reminder to review your subscription."
+        else:
+            urgency_text = f"Your subscription renews in {days_until_renewal} days. No action is required at this time."
+        
         body_text = f"""
-Subscription Renewal Notice - {urgency}
+SUBSCRIPTION RENEWAL NOTICE
 
-Hello {customer_name},
+Hi {customer_name},
 
-This is a reminder about your upcoming subscription renewal:
+{urgency_text}
 
-Service: {subscription_vendor}{plan_info}
+SUBSCRIPTION DETAILS
+--------------------
+Service:      {plan_display}
 Renewal Date: {renewal_date_str}
-Days Until Renewal: {days_until_renewal} days
-Amount: {currency} {cost:.2f}
+Amount Due:   {currency} {cost:.2f}
 
-Please ensure your payment method is up to date to avoid any service interruption.
+If you have any questions about this renewal or need to make changes to your subscription, please contact your account manager.
 
 ---
-This email was sent by SubTrack - Subscription Management System
+This is an automated message from SubTrack.
+You received this email because you are the registered contact for this subscription.
         """
         
         return self.send_email(customer_email, subject, body_html, body_text)

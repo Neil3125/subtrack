@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Log - SubTrack Web{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="gradient-text">📋 Activity Log</h1>
+            <p class="text-secondary">Track all changes and actions in your system</p>
+        </div>
+        <div class="flex gap-2">
+            <button class="btn btn-secondary" onclick="refreshActivityLogs()">
+                🔄 Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-4 mb-8">
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 0ms;">
+            <div class="text-sm text-secondary mb-2">Total Activities</div>
+            <div class="text-3xl font-bold text-primary mb-2" id="stat-total">{{ stats.total_actions|default(0) }}</div>
+            <div class="text-xs text-secondary">Last {{ stats.period_days|default(7) }} days</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 100ms;">
+            <div class="text-sm text-secondary mb-2">Created</div>
+            <div class="text-3xl font-bold text-success mb-2" id="stat-created">{{ stats.action_counts.created|default(0) }}</div>
+            <div class="text-xs text-secondary">New items added</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 200ms;">
+            <div class="text-sm text-secondary mb-2">Updated</div>
+            <div class="text-3xl font-bold text-warning mb-2" id="stat-updated">{{ stats.action_counts.updated|default(0) }}</div>
+            <div class="text-xs text-secondary">Items modified</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 300ms;">
+            <div class="text-sm text-secondary mb-2">Emails Sent</div>
+            <div class="text-3xl font-bold text-info mb-2" id="stat-emails">{{ (stats.action_counts.email_sent|default(0)) + (stats.action_counts.bulk_email_sent|default(0)) }}</div>
+            <div class="text-xs text-secondary">Renewal notices</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-6">
+        <div class="flex gap-4 items-end flex-wrap">
+            <div class="form-group flex-1" style="min-width: 150px; margin-bottom: 0;">
+                <label class="form-label">Entity Type</label>
+                <select class="form-select" id="filter-entity" onchange="filterActivityLogs()">
+                    <option value="">All Entities</option>
+                    <option value="subscription">Subscriptions</option>
+                    <option value="customer">Customers</option>
+                    <option value="category">Categories</option>
+                    <option value="group">Groups</option>
+                </select>
+            </div>
+            <div class="form-group flex-1" style="min-width: 150px; margin-bottom: 0;">
+                <label class="form-label">Action Type</label>
+                <select class="form-select" id="filter-action" onchange="filterActivityLogs()">
+                    <option value="">All Actions</option>
+                    <option value="created">Created</option>
+                    <option value="updated">Updated</option>
+                    <option value="deleted">Deleted</option>
+                    <option value="email_sent">Email Sent</option>
+                    <option value="bulk_email_sent">Bulk Email</option>
+                    <option value="renewed">Renewed</option>
+                    <option value="status_changed">Status Changed</option>
+                </select>
+            </div>
+            <div class="form-group flex-1" style="min-width: 150px; margin-bottom: 0;">
+                <label class="form-label">Time Period</label>
+                <select class="form-select" id="filter-days" onchange="filterActivityLogs()">
+                    <option value="1">Last 24 hours</option>
+                    <option value="7" selected>Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                    <option value="365">Last year</option>
+                </select>
+            </div>
+            <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
+        </div>
+    </div>
+
+    <!-- Activity Timeline -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">📜 Activity Timeline</h2>
+            <span class="badge badge-primary" id="log-count">{{ logs|length }} activities</span>
+        </div>
+        
+        <div id="activity-list">
+            {% if logs %}
+            <div class="activity-timeline">
+                {% for log in logs %}
+                <div class="activity-item" data-entity="{{ log.entity_type }}" data-action="{{ log.action_type }}">
+                    <div class="activity-icon">
+                        {{ log.icon or '📋' }}
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-header">
+                            <span class="activity-title">{{ log.description }}</span>
+                            <span class="activity-time">{{ log.created_at.strftime('%b %d, %Y at %I:%M %p') if log.created_at else 'Unknown' }}</span>
+                        </div>
+                        <div class="activity-meta">
+                            <span class="badge badge-{{ 'success' if log.action_type == 'created' else 'warning' if log.action_type == 'updated' else 'danger' if log.action_type == 'deleted' else 'info' }}">
+                                {{ log.action_type|replace('_', ' ')|title }}
+                            </span>
+                            <span class="badge badge-secondary">{{ log.entity_type|title }}</span>
+                            {% if log.entity_name %}
+                            <span class="text-secondary text-sm">• {{ log.entity_name }}</span>
+                            {% endif %}
+                        </div>
+                        {% if log.changes %}
+                        <div class="activity-changes mt-2">
+                            <button class="btn btn-sm btn-secondary" onclick="toggleChanges(this)">
+                                👁️ View Changes
+                            </button>
+                            <div class="changes-detail" style="display: none;">
+                                <table class="table table-sm mt-2" style="font-size: 0.85rem;">
+                                    <thead>
+                                        <tr>
+                                            <th>Field</th>
+                                            <th>Old Value</th>
+                                            <th>New Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for field, values in log.changes.items() %}
+                                        <tr>
+                                            <td class="font-medium">{{ field|replace('_', ' ')|title }}</td>
+                                            <td class="text-danger">{{ values.old if values.old is not none else '-' }}</td>
+                                            <td class="text-success">{{ values.new if values.new is not none else '-' }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📋</div>
+                <h3 class="empty-state-title">No activity yet</h3>
+                <p class="empty-state-text">Activities will appear here when you make changes to your subscriptions, customers, and other data.</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <div class="flex justify-center gap-2 mt-4 p-4 border-t" style="border-color: var(--color-border);">
+            {% if current_page > 1 %}
+            <button class="btn btn-sm btn-secondary" onclick="goToPage({{ current_page - 1 }})">← Previous</button>
+            {% endif %}
+            <span class="text-secondary" style="line-height: 32px;">Page {{ current_page }} of {{ total_pages }}</span>
+            {% if current_page < total_pages %}
+            <button class="btn btn-sm btn-secondary" onclick="goToPage({{ current_page + 1 }})">Next →</button>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.activity-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.activity-item {
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color 0.2s ease;
+}
+
+.activity-item:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-bottom: var(--space-1);
+}
+
+.activity-title {
+    font-weight: 500;
+    color: var(--color-text);
+    word-break: break-word;
+}
+
+.activity-time {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+.activity-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.activity-changes {
+    margin-top: var(--space-2);
+}
+
+.changes-detail {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--space-2);
+    margin-top: var(--space-2);
+}
+
+.changes-detail .table {
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .activity-header {
+        flex-direction: column;
+    }
+    
+    .activity-time {
+        font-size: 0.75rem;
+    }
+}
+</style>
+
+<script>
+function toggleChanges(btn) {
+    const detail = btn.nextElementSibling;
+    if (detail.style.display === 'none') {
+        detail.style.display = 'block';
+        btn.innerHTML = '🙈 Hide Changes';
+    } else {
+        detail.style.display = 'none';
+        btn.innerHTML = '👁️ View Changes';
+    }
+}
+
+function filterActivityLogs() {
+    const entityType = document.getElementById('filter-entity').value;
+    const actionType = document.getElementById('filter-action').value;
+    const days = document.getElementById('filter-days').value;
+    
+    let url = `/activity?days=${days}`;
+    if (entityType) url += `&entity_type=${entityType}`;
+    if (actionType) url += `&action_type=${actionType}`;
+    
+    window.location.href = url;
+}
+
+function clearFilters() {
+    document.getElementById('filter-entity').value = '';
+    document.getElementById('filter-action').value = '';
+    document.getElementById('filter-days').value = '7';
+    window.location.href = '/activity';
+}
+
+function refreshActivityLogs() {
+    window.location.reload();
+}
+
+function goToPage(page) {
+    const entityType = document.getElementById('filter-entity').value;
+    const actionType = document.getElementById('filter-action').value;
+    const days = document.getElementById('filter-days').value;
+    
+    let url = `/activity?page=${page}&days=${days}`;
+    if (entityType) url += `&entity_type=${entityType}`;
+    if (actionType) url += `&action_type=${actionType}`;
+    
+    window.location.href = url;
+}
+
+// Set filter values from URL params on load
+document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    
+    if (params.get('entity_type')) {
+        document.getElementById('filter-entity').value = params.get('entity_type');
+    }
+    if (params.get('action_type')) {
+        document.getElementById('filter-action').value = params.get('action_type');
+    }
+    if (params.get('days')) {
+        document.getElementById('filter-days').value = params.get('days');
+    }
+});
+</script>
+{% endblock %}

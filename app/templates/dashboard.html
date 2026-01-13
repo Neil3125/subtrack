@@ -110,53 +110,58 @@
 
 <!-- Monthly Cost Modal -->
 <div id="monthlyCostModal" class="modal" style="display: none;">
-    <div class="modal-content" style="max-width: 700px;">
+    <div class="modal-content" style="max-width: 800px;">
         <div class="modal-header">
             <h2 class="modal-title">💰 Monthly Cost Breakdown</h2>
             <button class="modal-close" onclick="closeModal('monthlyCostModal')">×</button>
         </div>
         <div class="modal-body">
-            <div class="mb-4">
-                <div class="text-2xl font-bold text-success">${{ "%.2f"|format(stats.monthly_cost|default(0)) }}</div>
-                <div class="text-secondary">Total Monthly Cost</div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Total Monthly Cost</div>
+                    <div class="text-2xl font-bold text-success">${{ "%.2f"|format(stats.monthly_cost|default(0)) }}</div>
+                </div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Projected Annual Revenue</div>
+                    <div class="text-2xl font-bold text-info">${{ "%.2f"|format(stats.annual_revenue|default(0)) }}</div>
+                </div>
             </div>
-            <div class="mb-4">
-                <div class="text-2xl font-bold text-info">${{ "%.2f"|format(stats.annual_revenue|default(0)) }}</div>
-                <div class="text-secondary">Projected Annual Revenue</div>
-            </div>
-            <hr style="margin: 16px 0; border-color: var(--color-border);">
             <h4 class="font-semibold mb-3">By Billing Cycle</h4>
             {% if all_active %}
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Vendor</th>
-                        <th>Cost</th>
-                        <th>Cycle</th>
-                        <th>Monthly Equiv.</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for sub in all_active %}
-                    <tr>
-                        <td class="font-medium">{{ sub.vendor_name }}</td>
-                        <td>${{ "%.2f"|format(sub.cost) }}</td>
-                        <td><span class="badge badge-secondary">{{ sub.billing_cycle.value }}</span></td>
-                        <td>
-                            {% if sub.billing_cycle.value == 'yearly' %}
-                            ${{ "%.2f"|format(sub.cost / 12) }}
-                            {% elif sub.billing_cycle.value == 'quarterly' %}
-                            ${{ "%.2f"|format(sub.cost / 3) }}
-                            {% elif sub.billing_cycle.value == 'weekly' %}
-                            ${{ "%.2f"|format(sub.cost * 4.33) }}
-                            {% else %}
-                            ${{ "%.2f"|format(sub.cost) }}
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                <table class="table" style="min-width: 100%;">
+                    <thead style="position: sticky; top: 0; background: var(--color-bg-card); z-index: 1;">
+                        <tr>
+                            <th style="min-width: 150px;">Vendor</th>
+                            <th style="min-width: 100px;">Cost</th>
+                            <th style="min-width: 100px;">Cycle</th>
+                            <th style="min-width: 120px;">Monthly Equiv.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in all_active %}
+                        <tr>
+                            <td class="font-medium" style="word-break: break-word;">{{ sub.vendor_name }}</td>
+                            <td>${{ "%.2f"|format(sub.cost) }}</td>
+                            <td><span class="badge badge-secondary">{{ sub.billing_cycle.value }}</span></td>
+                            <td>
+                                {% if sub.billing_cycle.value == 'yearly' %}
+                                ${{ "%.2f"|format(sub.cost / 12) }}
+                                {% elif sub.billing_cycle.value == 'quarterly' %}
+                                ${{ "%.2f"|format(sub.cost / 3) }}
+                                {% elif sub.billing_cycle.value == 'weekly' %}
+                                ${{ "%.2f"|format(sub.cost * 4.33) }}
+                                {% elif sub.billing_cycle.value == 'biannual' %}
+                                ${{ "%.2f"|format(sub.cost / 6) }}
+                                {% else %}
+                                ${{ "%.2f"|format(sub.cost) }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% endif %}
         </div>
     </div>
@@ -170,41 +175,82 @@
             <button class="modal-close" onclick="closeModal('expiringSoonModal')">×</button>
         </div>
         <div class="modal-body">
-            <div class="form-group mb-4">
-                <label class="form-label">Filter by Days</label>
-                <select class="form-select" id="expiring-days-filter" onchange="filterExpiringSubscriptions()">
-                    <option value="3">Expiring in 3 days</option>
-                    <option value="14">Expiring in 14 days</option>
-                    <option value="30" selected>Expiring in 30 days</option>
-                    <option value="60">Expiring in 60 days</option>
-                    <option value="90">Expiring in 90 days</option>
-                    <option value="999">90+ days</option>
-                </select>
+            <div class="flex gap-4 items-end mb-4">
+                <div class="form-group flex-1" style="margin-bottom: 0;">
+                    <label class="form-label">Filter by Days</label>
+                    <select class="form-select" id="expiring-days-filter" onchange="filterExpiringSubscriptions()">
+                        <option value="3">Expiring in 3 days</option>
+                        <option value="7">Expiring in 7 days</option>
+                        <option value="14">Expiring in 14 days</option>
+                        <option value="30" selected>Expiring in 30 days</option>
+                        <option value="60">Expiring in 60 days</option>
+                        <option value="90">Expiring in 90 days</option>
+                        <option value="999">90+ days</option>
+                    </select>
+                </div>
+                {% if expiring_soon %}
+                <button class="btn btn-primary" onclick="sendAllExpiringNotices()" id="send-all-btn">
+                    📧 Send All Renewal Notices
+                </button>
+                {% endif %}
             </div>
+            
+            {% if expiring_soon %}
+            <div class="info-box info-box-info mb-4" id="send-all-info">
+                <strong>💡 Tip:</strong> Click "Send All Renewal Notices" to send email reminders to all customers with expiring subscriptions shown below (only those with email addresses).
+            </div>
+            {% endif %}
+            
             <div id="expiring-results">
                 {% if expiring_soon %}
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Vendor</th>
-                            <th>Customer</th>
-                            <th>Cost</th>
-                            <th>Days Until Renewal</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for sub in expiring_soon %}
-                        <tr class="expiring-row" data-days="{{ sub.days_until_renewal() }}">
-                            <td class="font-medium">{{ sub.vendor_name }}</td>
-                            <td>{{ sub.customer.name }}</td>
-                            <td>${{ "%.2f"|format(sub.cost) }} {{ sub.currency }}</td>
-                            <td><span class="badge badge-warning">{{ sub.days_until_renewal() }} days</span></td>
-                            <td><a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table">
+                        <thead style="position: sticky; top: 0; background: var(--color-bg-card); z-index: 1;">
+                            <tr>
+                                <th style="width: 30px;">
+                                    <input type="checkbox" id="select-all-expiring" onchange="toggleSelectAllExpiring()" checked>
+                                </th>
+                                <th>Vendor</th>
+                                <th>Customer</th>
+                                <th>Email</th>
+                                <th>Cost</th>
+                                <th>Days</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in expiring_soon %}
+                            <tr class="expiring-row" data-days="{{ sub.days_until_renewal() }}" data-id="{{ sub.id }}" data-has-email="{{ 'true' if sub.customer.email else 'false' }}">
+                                <td>
+                                    <input type="checkbox" class="expiring-checkbox" data-id="{{ sub.id }}" {{ 'checked' if sub.customer.email else 'disabled' }}>
+                                </td>
+                                <td class="font-medium">{{ sub.vendor_name }}</td>
+                                <td>{{ sub.customer.name }}</td>
+                                <td>
+                                    {% if sub.customer.email %}
+                                    <span class="text-sm">{{ sub.customer.email }}</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">No email</span>
+                                    {% endif %}
+                                </td>
+                                <td>${{ "%.2f"|format(sub.cost) }}</td>
+                                <td><span class="badge badge-warning">{{ sub.days_until_renewal() }}d</span></td>
+                                <td>
+                                    <div class="flex gap-1">
+                                        <a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary" title="View">👁️</a>
+                                        {% if sub.customer.email %}
+                                        <button class="btn btn-sm btn-primary" onclick="sendRenewalNotice({{ sub.id }})" title="Send Email">📧</button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3 text-sm text-secondary">
+                    <span id="selected-expiring-count">{{ expiring_soon|length }}</span> subscriptions selected
+                </div>
                 {% else %}
                 <p class="text-secondary text-center">No subscriptions expiring soon! 🎉</p>
                 {% endif %}
@@ -262,6 +308,7 @@ function filterExpiringSubscriptions() {
     const days = parseInt(document.getElementById('expiring-days-filter').value);
     const rows = document.querySelectorAll('.expiring-row');
     let visibleCount = 0;
+    let withEmailCount = 0;
     
     rows.forEach(row => {
         const rowDays = parseInt(row.dataset.days);
@@ -274,11 +321,113 @@ function filterExpiringSubscriptions() {
         }
         
         row.style.display = show ? '' : 'none';
-        if (show) visibleCount++;
+        if (show) {
+            visibleCount++;
+            if (row.dataset.hasEmail === 'true') {
+                withEmailCount++;
+            }
+        }
     });
     
     document.getElementById('no-expiring-message').style.display = visibleCount === 0 ? 'block' : 'none';
+    
+    // Update selected count
+    const countEl = document.getElementById('selected-expiring-count');
+    if (countEl) {
+        countEl.textContent = withEmailCount;
+    }
+    
+    // Update send all button visibility
+    const sendAllBtn = document.getElementById('send-all-btn');
+    if (sendAllBtn) {
+        sendAllBtn.style.display = withEmailCount > 0 ? '' : 'none';
+    }
 }
+
+function toggleSelectAllExpiring() {
+    const selectAll = document.getElementById('select-all-expiring');
+    const checkboxes = document.querySelectorAll('.expiring-checkbox:not(:disabled)');
+    checkboxes.forEach(cb => {
+        const row = cb.closest('.expiring-row');
+        if (row && row.style.display !== 'none') {
+            cb.checked = selectAll.checked;
+        }
+    });
+    updateSelectedExpiringCount();
+}
+
+function updateSelectedExpiringCount() {
+    const checkboxes = document.querySelectorAll('.expiring-checkbox:checked');
+    const visibleChecked = Array.from(checkboxes).filter(cb => {
+        const row = cb.closest('.expiring-row');
+        return row && row.style.display !== 'none';
+    });
+    
+    const countEl = document.getElementById('selected-expiring-count');
+    if (countEl) {
+        countEl.textContent = visibleChecked.length;
+    }
+}
+
+function sendAllExpiringNotices() {
+    const checkboxes = document.querySelectorAll('.expiring-checkbox:checked');
+    const visibleChecked = Array.from(checkboxes).filter(cb => {
+        const row = cb.closest('.expiring-row');
+        return row && row.style.display !== 'none';
+    });
+    
+    const subscriptionIds = visibleChecked.map(cb => parseInt(cb.dataset.id));
+    
+    if (subscriptionIds.length === 0) {
+        showToast('No subscriptions selected', 'warning');
+        return;
+    }
+    
+    if (!confirm(`Send renewal notices to ${subscriptionIds.length} customer(s)?`)) {
+        return;
+    }
+    
+    const btn = document.getElementById('send-all-btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Sending...';
+    btn.disabled = true;
+    
+    fetch('/api/email/send-batch', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ subscription_ids: subscriptionIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        if (data.success_count > 0) {
+            showToast(`Successfully sent ${data.success_count} renewal notice(s)`, 'success');
+        }
+        if (data.failure_count > 0) {
+            showToast(`Failed to send ${data.failure_count} notice(s)`, 'error');
+        }
+        if (data.success_count === 0 && data.failure_count === 0) {
+            showToast('No emails were sent', 'warning');
+        }
+    })
+    .catch(error => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showToast('Error sending notices: ' + error.message, 'error');
+        console.error('Error:', error);
+    });
+}
+
+// Add event listeners to checkboxes
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.expiring-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateSelectedExpiringCount);
+    });
+});
 </script>
 
 {% endblock %}

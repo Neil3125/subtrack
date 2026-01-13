@@ -56,6 +56,42 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
+                    <div class="text-sm text-secondary mb-1">Category</div>
+                    <div class="font-medium">
+                        {% if customer.categories and customer.categories|length > 0 %}
+                            {% for cat in customer.categories %}
+                            <a href="/categories/{{ cat.id }}" class="badge badge-primary" style="margin-right: 4px;">
+                                📁 {{ cat.name }}
+                            </a>
+                            {% endfor %}
+                        {% elif customer.primary_category %}
+                            <a href="/categories/{{ customer.primary_category.id }}" class="badge badge-primary">
+                                📁 {{ customer.primary_category.name }}
+                            </a>
+                        {% else %}
+                            <span class="text-secondary">No category assigned</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm text-secondary mb-1">Group</div>
+                    <div class="font-medium">
+                        {% if customer.groups and customer.groups|length > 0 %}
+                            {% for grp in customer.groups %}
+                            <a href="/groups/{{ grp.id }}" class="badge badge-success" style="margin-right: 4px;">
+                                👥 {{ grp.name }}
+                            </a>
+                            {% endfor %}
+                        {% elif customer.primary_group %}
+                            <a href="/groups/{{ customer.primary_group.id }}" class="badge badge-success">
+                                👥 {{ customer.primary_group.name }}
+                            </a>
+                        {% else %}
+                            <span class="text-secondary">No group assigned</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
                     <div class="text-sm text-secondary mb-1">Email</div>
                     <div class="font-medium">{{ customer.email or 'Not provided' }}</div>
                 </div>
@@ -78,7 +114,7 @@
                     <div>
                         {% if customer.tags %}
                         {% for tag in customer.tags.split(',') %}
-                        <span class="badge badge-primary">{{ tag.strip() }}</span>
+                        <span class="badge badge-info">{{ tag.strip() }}</span>
                         {% endfor %}
                         {% else %}
                         No tags

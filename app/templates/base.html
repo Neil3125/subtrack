@@ -205,6 +205,11 @@
                             👥 Users
                         </a>
                     </li>
+                    <li class="sidebar-nav-item">
+                        <a href="/activity" class="sidebar-nav-link {% if '/activity' in request.path %}active{% endif %}">
+                            📋 Activity Log
+                        </a>
+                    </li>
                 </ul>
             </div>
 
@@ -232,11 +237,6 @@
             {% block content %}{% endblock %}
         </main>
     </div>
-
-    <!-- Floating Action Button -->
-    <button class="fab" onclick="openModal('quickAddModal')">
-        ➕
-    </button>
 
     <!-- About Modal -->
     <div id="aboutModal" class="modal" style="display: none;">

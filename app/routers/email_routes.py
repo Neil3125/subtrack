@@ -9,11 +9,30 @@ import logging
 from app.database import get_db
 from app.models import Subscription, Customer
 from app.models.renewal_notice import RenewalNotice
+from app.models.activity_log import ActivityLog
 from app.services.email_service import email_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def log_email_activity(db: Session, action_type: str, description: str,
+                       subscription_id: int = None, subscription_name: str = None,
+                       metadata: dict = None):
+    """Helper function to log email activity."""
+    try:
+        ActivityLog.log_action(
+            db=db,
+            action_type=action_type,
+            entity_type="subscription",
+            description=description,
+            entity_id=subscription_id,
+            entity_name=subscription_name,
+            metadata=metadata
+        )
+    except Exception as e:
+        logger.error(f"Activity logging error: {e}")
 
 
 @router.get("/config")
@@ -178,6 +197,21 @@ def send_renewal_notice(
     
     if success:
         logger.info(f"Renewal notice sent for subscription {subscription_id} to {recipient_email}")
+        
+        # Log activity
+        log_email_activity(
+            db=db,
+            action_type="email_sent",
+            description=f"Sent renewal notice for '{subscription.vendor_name}' to {customer.name}",
+            subscription_id=subscription_id,
+            subscription_name=subscription.vendor_name,
+            metadata={
+                "customer_name": customer.name,
+                "recipient_email": recipient_email,
+                "days_until_renewal": subscription.days_until_renewal()
+            }
+        )
+        
         return {
             "success": True,
             "message": message,
@@ -415,6 +449,21 @@ def send_batch_renewal_notices(
     
     if not dry_run:
         db.commit()
+        
+        # Log bulk email activity if any were sent
+        if results["sent"]:
+            log_email_activity(
+                db=db,
+                action_type="bulk_email_sent",
+                description=f"Sent {len(results['sent'])} renewal notices in bulk",
+                metadata={
+                    "sent_count": len(results["sent"]),
+                    "failed_count": len(results["failed"]),
+                    "skipped_count": len(results["skipped_no_email"]) + len(results["skipped_already_notified"]),
+                    "days_threshold": days_threshold,
+                    "recipients": [r["customer"] for r in results["sent"][:10]]  # First 10 for brevity
+                }
+            )
     
     # Summary
     results["summary"] = {

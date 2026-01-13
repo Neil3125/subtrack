@@ -547,6 +547,66 @@ async def users_page(request: Request, db: Session = Depends(get_db)):
 # AI dashboard removed - AI chat features have been disabled
 
 
+@router.get("/activity", response_class=HTMLResponse)
+async def activity_page(
+    request: Request,
+    page: int = 1,
+    days: int = 7,
+    entity_type: str = None,
+    action_type: str = None,
+    db: Session = Depends(get_db)
+):
+    """Activity log page showing all system activities."""
+    from app.models.activity_log import ActivityLog
+    from sqlalchemy import desc
+    from datetime import datetime
+    
+    categories = db.query(Category).all()
+    
+    # Build query with filters
+    query = db.query(ActivityLog)
+    
+    if entity_type:
+        query = query.filter(ActivityLog.entity_type == entity_type)
+    if action_type:
+        query = query.filter(ActivityLog.action_type == action_type)
+    if days:
+        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        query = query.filter(ActivityLog.created_at >= cutoff_date)
+    
+    # Get total and paginate
+    total = query.count()
+    limit = 50
+    total_pages = (total + limit - 1) // limit if total > 0 else 1
+    
+    logs = query.order_by(desc(ActivityLog.created_at)).offset((page - 1) * limit).limit(limit).all()
+    
+    # Get stats for the period
+    stats_query = db.query(ActivityLog)
+    if days:
+        stats_query = stats_query.filter(ActivityLog.created_at >= cutoff_date)
+    all_logs = stats_query.all()
+    
+    action_counts = {}
+    for log in all_logs:
+        action_counts[log.action_type] = action_counts.get(log.action_type, 0) + 1
+    
+    stats = {
+        'total_actions': len(all_logs),
+        'action_counts': action_counts,
+        'period_days': days
+    }
+    
+    return templates.TemplateResponse("activity.html", {
+        "request": request,
+        "categories": categories,
+        "logs": logs,
+        "stats": stats,
+        "current_page": page,
+        "total_pages": total_pages
+    })
+
+
 @router.get("/partials/customer-options", response_class=HTMLResponse)
 async def customer_options_partial(
     request: Request,
@@ -561,6 +621,9 @@ async def customer_options_partial(
         category_id: Filter customers by category (optional)
         selected_customer_id: Pre-select this customer
         show_all: If True, show all customers grouped by category
+    
+    Customers are always displayed with their group in parentheses for consistency.
+    Format: "Customer Name (Group Name)" or "Customer Name (No Group)"
     """
     # Build HTML options
     html = '<option value="">Select a customer</option>'
@@ -580,22 +643,58 @@ async def customer_options_partial(
                 html += f'<optgroup label="{cat.name}">'
                 for customer in cat_customers:
                     selected = 'selected' if selected_customer_id and customer.id == selected_customer_id else ''
-                    html += f'<option value="{customer.id}" {selected}>{customer.name}</option>'
+                    # Get group name - check both relationships
+                    group_name = None
+                    if customer.groups and len(customer.groups) > 0:
+                        group_name = customer.groups[0].name
+                    elif customer.primary_group:
+                        group_name = customer.primary_group.name
+                    
+                    display_name = f"{customer.name} ({group_name})" if group_name else f"{customer.name} (No Group)"
+                    html += f'<option value="{customer.id}" {selected}>{display_name}</option>'
                 html += '</optgroup>'
         
         if not has_any_customers:
             html += '<option value="" disabled>No customers found — create one first</option>'
     else:
-        # Filter by category
-        customers = db.query(Customer).filter(
-            Customer.category_id == category_id
+        # Filter by category - group customers by their group for better organization
+        groups = db.query(Group).filter(Group.category_id == category_id).order_by(Group.name).all()
+        
+        # Get customers with groups
+        customers_with_groups = []
+        for group in groups:
+            group_customers = db.query(Customer).filter(
+                Customer.category_id == category_id,
+                Customer.group_id == group.id
+            ).order_by(Customer.name).all()
+            if group_customers:
+                customers_with_groups.append((group, group_customers))
+        
+        # Get customers without groups
+        customers_no_group = db.query(Customer).filter(
+            Customer.category_id == category_id,
+            Customer.group_id == None
         ).order_by(Customer.name).all()
         
-        if not customers:
+        total_customers = sum(len(custs) for _, custs in customers_with_groups) + len(customers_no_group)
+        
+        if total_customers == 0:
             html += '<option value="" disabled>No customers in this category — create one first</option>'
         else:
-            for customer in customers:
-                selected = 'selected' if selected_customer_id and customer.id == selected_customer_id else ''
-                html += f'<option value="{customer.id}" {selected}>{customer.name}</option>'
+            # Add customers organized by group
+            for group, group_customers in customers_with_groups:
+                html += f'<optgroup label="{group.name}">'
+                for customer in group_customers:
+                    selected = 'selected' if selected_customer_id and customer.id == selected_customer_id else ''
+                    html += f'<option value="{customer.id}" {selected}>{customer.name}</option>'
+                html += '</optgroup>'
+            
+            # Add customers without groups
+            if customers_no_group:
+                html += '<optgroup label="No Group">'
+                for customer in customers_no_group:
+                    selected = 'selected' if selected_customer_id and customer.id == selected_customer_id else ''
+                    html += f'<option value="{customer.id}" {selected}>{customer.name}</option>'
+                html += '</optgroup>'
     
     return HTMLResponse(content=html)
