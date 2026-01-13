@@ -136,45 +136,28 @@ async function addExistingCustomersToGroup(groupId) {
     
     let successCount = 0;
     let errorCount = 0;
+    let errorMessages = [];
     
     for (const option of selectedOptions) {
         const customerId = option.value;
         try {
-            // First get the customer's current data
-            const getResponse = await fetch(`/api/customers/${customerId}`);
-            if (!getResponse.ok) {
-                errorCount++;
-                continue;
-            }
-            const customer = await getResponse.json();
-            
-            // Get current group_ids or create from group_id
-            let currentGroupIds = [];
-            if (customer.groups && customer.groups.length > 0) {
-                currentGroupIds = customer.groups.map(g => g.id);
-            } else if (customer.group_id) {
-                currentGroupIds = [customer.group_id];
-            }
-            
-            // Add this group if not already present
-            if (!currentGroupIds.includes(groupId)) {
-                currentGroupIds.push(groupId);
-            }
-            
-            // Update customer with the new group_ids array
+            // Simply update the customer with the new group_id
             const response = await fetch(`/api/customers/${customerId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ group_ids: currentGroupIds })
+                body: JSON.stringify({ group_id: groupId })
             });
             
             if (response.ok) {
                 successCount++;
             } else {
+                const errorData = await response.json().catch(() => ({}));
+                errorMessages.push(errorData.detail || 'Unknown error');
                 errorCount++;
             }
         } catch (error) {
             console.error('Error adding customer to group:', error);
+            errorMessages.push(error.message);
             errorCount++;
         }
     }
@@ -186,7 +169,7 @@ async function addExistingCustomersToGroup(groupId) {
         setTimeout(() => window.location.reload(), 500);
     }
     if (errorCount > 0) {
-        showToast(`Failed to add ${errorCount} customer(s)`, 'error');
+        showToast(`Failed to add ${errorCount} customer(s): ${errorMessages[0] || 'Unknown error'}`, 'error');
     }
 }
 </script>

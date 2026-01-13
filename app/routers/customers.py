@@ -105,14 +105,18 @@ def get_customer(customer_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{customer_id}", response_model=CustomerResponse)
 def update_customer(customer_id: int, customer: CustomerUpdate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    """Update a customer with support for multiple categories and groups."""
+    """Update a customer with support for multiple categories and groups.
+    
+    Note: Currently using legacy single category_id/group_id fields.
+    group_ids array is supported but only the first group will be set as primary.
+    """
     db_customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not db_customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     
     update_data = customer.model_dump(exclude_unset=True)
     
-    # Handle many-to-many relationships separately
+    # Handle many-to-many relationships separately (convert to legacy single fields)
     category_ids = update_data.pop('category_ids', None)
     group_ids = update_data.pop('group_ids', None)
     
@@ -124,39 +128,41 @@ def update_customer(customer_id: int, customer: CustomerUpdate, background_tasks
     for field, value in update_data.items():
         setattr(db_customer, field, value)
     
-    # Update many-to-many relationships if provided
-    if category_ids is not None:
+    # Handle category update - prefer category_ids array, fall back to legacy
+    if category_ids is not None and len(category_ids) > 0:
+        # Verify categories exist
         categories = db.query(Category).filter(Category.id.in_(category_ids)).all()
         if len(categories) != len(category_ids):
             raise HTTPException(status_code=404, detail="One or more categories not found")
-        db_customer.categories = categories
-        # Update legacy field
-        db_customer.category_id = category_ids[0] if category_ids else None
+        # Use first category as primary (legacy field)
+        db_customer.category_id = category_ids[0]
     elif legacy_category_id is not None:
         # Handle legacy single category update
         category = db.query(Category).filter(Category.id == legacy_category_id).first()
         if not category:
             raise HTTPException(status_code=404, detail="Category not found")
-        db_customer.categories = [category]
         db_customer.category_id = legacy_category_id
     
+    # Handle group update - prefer group_ids array, fall back to legacy
     if group_ids is not None:
-        groups = db.query(Group).filter(Group.id.in_(group_ids)).all()
-        if len(groups) != len(group_ids):
-            raise HTTPException(status_code=404, detail="One or more groups not found")
-        db_customer.groups = groups
-        # Update legacy field
-        db_customer.group_id = group_ids[0] if group_ids else None
+        if len(group_ids) > 0:
+            # Verify groups exist
+            groups = db.query(Group).filter(Group.id.in_(group_ids)).all()
+            if len(groups) != len(group_ids):
+                raise HTTPException(status_code=404, detail="One or more groups not found")
+            # Use first group as primary (legacy field)
+            db_customer.group_id = group_ids[0]
+        else:
+            # Empty array means remove from all groups
+            db_customer.group_id = None
     elif legacy_group_id is not None:
         # Handle legacy single group update
         if legacy_group_id:
             group = db.query(Group).filter(Group.id == legacy_group_id).first()
             if not group:
                 raise HTTPException(status_code=404, detail="Group not found")
-            db_customer.groups = [group]
             db_customer.group_id = legacy_group_id
         else:
-            db_customer.groups = []
             db_customer.group_id = None
     
     db.commit()
