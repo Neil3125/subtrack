@@ -21,21 +21,25 @@
 
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="card">
+        <div class="card card-hover stat-card clickable-card" style="cursor: pointer;" onclick="openModal('totalLinksModal')">
             <div class="text-2xl font-bold text-primary">{{ total_links }}</div>
             <div class="text-sm text-secondary">Total Links</div>
+            <div class="text-xs text-secondary mt-2">Click to view →</div>
         </div>
-        <div class="card">
+        <div class="card card-hover stat-card clickable-card" style="cursor: pointer;" onclick="filterByStatus('accepted')">
             <div class="text-2xl font-bold text-success">{{ accepted_links }}</div>
             <div class="text-sm text-secondary">Accepted</div>
+            <div class="text-xs text-secondary mt-2">Click to filter →</div>
         </div>
-        <div class="card">
+        <div class="card card-hover stat-card clickable-card" style="cursor: pointer;" onclick="filterByStatus('pending')">
             <div class="text-2xl font-bold text-warning">{{ pending_links }}</div>
             <div class="text-sm text-secondary">Pending Review</div>
+            <div class="text-xs text-secondary mt-2">Click to filter →</div>
         </div>
-        <div class="card">
+        <div class="card card-hover stat-card clickable-card" style="cursor: pointer;" onclick="filterByStatus('rejected')">
             <div class="text-2xl font-bold text-secondary">{{ rejected_links }}</div>
             <div class="text-sm text-secondary">Rejected</div>
+            <div class="text-xs text-secondary mt-2">Click to filter →</div>
         </div>
     </div>
 
@@ -137,6 +141,43 @@
     </div>
 </div>
 
+<!-- Total Links Modal -->
+<div id="totalLinksModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h2 class="modal-title">🔗 Links Overview</h2>
+            <button class="modal-close" onclick="closeModal('totalLinksModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Total Links</div>
+                    <div class="text-3xl font-bold text-primary">{{ total_links }}</div>
+                </div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Acceptance Rate</div>
+                    <div class="text-3xl font-bold text-success">{{ "%.0f"|format((accepted_links / total_links * 100) if total_links > 0 else 0) }}%</div>
+                </div>
+            </div>
+            <h4 class="font-semibold mb-3">Status Breakdown</h4>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-success-bg, rgba(16, 185, 129, 0.1));">
+                    <span>✅ Accepted</span>
+                    <span class="badge badge-success">{{ accepted_links }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-warning-bg, rgba(245, 158, 11, 0.1));">
+                    <span>⏳ Pending Review</span>
+                    <span class="badge badge-warning">{{ pending_links }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-bg-secondary);">
+                    <span>❌ Rejected</span>
+                    <span class="badge badge-secondary">{{ rejected_links }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function filterLinks() {
     const type = document.getElementById('filter-type').value;
@@ -158,6 +199,20 @@ function filterLinks() {
         
         link.style.display = show ? 'block' : 'none';
     });
+}
+
+function filterByStatus(status) {
+    // Set the status filter dropdown
+    document.getElementById('filter-status').value = status;
+    // Clear type filter
+    document.getElementById('filter-type').value = '';
+    // Reset confidence
+    document.getElementById('filter-confidence').value = '0';
+    document.getElementById('confidence-value').textContent = '0%';
+    // Apply the filter
+    filterLinks();
+    // Show toast
+    showToast(`Showing ${status} links`, 'info');
 }
 
 </script>

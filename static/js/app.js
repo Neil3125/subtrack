@@ -888,27 +888,48 @@ window.loadEditData = function(type, id) {
       // Special handling: customer edit needs group dropdown populated based on category
       if (type === 'customer') {
         const categoryField = form.querySelector('select[name="category_id"]');
-        const groupField = form.querySelector('select[name="group_id"]');
         const categoryId = categoryField ? categoryField.value : null;
-        const groupId = data.group_id || (groupField ? groupField.value : null);
-
-        // Populate ALL groups organized by category and pre-select current group
-        updateGroupSelect(categoryId, 'group_id', groupId);
         
-        // Also set it after a delay to ensure groups are loaded
-        if (groupId) {
-          setTimeout(() => {
-            const groupSelect = form.querySelector('select[name="group_id"]');
-            if (groupSelect) {
-              groupSelect.value = groupId;
-            }
-          }, 300);
+        // Get group IDs - support both single group_id and multiple groups array
+        let groupIds = [];
+        if (data.groups && Array.isArray(data.groups)) {
+          groupIds = data.groups.map(g => g.id);
+        } else if (data.group_ids && Array.isArray(data.group_ids)) {
+          groupIds = data.group_ids;
+        } else if (data.group_id) {
+          groupIds = [data.group_id];
+        }
+
+        // Use multi-select component for groups
+        const multiSelectContainer = document.getElementById('edit-customer-groups-container');
+        if (multiSelectContainer) {
+          // Load groups for the category with pre-selected groups
+          updateGroupSelectMulti(categoryId, 'edit-customer-groups-container', groupIds);
+        } else {
+          // Fallback to legacy single-select
+          const groupField = form.querySelector('select[name="group_id"]');
+          const groupId = data.group_id || (groupField ? groupField.value : null);
+          updateGroupSelect(categoryId, 'group_id', groupId);
+          
+          if (groupId) {
+            setTimeout(() => {
+              const groupSelect = form.querySelector('select[name="group_id"]');
+              if (groupSelect) {
+                groupSelect.value = groupId;
+              }
+            }, 300);
+          }
         }
 
         // Ensure future category changes keep group list in sync.
         if (categoryField && !categoryField.dataset.groupHooked) {
           categoryField.addEventListener('change', function() {
-            updateGroupSelect(this.value, 'group_id');
+            const container = document.getElementById('edit-customer-groups-container');
+            if (container) {
+              updateGroupSelectMulti(this.value, 'edit-customer-groups-container', []);
+            } else {
+              updateGroupSelect(this.value, 'group_id');
+            }
           });
           categoryField.dataset.groupHooked = 'true';
         }
@@ -1091,11 +1112,23 @@ window.createCustomer = function(formData) {
     return;
   }
   
+  // Handle group_ids from multi-select (comma-separated string) or legacy group_id
+  let groupIds = [];
+  if (formData.group_ids && formData.group_ids.trim()) {
+    groupIds = formData.group_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+  } else if (formData.group_id) {
+    groupIds = [parseInt(formData.group_id)];
+  }
+  
+  // Remove duplicates
+  groupIds = [...new Set(groupIds)];
+  
   // Prepare request payload
   const payload = {
     name: formData.name.trim(),
     category_id: parseInt(formData.category_id),
-    group_id: formData.group_id ? parseInt(formData.group_id) : null,
+    group_ids: groupIds.length > 0 ? groupIds : null,
+    group_id: groupIds.length > 0 ? groupIds[0] : null, // Legacy field for backward compatibility
     email: formData.email ? formData.email.trim() : null,
     phone: formData.phone ? formData.phone.trim() : null,
     country: formData.country.trim(),
@@ -1281,11 +1314,23 @@ window.updateCustomer = function(formData, id) {
     return;
   }
   
+  // Handle group_ids from multi-select (comma-separated string) or legacy group_id
+  let groupIds = [];
+  if (formData.group_ids && formData.group_ids.trim()) {
+    groupIds = formData.group_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+  } else if (formData.group_id) {
+    groupIds = [parseInt(formData.group_id)];
+  }
+  
+  // Remove duplicates
+  groupIds = [...new Set(groupIds)];
+  
   // Prepare request payload
   const payload = {
     name: formData.name.trim(),
     category_id: parseInt(formData.category_id),
-    group_id: formData.group_id ? parseInt(formData.group_id) : null,
+    group_ids: groupIds.length > 0 ? groupIds : [],
+    group_id: groupIds.length > 0 ? groupIds[0] : null, // Legacy field for backward compatibility
     email: formData.email ? formData.email.trim() : null,
     phone: formData.phone ? formData.phone.trim() : null,
     country: formData.country ? formData.country.trim() : null,
@@ -1497,6 +1542,110 @@ window.handleFormSubmit = function(event, callback) {
   } else {
     callback(data);
   }
+};
+
+// ==================== Multi-Select Group Component ====================
+window.updateGroupSelectMulti = function(categoryId, containerId, selectedGroupIds = []) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  // Determine the hidden input ID based on container ID
+  let hiddenInputId = 'customer-group-ids';
+  if (containerId.includes('edit-customer')) {
+    hiddenInputId = 'edit-customer-group-ids';
+  }
+  
+  // Convert selectedGroupIds to array if it's a string
+  if (typeof selectedGroupIds === 'string') {
+    selectedGroupIds = selectedGroupIds ? selectedGroupIds.split(',').map(id => parseInt(id)) : [];
+  }
+  if (!Array.isArray(selectedGroupIds)) {
+    selectedGroupIds = selectedGroupIds ? [selectedGroupIds] : [];
+  }
+  
+  // Fetch groups for the selected category
+  fetch(`/api/groups?category_id=${categoryId}`)
+    .then(r => r.json())
+    .then(groups => {
+      if (groups.length === 0) {
+        container.innerHTML = '<div class="multi-select-placeholder">No groups available in this category</div>';
+        return;
+      }
+      
+      container.innerHTML = '';
+      
+      groups.forEach(group => {
+        const isSelected = selectedGroupIds.includes(group.id);
+        const option = document.createElement('div');
+        option.className = `multi-select-option ${isSelected ? 'selected' : ''}`;
+        option.dataset.groupId = group.id;
+        option.innerHTML = `
+          <span class="check-icon"></span>
+          <span>${group.name}</span>
+        `;
+        
+        option.addEventListener('click', function() {
+          this.classList.toggle('selected');
+          updateGroupIdsHiddenInput(containerId, hiddenInputId);
+        });
+        
+        container.appendChild(option);
+      });
+      
+      // Update hidden input
+      updateGroupIdsHiddenInput(containerId, hiddenInputId);
+    })
+    .catch(error => {
+      console.error('Error loading groups:', error);
+      container.innerHTML = '<div class="multi-select-placeholder">Error loading groups</div>';
+    });
+};
+
+// Update the hidden input with selected group IDs
+function updateGroupIdsHiddenInput(containerId, hiddenInputId) {
+  const container = document.getElementById(containerId);
+  const hiddenInput = document.getElementById(hiddenInputId);
+  
+  if (!container || !hiddenInput) return;
+  
+  const selectedOptions = container.querySelectorAll('.multi-select-option.selected');
+  const selectedIds = Array.from(selectedOptions).map(opt => opt.dataset.groupId);
+  
+  // Remove duplicates
+  const uniqueIds = [...new Set(selectedIds)];
+  hiddenInput.value = uniqueIds.join(',');
+}
+
+// Helper to set selected groups when editing
+window.setSelectedGroups = function(containerId, groupIds) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  // Convert to array if needed
+  if (typeof groupIds === 'string') {
+    groupIds = groupIds ? groupIds.split(',').map(id => parseInt(id)) : [];
+  }
+  if (!Array.isArray(groupIds)) {
+    groupIds = groupIds ? [groupIds] : [];
+  }
+  
+  // Select the matching options
+  const options = container.querySelectorAll('.multi-select-option');
+  options.forEach(opt => {
+    const groupId = parseInt(opt.dataset.groupId);
+    if (groupIds.includes(groupId)) {
+      opt.classList.add('selected');
+    } else {
+      opt.classList.remove('selected');
+    }
+  });
+  
+  // Update hidden input
+  let hiddenInputId = 'customer-group-ids';
+  if (containerId.includes('edit-customer')) {
+    hiddenInputId = 'edit-customer-group-ids';
+  }
+  updateGroupIdsHiddenInput(containerId, hiddenInputId);
 };
 
 // Dynamic cascading selects - Shows ALL groups organized by category

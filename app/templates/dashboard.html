@@ -188,6 +188,11 @@
                         <option value="999">90+ days</option>
                     </select>
                 </div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-3); margin-bottom: 0; min-width: 150px;">
+                    <div class="text-xs text-secondary">Showing</div>
+                    <div class="text-xl font-bold text-warning" id="expiring-visible-count">{{ expiring_soon|length if expiring_soon else 0 }}</div>
+                    <div class="text-xs text-secondary">subscriptions</div>
+                </div>
                 {% if expiring_soon %}
                 <button class="btn btn-primary" onclick="sendAllExpiringNotices()" id="send-all-btn">
                     📧 Send All Renewal Notices
@@ -330,6 +335,12 @@ function filterExpiringSubscriptions() {
     });
     
     document.getElementById('no-expiring-message').style.display = visibleCount === 0 ? 'block' : 'none';
+    
+    // Update visible count display
+    const visibleCountEl = document.getElementById('expiring-visible-count');
+    if (visibleCountEl) {
+        visibleCountEl.textContent = visibleCount;
+    }
     
     // Update selected count
     const countEl = document.getElementById('selected-expiring-count');

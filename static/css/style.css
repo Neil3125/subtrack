@@ -1912,6 +1912,113 @@ select[name="customer_id"] {
   transform: scale(1.1) rotate(5deg);
 }
 
+/* Multi-Select Component */
+.multi-select-container {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  min-height: 44px;
+  background: var(--color-bg);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.multi-select-container:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(91, 127, 255, 0.1);
+}
+
+.multi-select-placeholder {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  padding: 4px 8px;
+}
+
+.multi-select-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  user-select: none;
+}
+
+.multi-select-option:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg);
+}
+
+.multi-select-option.selected {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: white;
+  border-color: transparent;
+}
+
+.multi-select-option.selected:hover {
+  opacity: 0.9;
+}
+
+.multi-select-option .check-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 2px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.multi-select-option.selected .check-icon {
+  background: white;
+  color: var(--color-primary);
+  border-color: white;
+}
+
+.multi-select-option.selected .check-icon::after {
+  content: '✓';
+}
+
+/* Actions wrapper for table cells */
+.actions-wrapper {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.actions-wrapper .btn {
+  position: relative;
+  z-index: 1;
+}
+
+.actions-cell {
+  position: relative;
+  overflow: visible !important;
+}
+
+.actions-cell .actions-wrapper {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  min-width: 80px;
+}
+
+.actions-cell .btn {
+  padding: 6px 8px;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;

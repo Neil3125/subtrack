@@ -4,6 +4,11 @@
 
 {% block content %}
 <div class="animate-fade-in">
+    <!-- Back Button -->
+    <button class="btn btn-secondary btn-sm mb-4" onclick="window.history.back()" style="display: inline-flex; align-items: center; gap: 6px;">
+        ← Back
+    </button>
+
     <div class="flex items-center justify-between mb-8">
         <div>
             <h1>{{ category.name }}</h1>
@@ -27,31 +32,31 @@
 
     <!-- Category Stats Cards -->
     <div class="grid grid-cols-4 mb-8">
-        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 0ms;">
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 0ms; cursor: pointer;" onclick="openModal('catSubsModal')">
             <div class="text-sm text-secondary mb-2">Total Subscriptions</div>
             <div class="text-3xl font-bold text-primary mb-2">{{ subscriptions|length }}</div>
-            <div class="text-xs text-secondary">In this category</div>
+            <div class="text-xs text-secondary">Click to view →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 100ms;">
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 100ms; cursor: pointer;" onclick="openModal('catCostModal')">
             <div class="text-sm text-secondary mb-2">Monthly Cost</div>
             <div class="text-3xl font-bold text-success mb-2">${{ "%.2f"|format(subscriptions|selectattr('status.value', 'equalto', 'active')|sum(attribute='cost')) }}</div>
-            <div class="text-xs text-secondary">Active subscriptions</div>
+            <div class="text-xs text-secondary">Click for breakdown →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 200ms; position: relative;">
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 200ms; position: relative; cursor: pointer;" onclick="openModal('catExpiringModal')">
             <div class="text-sm text-secondary mb-2">Expiring Soon</div>
             <div class="text-3xl font-bold text-warning mb-2">{{ category_stats.expiring_soon }}</div>
             {% if category_stats.expiring_soon > 0 %}
             <span class="notification-badge">!</span>
             {% endif %}
-            <div class="text-xs text-secondary">Within 30 days</div>
+            <div class="text-xs text-secondary">Click to view →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 300ms; position: relative;">
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 300ms; position: relative; cursor: pointer;" onclick="openModal('catOverdueModal')">
             <div class="text-sm text-secondary mb-2">Overdue</div>
             <div class="text-3xl font-bold text-danger mb-2">{{ category_stats.overdue }}</div>
             {% if category_stats.overdue > 0 %}
             <span class="notification-badge" style="background: var(--color-danger);">{{ category_stats.overdue }}</span>
             {% endif %}
-            <div class="text-xs text-secondary">Requires attention</div>
+            <div class="text-xs text-secondary">Click to view →</div>
         </div>
     </div>
 
@@ -209,5 +214,166 @@
         </div>
     </div>
     {% endif %}
+</div>
+
+<!-- Category Subscriptions Modal -->
+<div id="catSubsModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h2 class="modal-title">📋 All Subscriptions ({{ subscriptions|length }})</h2>
+            <button class="modal-close" onclick="closeModal('catSubsModal')">×</button>
+        </div>
+        <div class="modal-body">
+            {% if subscriptions %}
+            <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                <table class="table">
+                    <thead style="position: sticky; top: 0; background: var(--color-bg-card); z-index: 1;">
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Customer</th>
+                            <th>Cost</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in subscriptions %}
+                        <tr>
+                            <td class="font-medium">{{ sub.vendor_name }}</td>
+                            <td>{{ sub.customer.name }}</td>
+                            <td>${{ "%.2f"|format(sub.cost) }}</td>
+                            <td><span class="badge badge-{{ 'success' if sub.status.value == 'active' else 'secondary' }}">{{ sub.status.value }}</span></td>
+                            <td><a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-secondary text-center py-4">No subscriptions in this category</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Category Cost Breakdown Modal -->
+<div id="catCostModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h2 class="modal-title">💰 Cost Breakdown</h2>
+            <button class="modal-close" onclick="closeModal('catCostModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Active Monthly Cost</div>
+                    <div class="text-2xl font-bold text-success">${{ "%.2f"|format(subscriptions|selectattr('status.value', 'equalto', 'active')|sum(attribute='cost')) }}</div>
+                </div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Total Subscriptions</div>
+                    <div class="text-2xl font-bold text-primary">{{ subscriptions|length }}</div>
+                </div>
+            </div>
+            <h4 class="font-semibold mb-2">By Status</h4>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center p-2 rounded" style="background: var(--color-success-bg);">
+                    <span>Active</span>
+                    <span class="badge badge-success">{{ subscriptions|selectattr('status.value', 'equalto', 'active')|list|length }}</span>
+                </div>
+                <div class="flex justify-between items-center p-2 rounded" style="background: var(--color-warning-bg);">
+                    <span>Paused</span>
+                    <span class="badge badge-warning">{{ subscriptions|selectattr('status.value', 'equalto', 'paused')|list|length }}</span>
+                </div>
+                <div class="flex justify-between items-center p-2 rounded" style="background: var(--color-danger-bg);">
+                    <span>Cancelled</span>
+                    <span class="badge badge-danger">{{ subscriptions|selectattr('status.value', 'equalto', 'cancelled')|list|length }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Expiring Soon Modal -->
+<div id="catExpiringModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h2 class="modal-title">⚠️ Expiring Soon ({{ category_stats.expiring_soon }})</h2>
+            <button class="modal-close" onclick="closeModal('catExpiringModal')">×</button>
+        </div>
+        <div class="modal-body">
+            {% set expiring = [] %}
+            {% for sub in subscriptions if sub.status.value == 'active' and sub.days_until_renewal() >= 0 and sub.days_until_renewal() <= 30 %}
+                {% set _ = expiring.append(sub) %}
+            {% endfor %}
+            {% if expiring|length > 0 or category_stats.expiring_soon > 0 %}
+            <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                <table class="table">
+                    <thead style="position: sticky; top: 0; background: var(--color-bg-card); z-index: 1;">
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Customer</th>
+                            <th>Cost</th>
+                            <th>Days Left</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in subscriptions if sub.status.value == 'active' and sub.days_until_renewal() >= 0 and sub.days_until_renewal() <= 30 %}
+                        <tr>
+                            <td class="font-medium">{{ sub.vendor_name }}</td>
+                            <td>{{ sub.customer.name }}</td>
+                            <td>${{ "%.2f"|format(sub.cost) }}</td>
+                            <td><span class="badge badge-warning">{{ sub.days_until_renewal() }}d</span></td>
+                            <td><a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-secondary text-center py-4">No subscriptions expiring soon! 🎉</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Category Overdue Modal -->
+<div id="catOverdueModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h2 class="modal-title">🚨 Overdue ({{ category_stats.overdue }})</h2>
+            <button class="modal-close" onclick="closeModal('catOverdueModal')">×</button>
+        </div>
+        <div class="modal-body">
+            {% if category_stats.overdue > 0 %}
+            <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                <table class="table">
+                    <thead style="position: sticky; top: 0; background: var(--color-bg-card); z-index: 1;">
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Customer</th>
+                            <th>Cost</th>
+                            <th>Days Overdue</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in subscriptions if sub.days_until_renewal() < 0 %}
+                        <tr>
+                            <td class="font-medium">{{ sub.vendor_name }}</td>
+                            <td>{{ sub.customer.name }}</td>
+                            <td>${{ "%.2f"|format(sub.cost) }}</td>
+                            <td><span class="badge badge-danger">{{ -sub.days_until_renewal() }}d overdue</span></td>
+                            <td><a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-secondary text-center py-4">No overdue subscriptions! 🎉</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -16,25 +16,25 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-4 mb-8">
-        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 0ms;">
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 0ms; cursor: pointer;" onclick="openModal('totalCustomersModal')">
             <div class="text-sm text-secondary mb-2">Total Customers</div>
             <div class="text-3xl font-bold text-primary mb-2">{{ total_customers }}</div>
-            <div class="text-xs text-secondary">Across all categories</div>
+            <div class="text-xs text-secondary">Click to view details →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 100ms;">
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 100ms; cursor: pointer;" onclick="openModal('categoriesModal')">
             <div class="text-sm text-secondary mb-2">Categories</div>
             <div class="text-3xl font-bold text-success mb-2">{{ categories_count }}</div>
-            <div class="text-xs text-secondary">With customers</div>
+            <div class="text-xs text-secondary">Click to view breakdown →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 200ms;">
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 200ms; cursor: pointer;" onclick="openModal('countriesModal')">
             <div class="text-sm text-secondary mb-2">Countries</div>
             <div class="text-3xl font-bold text-warning mb-2">{{ countries_count }}</div>
-            <div class="text-xs text-secondary">Unique locations</div>
+            <div class="text-xs text-secondary">Click to view breakdown →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 300ms;">
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 300ms; cursor: pointer;" onclick="openModal('groupsModal')">
             <div class="text-sm text-secondary mb-2">In Groups</div>
             <div class="text-3xl font-bold text-info mb-2">{{ in_groups_count }}</div>
-            <div class="text-xs text-secondary">Customers in groups</div>
+            <div class="text-xs text-secondary">Click to view details →</div>
         </div>
     </div>
 
@@ -209,6 +209,153 @@
         </div>
     </div>
     {% endif %}
+</div>
+
+<!-- Total Customers Modal -->
+<div id="totalCustomersModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h2 class="modal-title">👥 Customer Overview</h2>
+            <button class="modal-close" onclick="closeModal('totalCustomersModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Total Customers</div>
+                    <div class="text-3xl font-bold text-primary">{{ total_customers }}</div>
+                </div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">With Email</div>
+                    <div class="text-3xl font-bold text-success">{{ customers|selectattr('email')|list|length }}</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">In Categories</div>
+                    <div class="text-2xl font-bold text-warning">{{ categories_count }}</div>
+                </div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">In Groups</div>
+                    <div class="text-2xl font-bold text-info">{{ in_groups_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Categories Breakdown Modal -->
+<div id="categoriesModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h2 class="modal-title">📁 Customers by Category</h2>
+            <button class="modal-close" onclick="closeModal('categoriesModal')">×</button>
+        </div>
+        <div class="modal-body">
+            {% if category_breakdown %}
+            <div class="space-y-3">
+                {% for item in category_breakdown %}
+                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-bg-secondary);">
+                    <div class="flex items-center gap-2">
+                        <a href="/categories/{{ item.id }}" class="text-primary font-medium hover:underline">{{ item.name }}</a>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="progress" style="width: 100px; height: 6px;">
+                            <div class="progress-bar" style="width: {{ (item.count / total_customers * 100) if total_customers > 0 else 0 }}%;"></div>
+                        </div>
+                        <span class="badge badge-primary">{{ item.count }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-secondary text-center py-4">No categories yet</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Countries Breakdown Modal -->
+<div id="countriesModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h2 class="modal-title">🌍 Customers by Country</h2>
+            <button class="modal-close" onclick="closeModal('countriesModal')">×</button>
+        </div>
+        <div class="modal-body">
+            {% if country_breakdown %}
+            <div class="space-y-3" style="max-height: 400px; overflow-y: auto;">
+                {% for item in country_breakdown %}
+                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-bg-secondary);">
+                    <span class="font-medium">{{ item.country or 'Not Specified' }}</span>
+                    <div class="flex items-center gap-3">
+                        <div class="progress" style="width: 100px; height: 6px;">
+                            <div class="progress-bar" style="width: {{ (item.count / total_customers * 100) if total_customers > 0 else 0 }}%; background: var(--color-success);"></div>
+                        </div>
+                        <span class="badge badge-secondary">{{ item.count }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-secondary text-center py-4">No country data available</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Groups Modal -->
+<div id="groupsModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h2 class="modal-title">👨‍👩‍👧‍👦 Customers in Groups</h2>
+            <button class="modal-close" onclick="closeModal('groupsModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">In Groups</div>
+                    <div class="text-2xl font-bold text-info">{{ in_groups_count }}</div>
+                </div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Not in Groups</div>
+                    <div class="text-2xl font-bold text-secondary">{{ total_customers - in_groups_count }}</div>
+                </div>
+            </div>
+            {% if in_groups_count > 0 %}
+            <h4 class="font-semibold mb-2">Customers with Groups</h4>
+            <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+                <table class="table">
+                    <thead style="position: sticky; top: 0; background: var(--color-bg-card); z-index: 1;">
+                        <tr>
+                            <th>Customer</th>
+                            <th>Group(s)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers if customer.primary_group or (customer.groups and customer.groups|length > 0) %}
+                        <tr>
+                            <td class="font-medium">{{ customer.name }}</td>
+                            <td>
+                                {% if customer.groups %}
+                                    {% for grp in customer.groups %}
+                                    <span class="badge badge-success" style="margin: 1px;">{{ grp.name }}</span>
+                                    {% endfor %}
+                                {% elif customer.primary_group %}
+                                    <span class="badge badge-success">{{ customer.primary_group.name }}</span>
+                                {% endif %}
+                            </td>
+                            <td><a href="/customers/{{ customer.id }}" class="btn btn-sm btn-secondary">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-secondary text-center py-4">No customers are assigned to groups yet</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
 <script>

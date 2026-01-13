@@ -13,6 +13,11 @@
             <button class="btn btn-secondary" onclick="refreshActivityLogs()">
                 🔄 Refresh
             </button>
+            {% if logs|length > 15 %}
+            <button class="btn btn-danger" onclick="openClearLogsModal()">
+                🗑️ Clear Logs
+            </button>
+            {% endif %}
         </div>
     </div>
 
@@ -166,6 +171,45 @@
             {% endif %}
         </div>
         {% endif %}
+    </div>
+</div>
+
+<!-- Clear Logs Confirmation Modal -->
+<div id="clearLogsModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2 class="modal-title">🗑️ Clear Activity Logs</h2>
+            <button class="modal-close" onclick="closeModal('clearLogsModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="info-box info-box-warning mb-4">
+                <strong>⚠️ Warning:</strong> This action cannot be undone. All activity logs older than the selected period will be permanently deleted.
+            </div>
+            
+            <div class="form-group mb-4">
+                <label class="form-label">Clear logs older than:</label>
+                <select class="form-select" id="clear-logs-days">
+                    <option value="7">7 days</option>
+                    <option value="14">14 days</option>
+                    <option value="30" selected>30 days</option>
+                    <option value="60">60 days</option>
+                    <option value="90">90 days</option>
+                    <option value="0">All logs (clear everything)</option>
+                </select>
+            </div>
+            
+            <div class="form-group mb-4">
+                <label class="form-label">Type "CLEAR" to confirm:</label>
+                <input type="text" class="form-input" id="clear-logs-confirm" placeholder="Type CLEAR to confirm">
+            </div>
+            
+            <div class="flex gap-2 justify-end">
+                <button class="btn btn-secondary" onclick="closeModal('clearLogsModal')">Cancel</button>
+                <button class="btn btn-danger" onclick="clearActivityLogs()" id="clear-logs-btn" disabled>
+                    🗑️ Clear Logs
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -406,6 +450,70 @@ document.addEventListener('DOMContentLoaded', function() {
     if (params.get('days')) {
         document.getElementById('filter-days').value = params.get('days');
     }
+    
+    // Enable/disable clear logs button based on confirmation input
+    const confirmInput = document.getElementById('clear-logs-confirm');
+    if (confirmInput) {
+        confirmInput.addEventListener('input', function() {
+            const clearBtn = document.getElementById('clear-logs-btn');
+            clearBtn.disabled = this.value.toUpperCase() !== 'CLEAR';
+        });
+    }
 });
+
+function openClearLogsModal() {
+    document.getElementById('clear-logs-confirm').value = '';
+    document.getElementById('clear-logs-btn').disabled = true;
+    openModal('clearLogsModal');
+}
+
+function clearActivityLogs() {
+    const confirmValue = document.getElementById('clear-logs-confirm').value;
+    if (confirmValue.toUpperCase() !== 'CLEAR') {
+        showToast('Please type CLEAR to confirm', 'warning');
+        return;
+    }
+    
+    const days = parseInt(document.getElementById('clear-logs-days').value);
+    const btn = document.getElementById('clear-logs-btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Clearing...';
+    btn.disabled = true;
+    
+    let url = '/api/activity/logs';
+    if (days > 0) {
+        url += `?days=${days}`;
+    } else {
+        // Clear all - use 1 day to effectively clear everything
+        url += '?days=1';
+    }
+    
+    fetch(url, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.innerHTML = originalText;
+        closeModal('clearLogsModal');
+        
+        if (data.deleted_count !== undefined) {
+            showToast(`Successfully cleared ${data.deleted_count} activity log(s)`, 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else if (data.error) {
+            showToast('Error: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showToast('Error clearing logs: ' + error.message, 'error');
+        console.error('Error:', error);
+    });
+}
 </script>
 {% endblock %}

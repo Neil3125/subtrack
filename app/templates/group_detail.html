@@ -4,6 +4,11 @@
 
 {% block content %}
 <div class="animate-fade-in">
+    <!-- Back Button -->
+    <button class="btn btn-secondary btn-sm mb-4" onclick="window.history.back()" style="display: inline-flex; align-items: center; gap: 6px;">
+        ← Back
+    </button>
+
     <nav class="breadcrumbs" style="margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
         <a href="/" style="color: var(--color-text-secondary);">Dashboard</a>
         <span style="margin: 0 var(--space-2); color: var(--color-text-tertiary);">/</span>
@@ -29,6 +34,29 @@
             <button class="btn btn-primary" onclick="openModal('customerModal')">
                 ➕ New Customer
             </button>
+        </div>
+    </div>
+
+    <!-- Group Stats Cards -->
+    <div class="grid grid-cols-3 mb-6">
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="cursor: pointer;" onclick="openModal('groupCustomersModal')">
+            <div class="text-sm text-secondary mb-2">Customers</div>
+            <div class="text-3xl font-bold text-primary">{{ customers|length }}</div>
+            <div class="text-xs text-secondary">Click to view →</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 100ms; cursor: pointer;" onclick="openModal('groupSubsModal')">
+            <div class="text-sm text-secondary mb-2">Total Subscriptions</div>
+            {% set total_subs = namespace(count=0) %}
+            {% for c in customers %}{% set total_subs.count = total_subs.count + c.subscriptions|length %}{% endfor %}
+            <div class="text-3xl font-bold text-success">{{ total_subs.count }}</div>
+            <div class="text-xs text-secondary">Click to view →</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 200ms;">
+            <div class="text-sm text-secondary mb-2">Category</div>
+            <div class="text-xl font-bold text-info">
+                <a href="/categories/{{ group.category.id }}" class="hover:underline">{{ group.category.name }}</a>
+            </div>
+            <div class="text-xs text-secondary">Parent category</div>
         </div>
     </div>
 
@@ -173,4 +201,87 @@ async function addExistingCustomersToGroup(groupId) {
     }
 }
 </script>
+
+<!-- Group Customers Modal -->
+<div id="groupCustomersModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h2 class="modal-title">👥 Customers in {{ group.name }} ({{ customers|length }})</h2>
+            <button class="modal-close" onclick="closeModal('groupCustomersModal')">×</button>
+        </div>
+        <div class="modal-body">
+            {% if customers %}
+            <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                <table class="table">
+                    <thead style="position: sticky; top: 0; background: var(--color-bg-card); z-index: 1;">
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Subscriptions</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td class="font-medium">{{ customer.name }}</td>
+                            <td>{{ customer.email or '-' }}</td>
+                            <td><span class="badge badge-primary">{{ customer.subscriptions|length }}</span></td>
+                            <td><a href="/customers/{{ customer.id }}" class="btn btn-sm btn-secondary">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-secondary text-center py-4">No customers in this group yet</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Group Subscriptions Modal -->
+<div id="groupSubsModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h2 class="modal-title">📋 All Subscriptions in {{ group.name }}</h2>
+            <button class="modal-close" onclick="closeModal('groupSubsModal')">×</button>
+        </div>
+        <div class="modal-body">
+            {% set has_subs = namespace(value=false) %}
+            {% for c in customers %}{% if c.subscriptions|length > 0 %}{% set has_subs.value = true %}{% endif %}{% endfor %}
+            
+            {% if has_subs.value %}
+            <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                <table class="table">
+                    <thead style="position: sticky; top: 0; background: var(--color-bg-card); z-index: 1;">
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Customer</th>
+                            <th>Cost</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        {% for sub in customer.subscriptions %}
+                        <tr>
+                            <td class="font-medium">{{ sub.vendor_name }}</td>
+                            <td>{{ customer.name }}</td>
+                            <td>${{ "%.2f"|format(sub.cost) }}</td>
+                            <td><span class="badge badge-{{ 'success' if sub.status.value == 'active' else 'secondary' }}">{{ sub.status.value }}</span></td>
+                            <td><a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a></td>
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-secondary text-center py-4">No subscriptions from customers in this group</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -113,13 +113,17 @@ def delete_activity_log(log_id: int, db: Session = Depends(get_db)):
 
 @router.delete("/logs")
 def clear_old_logs(
-    days: int = Query(30, ge=1),
+    days: int = Query(30, ge=0),
     db: Session = Depends(get_db)
 ):
-    """Clear activity logs older than specified days."""
-    cutoff_date = datetime.utcnow() - timedelta(days=days)
+    """Clear activity logs older than specified days. Use days=0 to clear all logs."""
+    if days == 0:
+        # Clear all logs
+        deleted = db.query(ActivityLog).delete()
+    else:
+        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        deleted = db.query(ActivityLog).filter(ActivityLog.created_at < cutoff_date).delete()
     
-    deleted = db.query(ActivityLog).filter(ActivityLog.created_at < cutoff_date).delete()
     db.commit()
     
     return {"deleted_count": deleted}

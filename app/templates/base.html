@@ -383,7 +383,7 @@
 
     <!-- Customer Modal -->
     <div id="customerModal" class="modal" style="display: none;">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header">
                 <h2 class="modal-title">Create Customer</h2>
                 <button class="modal-close" onclick="closeModal('customerModal')">×</button>
@@ -392,7 +392,7 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label class="form-label">Category *</label>
-                        <select name="category_id" class="form-select" required onchange="updateGroupSelect(this.value)">
+                        <select name="category_id" class="form-select" required onchange="updateGroupSelectMulti(this.value, 'customer-groups-container')">
                             <option value="">Select a category</option>
                             {% for category in categories|default([]) %}
                             <option value="{{ category.id }}">{{ category.name }}</option>
@@ -400,22 +400,26 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Group (Optional)</label>
-                        <select name="group_id" class="form-select">
-                            <option value="">No group</option>
-                        </select>
+                        <label class="form-label">Groups (Optional - Multi-select)</label>
+                        <div id="customer-groups-container" class="multi-select-container">
+                            <div class="multi-select-placeholder">Select a category first to see available groups</div>
+                        </div>
+                        <input type="hidden" name="group_ids" id="customer-group-ids" value="">
+                        <small class="text-secondary">Click to select multiple groups</small>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Name *</label>
                         <input type="text" name="name" class="form-input" required placeholder="Customer name">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="email" class="form-input" placeholder="email@example.com">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Phone</label>
-                        <input type="tel" name="phone" class="form-input" placeholder="+1-555-0000">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-input" placeholder="email@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" name="phone" class="form-input" placeholder="+1-555-0000">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Country *</label>
@@ -613,21 +617,21 @@
             </div>
             <form onsubmit="handleFormSubmit(event, updateCustomer)">
                 <div class="modal-body">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label class="form-label">Category *</label>
-                            <select name="category_id" class="form-select" required onchange="updateGroupSelect(this.value)">
-                                {% for category in categories|default([]) %}
-                                <option value="{{ category.id }}">{{ category.name }}</option>
-                                {% endfor %}
-                            </select>
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select name="category_id" class="form-select" required onchange="updateGroupSelectMulti(this.value, 'edit-customer-groups-container')">
+                            {% for category in categories|default([]) %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Groups (Optional - Multi-select)</label>
+                        <div id="edit-customer-groups-container" class="multi-select-container">
+                            <div class="multi-select-placeholder">Loading groups...</div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Group (Optional)</label>
-                            <select name="group_id" class="form-select">
-                                <option value="">No group</option>
-                            </select>
-                        </div>
+                        <input type="hidden" name="group_ids" id="edit-customer-group-ids" value="">
+                        <small class="text-secondary">Click to select/deselect multiple groups</small>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Name *</label>

@@ -24,40 +24,40 @@
 
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="card card-glass card-3d">
+        <div class="card card-glass card-3d card-hover clickable-card" style="cursor: pointer;" onclick="openModal('totalSpendModal')">
             <div class="flex items-center justify-between mb-2">
                 <div class="text-sm text-secondary">Total Spend</div>
                 <span class="text-2xl">💰</span>
             </div>
             <div class="text-3xl font-bold text-primary mb-1">${{ "{:,.2f}".format(total_spend) }}</div>
-            <div class="text-xs text-success">↗ +12.5% from last period</div>
+            <div class="text-xs text-secondary">Click for breakdown →</div>
         </div>
         
-        <div class="card card-glass card-3d">
+        <div class="card card-glass card-3d card-hover clickable-card" style="cursor: pointer;" onclick="openModal('activeSubsAnalyticsModal')">
             <div class="flex items-center justify-between mb-2">
                 <div class="text-sm text-secondary">Active Subscriptions</div>
                 <span class="text-2xl">📋</span>
             </div>
             <div class="text-3xl font-bold text-primary mb-1">{{ active_count }}</div>
-            <div class="text-xs text-success">↗ +3 this month</div>
+            <div class="text-xs text-secondary">Click to view details →</div>
         </div>
         
-        <div class="card card-glass card-3d">
+        <div class="card card-glass card-3d card-hover clickable-card" style="cursor: pointer;" onclick="openModal('avgCostModal')">
             <div class="flex items-center justify-between mb-2">
                 <div class="text-sm text-secondary">Avg Cost/Sub</div>
                 <span class="text-2xl">📊</span>
             </div>
             <div class="text-3xl font-bold text-primary mb-1">${{ "{:.2f}".format(avg_cost) }}</div>
-            <div class="text-xs text-danger">↘ -2.3% from average</div>
+            <div class="text-xs text-secondary">Click for analysis →</div>
         </div>
         
-        <div class="card card-glass card-3d">
+        <div class="card card-glass card-3d card-hover clickable-card" style="cursor: pointer;" onclick="openModal('renewalsModal')">
             <div class="flex items-center justify-between mb-2">
                 <div class="text-sm text-secondary">Renewals (30d)</div>
                 <span class="text-2xl">🔄</span>
             </div>
             <div class="text-3xl font-bold text-warning mb-1">{{ upcoming_renewals }}</div>
-            <div class="text-xs text-secondary">Worth ${{ "{:,.2f}".format(renewal_value) }}</div>
+            <div class="text-xs text-secondary">Worth ${{ "{:,.2f}".format(renewal_value) }} - Click to view →</div>
         </div>
     </div>
 
@@ -186,6 +186,151 @@
         </div>
     </div>
 
+</div>
+
+<!-- Total Spend Modal -->
+<div id="totalSpendModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h2 class="modal-title">💰 Total Spend Breakdown</h2>
+            <button class="modal-close" onclick="closeModal('totalSpendModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Total Monthly Spend</div>
+                    <div class="text-3xl font-bold text-primary">${{ "{:,.2f}".format(total_spend) }}</div>
+                </div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Annual Projection</div>
+                    <div class="text-3xl font-bold text-success">${{ "{:,.2f}".format(total_spend * 12) }}</div>
+                </div>
+            </div>
+            <h4 class="font-semibold mb-3">Spend by Category</h4>
+            <div class="space-y-2">
+                {% for category in categories %}
+                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-bg-secondary);">
+                    <span class="font-medium">{{ category.name }}</span>
+                    <div class="flex items-center gap-3">
+                        <div class="progress" style="width: 100px; height: 6px;">
+                            <div class="progress-bar" style="width: {{ (category.total / total_spend * 100) if total_spend > 0 else 0 }}%;"></div>
+                        </div>
+                        <span class="badge badge-primary">${{ "{:.2f}".format(category.total or 0) }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Subscriptions Analytics Modal -->
+<div id="activeSubsAnalyticsModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h2 class="modal-title">📋 Active Subscriptions</h2>
+            <button class="modal-close" onclick="closeModal('activeSubsAnalyticsModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Active Count</div>
+                    <div class="text-3xl font-bold text-primary">{{ active_count }}</div>
+                </div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Avg Cost per Sub</div>
+                    <div class="text-3xl font-bold text-success">${{ "{:.2f}".format(avg_cost) }}</div>
+                </div>
+            </div>
+            <h4 class="font-semibold mb-3">Status Distribution</h4>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-success-bg, rgba(16, 185, 129, 0.1));">
+                    <span>✅ Active</span>
+                    <span class="badge badge-success">{{ status_counts.active or 0 }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-warning-bg, rgba(245, 158, 11, 0.1));">
+                    <span>⏸️ Paused</span>
+                    <span class="badge badge-warning">{{ status_counts.paused or 0 }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-danger-bg, rgba(239, 68, 68, 0.1));">
+                    <span>❌ Cancelled</span>
+                    <span class="badge badge-danger">{{ status_counts.cancelled or 0 }}</span>
+                </div>
+            </div>
+            <div class="mt-4">
+                <a href="/subscriptions" class="btn btn-primary w-full">View All Subscriptions</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Average Cost Modal -->
+<div id="avgCostModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h2 class="modal-title">📊 Cost Analysis</h2>
+            <button class="modal-close" onclick="closeModal('avgCostModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Avg Cost/Sub</div>
+                    <div class="text-2xl font-bold text-primary">${{ "{:.2f}".format(avg_cost) }}</div>
+                </div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Total Spend</div>
+                    <div class="text-2xl font-bold text-success">${{ "{:,.2f}".format(total_spend) }}</div>
+                </div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Active Subs</div>
+                    <div class="text-2xl font-bold text-info">{{ active_count }}</div>
+                </div>
+            </div>
+            <h4 class="font-semibold mb-3">Cost by Billing Cycle</h4>
+            <div class="space-y-2">
+                {% for cycle in billing_cycles %}
+                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-bg-secondary);">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">{{ cycle.icon }}</span>
+                        <span>{{ cycle.name }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="badge badge-secondary">{{ cycle.count }} subs</span>
+                        <span class="badge badge-primary">{{ cycle.percentage }}%</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Renewals Modal -->
+<div id="renewalsModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h2 class="modal-title">🔄 Upcoming Renewals (30 Days)</h2>
+            <button class="modal-close" onclick="closeModal('renewalsModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Renewals Coming Up</div>
+                    <div class="text-3xl font-bold text-warning">{{ upcoming_renewals }}</div>
+                </div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Total Value</div>
+                    <div class="text-3xl font-bold text-success">${{ "{:,.2f}".format(renewal_value) }}</div>
+                </div>
+            </div>
+            <div class="info-box info-box-warning mb-4">
+                <strong>💡 Tip:</strong> Review these subscriptions before renewal to ensure you're getting the best value.
+            </div>
+            <div class="mt-4">
+                <a href="/subscriptions?filter=expiring" class="btn btn-primary w-full">View Expiring Subscriptions</a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>

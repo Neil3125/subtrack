@@ -4,6 +4,11 @@
 
 {% block content %}
 <div class="animate-fade-in">
+    <!-- Back Button -->
+    <button class="btn btn-secondary btn-sm mb-4" onclick="window.history.back()" style="display: inline-flex; align-items: center; gap: 6px;">
+        ← Back
+    </button>
+
     <nav class="breadcrumbs" style="margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
         <a href="/" style="color: var(--color-text-secondary);">Dashboard</a>
         <span style="margin: 0 var(--space-2); color: var(--color-text-tertiary);">/</span>
@@ -130,15 +135,17 @@
 
         <!-- Quick Stats -->
         <div class="flex flex-col gap-4">
-            <div class="card">
+            <div class="card card-hover clickable-card" style="cursor: pointer;" onclick="openModal('custSubsModal')">
                 <div class="text-sm text-secondary mb-2">Total Subscriptions</div>
                 <div class="text-3xl font-bold text-primary">{{ subscriptions|length }}</div>
+                <div class="text-xs text-secondary mt-1">Click to view →</div>
             </div>
-            <div class="card">
+            <div class="card card-hover clickable-card" style="cursor: pointer;" onclick="openModal('custSpendModal')">
                 <div class="text-sm text-secondary mb-2">Monthly Spend</div>
                 <div class="text-3xl font-bold text-success">
                     ${{ "%.2f"|format(subscriptions|sum(attribute='cost')) }}
                 </div>
+                <div class="text-xs text-secondary mt-1">Click for breakdown →</div>
             </div>
         </div>
     </div>
@@ -228,5 +235,88 @@
         </div>
     </div>
     {% endif %}
+</div>
+
+<!-- Customer Subscriptions Modal -->
+<div id="custSubsModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h2 class="modal-title">📋 {{ customer.name }}'s Subscriptions ({{ subscriptions|length }})</h2>
+            <button class="modal-close" onclick="closeModal('custSubsModal')">×</button>
+        </div>
+        <div class="modal-body">
+            {% if subscriptions %}
+            <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                <table class="table">
+                    <thead style="position: sticky; top: 0; background: var(--color-bg-card); z-index: 1;">
+                        <tr>
+                            <th>Vendor</th>
+                            <th>Plan</th>
+                            <th>Cost</th>
+                            <th>Status</th>
+                            <th>Next Renewal</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in subscriptions %}
+                        <tr>
+                            <td class="font-medium">{{ sub.vendor_name }}</td>
+                            <td>{{ sub.plan_name or '-' }}</td>
+                            <td>${{ "%.2f"|format(sub.cost) }}</td>
+                            <td><span class="badge badge-{{ 'success' if sub.status.value == 'active' else 'warning' if sub.status.value == 'paused' else 'secondary' }}">{{ sub.status.value }}</span></td>
+                            <td>
+                                {% set days = sub.days_until_renewal() %}
+                                <span class="badge badge-{{ 'danger' if days < 0 else 'warning' if days <= 30 else 'success' }}">
+                                    {% if days < 0 %}{{ -days }}d overdue{% else %}{{ days }}d{% endif %}
+                                </span>
+                            </td>
+                            <td><a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-secondary text-center py-4">No subscriptions yet</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Customer Spend Breakdown Modal -->
+<div id="custSpendModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h2 class="modal-title">💰 Spend Breakdown</h2>
+            <button class="modal-close" onclick="closeModal('custSpendModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Total Monthly</div>
+                    <div class="text-2xl font-bold text-success">${{ "%.2f"|format(subscriptions|sum(attribute='cost')) }}</div>
+                </div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
+                    <div class="text-sm text-secondary mb-1">Annual Projection</div>
+                    <div class="text-2xl font-bold text-info">${{ "%.2f"|format(subscriptions|sum(attribute='cost') * 12) }}</div>
+                </div>
+            </div>
+            {% if subscriptions %}
+            <h4 class="font-semibold mb-2">By Subscription</h4>
+            <div class="space-y-2" style="max-height: 250px; overflow-y: auto;">
+                {% for sub in subscriptions|sort(attribute='cost', reverse=true) %}
+                <div class="flex justify-between items-center p-2 rounded" style="background: var(--color-bg-secondary);">
+                    <div>
+                        <span class="font-medium">{{ sub.vendor_name }}</span>
+                        <span class="badge badge-{{ 'success' if sub.status.value == 'active' else 'secondary' }} ml-2">{{ sub.status.value }}</span>
+                    </div>
+                    <span class="font-bold">${{ "%.2f"|format(sub.cost) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}
