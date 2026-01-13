@@ -1074,14 +1074,21 @@ window.createCustomer = function(formData) {
       notes: formData.notes || null
     })
   })
-  .then(response => response.json())
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => {
+        throw new Error(err.detail || 'Failed to create customer');
+      });
+    }
+    return response.json();
+  })
   .then(data => {
     showToast('Customer created successfully', 'success');
     closeAllModals();
     setTimeout(() => window.location.reload(), 500);
   })
   .catch(error => {
-    showToast('Error creating customer', 'error');
+    showToast('Error: ' + error.message, 'error');
     console.error('Error:', error);
   });
 };
@@ -1187,14 +1194,21 @@ window.updateCustomer = function(formData, id) {
       notes: formData.notes || null
     })
   })
-  .then(response => response.json())
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => {
+        throw new Error(err.detail || 'Failed to update customer');
+      });
+    }
+    return response.json();
+  })
   .then(data => {
     showToast('Customer updated successfully', 'success');
     closeAllModals();
     setTimeout(() => window.location.reload(), 500);
   })
   .catch(error => {
-    showToast('Error updating customer', 'error');
+    showToast('Error: ' + error.message, 'error');
     console.error('Error:', error);
   });
 };

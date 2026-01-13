@@ -1512,10 +1512,10 @@ a:hover {
   z-index: 100;
 }
 
-/* Hide FAB on desktop to prevent overlap with tables */
+/* FAB always visible - it's the Quick Add button */
 @media (min-width: 1024px) {
   .fab {
-    display: none;
+    display: flex;
   }
 }
 

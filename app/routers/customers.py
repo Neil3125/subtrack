@@ -13,39 +13,43 @@ router = APIRouter()
 
 @router.post("", response_model=CustomerResponse, status_code=201)
 def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    """Create a new customer with support for multiple categories and groups."""
+    """Create a new customer.
     
-    # Determine which fields to use (new many-to-many or legacy single)
-    category_ids = customer.category_ids if customer.category_ids else ([customer.category_id] if customer.category_id else [])
-    group_ids = customer.group_ids if customer.group_ids else ([customer.group_id] if customer.group_id else [])
+    Uses category_id and group_id fields. Also accepts category_ids/group_ids arrays
+    but only the first value will be used (legacy single-value support).
+    """
     
-    if not category_ids:
-        raise HTTPException(status_code=400, detail="At least one category is required")
+    # Determine which fields to use - prefer single values, fall back to arrays
+    category_id = customer.category_id
+    if not category_id and customer.category_ids:
+        category_id = customer.category_ids[0] if customer.category_ids else None
     
-    # Verify all categories exist
-    categories = db.query(Category).filter(Category.id.in_(category_ids)).all()
-    if len(categories) != len(category_ids):
-        raise HTTPException(status_code=404, detail="One or more categories not found")
+    group_id = customer.group_id
+    if not group_id and customer.group_ids:
+        group_id = customer.group_ids[0] if customer.group_ids else None
     
-    # Verify all groups exist if provided
-    groups = []
-    if group_ids:
-        groups = db.query(Group).filter(Group.id.in_(group_ids)).all()
-        if len(groups) != len(group_ids):
-            raise HTTPException(status_code=404, detail="One or more groups not found")
+    if not category_id:
+        raise HTTPException(status_code=400, detail="Category is required")
+    
+    # Verify category exists
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    # Verify group exists if provided
+    if group_id:
+        group = db.query(Group).filter(Group.id == group_id).first()
+        if not group:
+            raise HTTPException(status_code=404, detail="Group not found")
     
     # Create customer with basic fields
     customer_data = customer.model_dump(exclude={'category_id', 'group_id', 'category_ids', 'group_ids'})
     
-    # Set legacy fields for backward compatibility (use first category/group)
-    customer_data['category_id'] = category_ids[0] if category_ids else None
-    customer_data['group_id'] = group_ids[0] if group_ids else None
+    # Set the category_id and group_id
+    customer_data['category_id'] = category_id
+    customer_data['group_id'] = group_id
     
     db_customer = Customer(**customer_data)
-    
-    # Add many-to-many relationships
-    db_customer.categories = categories
-    db_customer.groups = groups
     
     db.add(db_customer)
     db.commit()
