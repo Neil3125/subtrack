@@ -1038,10 +1038,11 @@ a:hover {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(91, 127, 255, 0.1);
   border: 1px solid var(--color-border);
   width: min(900px, 95vw);
-  max-height: 90vh;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 
 .modal.show .modal-content {
@@ -1090,10 +1091,11 @@ a:hover {
 /* Modal body - THIS IS THE SCROLLABLE PART */
 .modal-body {
   padding: var(--space-4) var(--space-5);
-  overflow-y: auto;
+  overflow-y: auto !important;
   overflow-x: hidden;
   flex: 1 1 auto;
   min-height: 0;
+  max-height: calc(85vh - 140px); /* Account for header and footer */
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }

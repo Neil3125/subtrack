@@ -140,10 +140,32 @@ async function addExistingCustomersToGroup(groupId) {
     for (const option of selectedOptions) {
         const customerId = option.value;
         try {
+            // First get the customer's current data
+            const getResponse = await fetch(`/api/customers/${customerId}`);
+            if (!getResponse.ok) {
+                errorCount++;
+                continue;
+            }
+            const customer = await getResponse.json();
+            
+            // Get current group_ids or create from group_id
+            let currentGroupIds = [];
+            if (customer.groups && customer.groups.length > 0) {
+                currentGroupIds = customer.groups.map(g => g.id);
+            } else if (customer.group_id) {
+                currentGroupIds = [customer.group_id];
+            }
+            
+            // Add this group if not already present
+            if (!currentGroupIds.includes(groupId)) {
+                currentGroupIds.push(groupId);
+            }
+            
+            // Update customer with the new group_ids array
             const response = await fetch(`/api/customers/${customerId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ group_id: groupId })
+                body: JSON.stringify({ group_ids: currentGroupIds })
             });
             
             if (response.ok) {
@@ -152,6 +174,7 @@ async function addExistingCustomersToGroup(groupId) {
                 errorCount++;
             }
         } catch (error) {
+            console.error('Error adding customer to group:', error);
             errorCount++;
         }
     }

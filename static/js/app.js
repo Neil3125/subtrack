@@ -890,20 +890,19 @@ window.loadEditData = function(type, id) {
         const categoryField = form.querySelector('select[name="category_id"]');
         const groupField = form.querySelector('select[name="group_id"]');
         const categoryId = categoryField ? categoryField.value : null;
-        const groupId = groupField ? groupField.value : null;
+        const groupId = data.group_id || (groupField ? groupField.value : null);
 
-        // Populate groups (filtered by category when present) and re-select current group.
-        updateGroupSelect(categoryId, 'group_id');
+        // Populate ALL groups organized by category and pre-select current group
+        updateGroupSelect(categoryId, 'group_id', groupId);
         
-        // If there's a group selected, set it after groups are loaded
+        // Also set it after a delay to ensure groups are loaded
         if (groupId) {
-          // Small delay to ensure groups are loaded first
           setTimeout(() => {
             const groupSelect = form.querySelector('select[name="group_id"]');
             if (groupSelect) {
               groupSelect.value = groupId;
             }
-          }, 100);
+          }, 300);
         }
 
         // Ensure future category changes keep group list in sync.
@@ -1348,8 +1347,8 @@ window.handleFormSubmit = function(event, callback) {
   }
 };
 
-// Dynamic cascading selects
-window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id') {
+// Dynamic cascading selects - Shows ALL groups organized by category
+window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id', selectedGroupId = null) {
   // Find the group select - prefer searching within open modals first
   let groupSelect = null;
   
@@ -1370,20 +1369,60 @@ window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id') {
   
   if (!groupSelect) return;
   
-  if (!categoryId) {
-    groupSelect.innerHTML = '<option value="">No group</option>';
-    return;
-  }
-  
-  fetch(`/api/groups?category_id=${categoryId}`)
-    .then(response => response.json())
-    .then(groups => {
+  // Fetch ALL groups and ALL categories to organize them
+  Promise.all([
+    fetch('/api/groups').then(r => r.json()),
+    fetch('/api/categories').then(r => r.json())
+  ])
+    .then(([groups, categories]) => {
       groupSelect.innerHTML = '<option value="">No group</option>';
+      
+      // Create a map of category id to category name
+      const categoryMap = {};
+      categories.forEach(cat => {
+        categoryMap[cat.id] = cat.name;
+      });
+      
+      // Group the groups by category
+      const groupsByCategory = {};
       groups.forEach(group => {
-        const option = document.createElement('option');
-        option.value = group.id;
-        option.textContent = group.name;
-        groupSelect.appendChild(option);
+        const catId = group.category_id;
+        if (!groupsByCategory[catId]) {
+          groupsByCategory[catId] = [];
+        }
+        groupsByCategory[catId].push(group);
+      });
+      
+      // Sort categories - put current category first if specified
+      let sortedCategoryIds = Object.keys(groupsByCategory).map(Number);
+      if (categoryId) {
+        sortedCategoryIds.sort((a, b) => {
+          if (a == categoryId) return -1;
+          if (b == categoryId) return 1;
+          return (categoryMap[a] || '').localeCompare(categoryMap[b] || '');
+        });
+      }
+      
+      // Create optgroups for each category
+      sortedCategoryIds.forEach(catId => {
+        const catGroups = groupsByCategory[catId];
+        if (catGroups && catGroups.length > 0) {
+          const optgroup = document.createElement('optgroup');
+          const catName = categoryMap[catId] || 'Unknown Category';
+          optgroup.label = catId == categoryId ? `📁 ${catName} (Current)` : `📁 ${catName}`;
+          
+          catGroups.forEach(group => {
+            const option = document.createElement('option');
+            option.value = group.id;
+            option.textContent = group.name;
+            if (selectedGroupId && String(group.id) === String(selectedGroupId)) {
+              option.selected = true;
+            }
+            optgroup.appendChild(option);
+          });
+          
+          groupSelect.appendChild(optgroup);
+        }
       });
     })
     .catch(error => console.error('Error loading groups:', error));
