@@ -17,7 +17,7 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-4 mb-8">
+    <div class="grid grid-cols-5 mb-8">
         <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 0ms;">
             <div class="text-sm text-secondary mb-2">Total Activities</div>
             <div class="text-3xl font-bold text-primary mb-2" id="stat-total">{{ stats.total_actions|default(0) }}</div>
@@ -32,6 +32,11 @@
             <div class="text-sm text-secondary mb-2">Updated</div>
             <div class="text-3xl font-bold text-warning mb-2" id="stat-updated">{{ stats.action_counts.updated|default(0) }}</div>
             <div class="text-xs text-secondary">Items modified</div>
+        </div>
+        <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 250ms;">
+            <div class="text-sm text-secondary mb-2">Renewed</div>
+            <div class="text-3xl font-bold text-secondary mb-2" id="stat-renewed">{{ stats.action_counts.renewed|default(0) }}</div>
+            <div class="text-xs text-secondary">Subscriptions renewed</div>
         </div>
         <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 300ms;">
             <div class="text-sm text-secondary mb-2">Emails Sent</div>
@@ -174,9 +179,10 @@
 .activity-item {
     display: flex;
     gap: var(--space-4);
-    padding: var(--space-4);
+    padding: var(--space-4) var(--space-5);
     border-bottom: 1px solid var(--color-border);
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
+    position: relative;
 }
 
 .activity-item:hover {
@@ -187,16 +193,43 @@
     border-bottom: none;
 }
 
+/* Color-coded left border based on action type */
+.activity-item[data-action="created"] {
+    border-left: 3px solid var(--color-success);
+}
+
+.activity-item[data-action="updated"] {
+    border-left: 3px solid var(--color-warning);
+}
+
+.activity-item[data-action="deleted"] {
+    border-left: 3px solid var(--color-danger);
+}
+
+.activity-item[data-action="email_sent"],
+.activity-item[data-action="bulk_email_sent"] {
+    border-left: 3px solid var(--color-info);
+}
+
+.activity-item[data-action="renewed"] {
+    border-left: 3px solid var(--color-primary);
+}
+
+.activity-item[data-action="status_changed"] {
+    border-left: 3px solid var(--color-secondary);
+}
+
 .activity-icon {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background: var(--color-bg-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .activity-content {
@@ -208,20 +241,25 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: var(--space-2);
-    margin-bottom: var(--space-1);
+    gap: var(--space-3);
+    margin-bottom: var(--space-2);
 }
 
 .activity-title {
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 0.95rem;
     color: var(--color-text);
     word-break: break-word;
+    line-height: 1.4;
 }
 
 .activity-time {
     font-size: 0.8rem;
     color: var(--color-text-secondary);
     white-space: nowrap;
+    background: var(--color-bg-secondary);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
 }
 
 .activity-meta {
@@ -229,30 +267,81 @@
     align-items: center;
     gap: var(--space-2);
     flex-wrap: wrap;
+    margin-top: var(--space-1);
+}
+
+.activity-meta .badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
 }
 
 .activity-changes {
-    margin-top: var(--space-2);
+    margin-top: var(--space-3);
 }
 
 .changes-detail {
     background: var(--color-bg-secondary);
     border-radius: var(--radius-md);
-    padding: var(--space-2);
+    padding: var(--space-3);
     margin-top: var(--space-2);
+    border: 1px solid var(--color-border);
 }
 
 .changes-detail .table {
     margin: 0;
+    font-size: 0.85rem;
+}
+
+.changes-detail .table th {
+    background: var(--color-bg-card);
+    font-weight: 600;
+    padding: 8px 12px;
+}
+
+.changes-detail .table td {
+    padding: 8px 12px;
+    vertical-align: top;
+}
+
+.changes-detail .text-danger {
+    background: rgba(239, 68, 68, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-decoration: line-through;
+    opacity: 0.8;
+}
+
+.changes-detail .text-success {
+    background: rgba(16, 185, 129, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* Entity type icons in badges */
+.activity-meta .badge-secondary::before {
+    margin-right: 4px;
 }
 
 @media (max-width: 640px) {
     .activity-header {
         flex-direction: column;
+        gap: var(--space-1);
     }
     
     .activity-time {
         font-size: 0.75rem;
+        align-self: flex-start;
+    }
+    
+    .activity-item {
+        padding: var(--space-3);
+    }
+    
+    .activity-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
     }
 }
 </style>

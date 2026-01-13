@@ -1524,41 +1524,10 @@ select[name="customer_id"] {
   animation: pulse 2s infinite;
 }
 
-/* Floating Action Button - Simplified for performance */
+/* Floating Action Button - DISABLED: Using fab-container from base.html instead */
+/* The .fab class is kept but hidden to avoid duplicate buttons */
 .fab {
-  position: fixed;
-  bottom: var(--space-8);
-  right: var(--space-8);
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-  color: white;
-  border: none;
-  box-shadow: 0 4px 12px rgba(91, 127, 255, 0.3);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-xl);
-  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
-  z-index: 100;
-}
-
-/* FAB always visible - it's the Quick Add button */
-@media (min-width: 1024px) {
-  .fab {
-    display: flex;
-  }
-}
-
-.fab:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(91, 127, 255, 0.4);
-}
-
-.fab:active {
-  transform: scale(0.98);
+  display: none !important;
 }
 
 /* Dropdown Menu */

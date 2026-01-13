@@ -39,8 +39,8 @@ class ActivityLog(Base):
     changes = Column(JSON, nullable=True)
     # Format: {"field_name": {"old": "old_value", "new": "new_value"}, ...}
     
-    # Additional metadata
-    metadata = Column(JSON, nullable=True)
+    # Additional data (renamed from metadata to avoid SQLAlchemy reserved name conflict)
+    extra_data = Column(JSON, nullable=True)
     # Can store things like: email recipient, subscription vendor name, etc.
     
     # User who performed the action (if applicable)
@@ -59,7 +59,7 @@ class ActivityLog(Base):
     @classmethod
     def log_action(cls, db, action_type: str, entity_type: str, description: str, 
                    entity_id: int = None, entity_name: str = None, changes: dict = None,
-                   metadata: dict = None, user_id: int = None, icon: str = None):
+                   extra_data: dict = None, user_id: int = None, icon: str = None):
         """
         Helper method to create a new activity log entry.
         
@@ -71,7 +71,7 @@ class ActivityLog(Base):
             entity_id: ID of the affected entity
             entity_name: Name of the affected entity for display
             changes: Dict of field changes with old/new values
-            metadata: Additional metadata
+            extra_data: Additional data (email recipient, vendor name, etc.)
             user_id: ID of user who performed the action
             icon: Emoji icon for display
         
@@ -100,7 +100,7 @@ class ActivityLog(Base):
             entity_name=entity_name,
             description=description,
             changes=changes,
-            metadata=metadata,
+            extra_data=extra_data,
             user_id=user_id,
             icon=icon
         )

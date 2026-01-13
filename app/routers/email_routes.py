@@ -19,7 +19,7 @@ router = APIRouter()
 
 def log_email_activity(db: Session, action_type: str, description: str,
                        subscription_id: int = None, subscription_name: str = None,
-                       metadata: dict = None):
+                       extra_data: dict = None):
     """Helper function to log email activity."""
     try:
         ActivityLog.log_action(
@@ -29,7 +29,7 @@ def log_email_activity(db: Session, action_type: str, description: str,
             description=description,
             entity_id=subscription_id,
             entity_name=subscription_name,
-            metadata=metadata
+            extra_data=extra_data
         )
     except Exception as e:
         logger.error(f"Activity logging error: {e}")
@@ -205,7 +205,7 @@ def send_renewal_notice(
             description=f"Sent renewal notice for '{subscription.vendor_name}' to {customer.name}",
             subscription_id=subscription_id,
             subscription_name=subscription.vendor_name,
-            metadata={
+            extra_data={
                 "customer_name": customer.name,
                 "recipient_email": recipient_email,
                 "days_until_renewal": subscription.days_until_renewal()
@@ -456,7 +456,7 @@ def send_batch_renewal_notices(
                 db=db,
                 action_type="bulk_email_sent",
                 description=f"Sent {len(results['sent'])} renewal notices in bulk",
-                metadata={
+                extra_data={
                     "sent_count": len(results["sent"]),
                     "failed_count": len(results["failed"]),
                     "skipped_count": len(results["skipped_no_email"]) + len(results["skipped_already_notified"]),

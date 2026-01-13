@@ -8,6 +8,7 @@ import logging
 import re
 from app.database import get_db
 from app.models import Customer, Category, Group
+from app.models.activity_log import ActivityLog
 from app.schemas import CustomerCreate, CustomerUpdate, CustomerResponse
 from app.data_persistence import auto_save
 
@@ -15,6 +16,26 @@ from app.data_persistence import auto_save
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def log_activity(db: Session, action_type: str, entity_type: str, description: str,
+                 entity_id: int = None, entity_name: str = None, changes: dict = None,
+                 extra_data: dict = None):
+    """Helper function to log activity."""
+    try:
+        ActivityLog.log_action(
+            db=db,
+            action_type=action_type,
+            entity_type=entity_type,
+            description=description,
+            entity_id=entity_id,
+            entity_name=entity_name,
+            changes=changes,
+            extra_data=extra_data
+        )
+    except Exception as e:
+        # Don't fail the main operation if logging fails
+        logger.error(f"Activity logging error: {e}")
 
 
 def validate_email_format(email: str) -> bool:
@@ -109,6 +130,17 @@ def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks,
         
         logger.info(f"Customer created successfully: id={db_customer.id}, name={db_customer.name}")
         
+        # Log activity
+        log_activity(
+            db=db,
+            action_type="created",
+            entity_type="customer",
+            description=f"Created customer '{db_customer.name}'",
+            entity_id=db_customer.id,
+            entity_name=db_customer.name,
+            extra_data={"email": db_customer.email, "country": db_customer.country, "category": category.name}
+        )
+        
         # Auto-save data to file
         background_tasks.add_task(auto_save, db)
         
@@ -187,6 +219,18 @@ def update_customer(customer_id: int, customer: CustomerUpdate, background_tasks
     if not db_customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     
+    # Store original values for change tracking
+    original_values = {
+        "name": db_customer.name,
+        "email": db_customer.email,
+        "phone": db_customer.phone,
+        "country": db_customer.country,
+        "tags": db_customer.tags,
+        "notes": db_customer.notes,
+        "category_id": db_customer.category_id,
+        "group_id": db_customer.group_id
+    }
+    
     update_data = customer.model_dump(exclude_unset=True)
     
     # Handle many-to-many relationships separately (convert to legacy single fields)
@@ -241,6 +285,38 @@ def update_customer(customer_id: int, customer: CustomerUpdate, background_tasks
     db.commit()
     db.refresh(db_customer)
     
+    # Track changes for activity log
+    changes = {}
+    new_values = {
+        "name": db_customer.name,
+        "email": db_customer.email,
+        "phone": db_customer.phone,
+        "country": db_customer.country,
+        "tags": db_customer.tags,
+        "notes": db_customer.notes,
+        "category_id": db_customer.category_id,
+        "group_id": db_customer.group_id
+    }
+    for field, old_value in original_values.items():
+        new_value = new_values.get(field)
+        if old_value != new_value:
+            changes[field] = {
+                "old": str(old_value) if old_value is not None else None,
+                "new": str(new_value) if new_value is not None else None
+            }
+    
+    # Log activity if there were changes
+    if changes:
+        log_activity(
+            db=db,
+            action_type="updated",
+            entity_type="customer",
+            description=f"Updated customer '{db_customer.name}'",
+            entity_id=db_customer.id,
+            entity_name=db_customer.name,
+            changes=changes
+        )
+    
     # Auto-save data to file
     background_tasks.add_task(auto_save, db)
     
@@ -254,8 +330,25 @@ def delete_customer(customer_id: int, background_tasks: BackgroundTasks, db: Ses
     if not db_customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     
+    # Store info for logging before deletion
+    customer_name = db_customer.name
+    cust_id = db_customer.id
+    customer_email = db_customer.email
+    category_name = db_customer.category.name if db_customer.category else "Unknown"
+    
     db.delete(db_customer)
     db.commit()
+    
+    # Log activity
+    log_activity(
+        db=db,
+        action_type="deleted",
+        entity_type="customer",
+        description=f"Deleted customer '{customer_name}'",
+        entity_id=cust_id,
+        entity_name=customer_name,
+        extra_data={"email": customer_email, "category": category_name}
+    )
     
     # Auto-save data to file
     background_tasks.add_task(auto_save, db)

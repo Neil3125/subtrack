@@ -110,13 +110,13 @@
 
 <!-- Monthly Cost Modal -->
 <div id="monthlyCostModal" class="modal" style="display: none;">
-    <div class="modal-content" style="max-width: 800px;">
+    <div class="modal-content" style="max-width: 900px; width: 95vw;">
         <div class="modal-header">
             <h2 class="modal-title">💰 Monthly Cost Breakdown</h2>
             <button class="modal-close" onclick="closeModal('monthlyCostModal')">×</button>
         </div>
-        <div class="modal-body">
-            <div class="grid grid-cols-2 gap-4 mb-4">
+        <div class="modal-body" style="overflow-x: auto;">
+            <div class="grid grid-cols-2 gap-4 mb-4" style="min-width: 300px;">
                 <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
                     <div class="text-sm text-secondary mb-1">Total Monthly Cost</div>
                     <div class="text-2xl font-bold text-success">${{ "%.2f"|format(stats.monthly_cost|default(0)) }}</div>
@@ -128,23 +128,23 @@
             </div>
             <h4 class="font-semibold mb-3">By Billing Cycle</h4>
             {% if all_active %}
-            <div class="table-container" style="max-height: 400px; overflow-y: auto;">
-                <table class="table" style="min-width: 100%;">
+            <div class="table-container" style="max-height: 400px; overflow: auto;">
+                <table class="table" style="min-width: 500px; width: 100%;">
                     <thead style="position: sticky; top: 0; background: var(--color-bg-card); z-index: 1;">
                         <tr>
-                            <th style="min-width: 150px;">Vendor</th>
-                            <th style="min-width: 100px;">Cost</th>
-                            <th style="min-width: 100px;">Cycle</th>
-                            <th style="min-width: 120px;">Monthly Equiv.</th>
+                            <th style="min-width: 180px; white-space: nowrap;">Vendor</th>
+                            <th style="min-width: 100px; white-space: nowrap;">Cost</th>
+                            <th style="min-width: 100px; white-space: nowrap;">Cycle</th>
+                            <th style="min-width: 120px; white-space: nowrap;">Monthly Equiv.</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for sub in all_active %}
                         <tr>
-                            <td class="font-medium" style="word-break: break-word;">{{ sub.vendor_name }}</td>
-                            <td>${{ "%.2f"|format(sub.cost) }}</td>
+                            <td class="font-medium" style="word-break: break-word; max-width: 200px;">{{ sub.vendor_name }}</td>
+                            <td style="white-space: nowrap;">${{ "%.2f"|format(sub.cost) }}</td>
                             <td><span class="badge badge-secondary">{{ sub.billing_cycle.value }}</span></td>
-                            <td>
+                            <td style="white-space: nowrap;">
                                 {% if sub.billing_cycle.value == 'yearly' %}
                                 ${{ "%.2f"|format(sub.cost / 12) }}
                                 {% elif sub.billing_cycle.value == 'quarterly' %}
@@ -392,7 +392,7 @@ function sendAllExpiringNotices() {
     btn.innerHTML = '⏳ Sending...';
     btn.disabled = true;
     
-    fetch('/api/email/send-batch', {
+    fetch('/api/email/send-batch-notices', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

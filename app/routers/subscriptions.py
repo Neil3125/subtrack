@@ -13,7 +13,7 @@ router = APIRouter()
 
 def log_activity(db: Session, action_type: str, entity_type: str, description: str,
                  entity_id: int = None, entity_name: str = None, changes: dict = None,
-                 metadata: dict = None):
+                 extra_data: dict = None):
     """Helper function to log activity."""
     try:
         ActivityLog.log_action(
@@ -24,7 +24,7 @@ def log_activity(db: Session, action_type: str, entity_type: str, description: s
             entity_id=entity_id,
             entity_name=entity_name,
             changes=changes,
-            metadata=metadata
+            extra_data=extra_data
         )
     except Exception as e:
         # Don't fail the main operation if logging fails
@@ -57,7 +57,7 @@ def create_subscription(subscription: SubscriptionCreate, background_tasks: Back
         description=f"Created subscription '{db_subscription.vendor_name}' for {customer.name}",
         entity_id=db_subscription.id,
         entity_name=db_subscription.vendor_name,
-        metadata={"customer_name": customer.name, "cost": str(db_subscription.cost), "currency": db_subscription.currency}
+        extra_data={"customer_name": customer.name, "cost": str(db_subscription.cost), "currency": db_subscription.currency}
     )
     
     # Auto-save data to file
@@ -157,7 +157,7 @@ def delete_subscription(subscription_id: int, background_tasks: BackgroundTasks,
         description=f"Deleted subscription '{vendor_name}' from {customer_name}",
         entity_id=sub_id,
         entity_name=vendor_name,
-        metadata={"customer_name": customer_name}
+        extra_data={"customer_name": customer_name}
     )
     
     # Auto-save data to file
@@ -217,7 +217,7 @@ def renew_subscription(subscription_id: int, background_tasks: BackgroundTasks, 
                 "new": new_date.isoformat()
             }
         },
-        metadata={"customer_name": customer_name, "billing_cycle": db_subscription.billing_cycle.value}
+        extra_data={"customer_name": customer_name, "billing_cycle": db_subscription.billing_cycle.value}
     )
     
     # Auto-save data to file
