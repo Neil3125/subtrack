@@ -110,12 +110,15 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if customer.categories %}
-                                {% for cat in customer.categories %}
-                                <a href="/categories/{{ cat.id }}" class="badge badge-primary" style="margin: 1px;">
-                                    {{ cat.name }}
+                            {% if customer.categories and customer.categories|length > 0 %}
+                                <a href="/categories/{{ customer.categories[0].id }}" class="badge badge-primary">
+                                    {{ customer.categories[0].name }}
                                 </a>
-                                {% endfor %}
+                                {% if customer.categories|length > 1 %}
+                                <span class="group-count-badge" title="Also in: {% for cat in customer.categories[1:] %}{{ cat.name }}{% if not loop.last %}, {% endif %}{% endfor %}">
+                                    +{{ customer.categories|length - 1 }}
+                                </span>
+                                {% endif %}
                             {% elif customer.primary_category %}
                                 <a href="/categories/{{ customer.primary_category.id }}" class="badge badge-primary">
                                     {{ customer.primary_category.name }}
@@ -125,12 +128,15 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if customer.groups %}
-                                {% for grp in customer.groups %}
-                                <a href="/groups/{{ grp.id }}" class="badge badge-success" style="margin: 1px;">
-                                    {{ grp.name }}
+                            {% if customer.groups and customer.groups|length > 0 %}
+                                <a href="/groups/{{ customer.groups[0].id }}" class="badge badge-success">
+                                    {{ customer.groups[0].name }}
                                 </a>
-                                {% endfor %}
+                                {% if customer.groups|length > 1 %}
+                                <span class="group-count-badge" title="Also in: {% for grp in customer.groups[1:] %}{{ grp.name }}{% if not loop.last %}, {% endif %}{% endfor %}">
+                                    +{{ customer.groups|length - 1 }}
+                                </span>
+                                {% endif %}
                             {% elif customer.primary_group %}
                                 <a href="/groups/{{ customer.primary_group.id }}" class="badge badge-success">
                                     {{ customer.primary_group.name }}
@@ -305,54 +311,63 @@
 
 <!-- Groups Modal -->
 <div id="groupsModal" class="modal" style="display: none;">
-    <div class="modal-content" style="max-width: 700px;">
+    <div class="modal-content" style="max-width: 800px; width: 95%;">
         <div class="modal-header">
             <h2 class="modal-title">👨‍👩‍👧‍👦 Customers in Groups</h2>
             <button class="modal-close" onclick="closeModal('groupsModal')">×</button>
         </div>
         <div class="modal-body">
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
-                    <div class="text-sm text-secondary mb-1">In Groups</div>
-                    <div class="text-2xl font-bold text-info">{{ in_groups_count }}</div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-5);">
+                    <div class="text-sm text-secondary mb-2">Customers in Groups</div>
+                    <div class="text-3xl font-bold text-info">{{ in_groups_count }}</div>
                 </div>
-                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
-                    <div class="text-sm text-secondary mb-1">Not in Groups</div>
-                    <div class="text-2xl font-bold text-secondary">{{ total_customers - in_groups_count }}</div>
+                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-5);">
+                    <div class="text-sm text-secondary mb-2">Without Groups</div>
+                    <div class="text-3xl font-bold text-secondary">{{ total_customers - in_groups_count }}</div>
                 </div>
             </div>
             {% if in_groups_count > 0 %}
-            <h4 class="font-semibold mb-2">Customers with Groups</h4>
-            <div class="table-container" style="max-height: 300px; overflow-y: auto;">
-                <table class="table">
+            <h4 class="font-semibold mb-3" style="font-size: 1rem;">Customers with Groups</h4>
+            <div class="table-container" style="max-height: 350px; overflow-y: auto;">
+                <table class="table" style="width: 100%;">
                     <thead style="position: sticky; top: 0; background: var(--color-bg-card); z-index: 1;">
                         <tr>
-                            <th>Customer</th>
-                            <th>Group(s)</th>
-                            <th>Actions</th>
+                            <th style="width: 35%; padding: 12px 16px;">Customer</th>
+                            <th style="width: 50%; padding: 12px 16px;">Group(s)</th>
+                            <th style="width: 15%; padding: 12px 16px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for customer in customers if customer.primary_group or (customer.groups and customer.groups|length > 0) %}
                         <tr>
-                            <td class="font-medium">{{ customer.name }}</td>
-                            <td>
+                            <td class="font-medium" style="padding: 12px 16px;">
+                                <a href="/customers/{{ customer.id }}" class="text-primary hover:underline">{{ customer.name }}</a>
+                            </td>
+                            <td style="padding: 12px 16px;">
+                                <div class="flex flex-wrap gap-2">
                                 {% if customer.groups %}
                                     {% for grp in customer.groups %}
-                                    <span class="badge badge-success" style="margin: 1px;">{{ grp.name }}</span>
+                                    <a href="/groups/{{ grp.id }}" class="badge badge-success" style="white-space: nowrap;">{{ grp.name }}</a>
                                     {% endfor %}
                                 {% elif customer.primary_group %}
-                                    <span class="badge badge-success">{{ customer.primary_group.name }}</span>
+                                    <a href="/groups/{{ customer.primary_group.id }}" class="badge badge-success">{{ customer.primary_group.name }}</a>
                                 {% endif %}
+                                </div>
                             </td>
-                            <td><a href="/customers/{{ customer.id }}" class="btn btn-sm btn-secondary">View</a></td>
+                            <td style="padding: 12px 16px;">
+                                <a href="/customers/{{ customer.id }}" class="btn btn-sm btn-secondary">View</a>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
             {% else %}
-            <p class="text-secondary text-center py-4">No customers are assigned to groups yet</p>
+            <div class="empty-state" style="padding: var(--space-6);">
+                <div class="empty-state-icon">📦</div>
+                <p class="text-secondary">No customers are assigned to groups yet</p>
+            </div>
             {% endif %}
         </div>
     </div>

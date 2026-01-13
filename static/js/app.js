@@ -81,8 +81,15 @@ function openModal(modalId) {
     // Track this modal
     window.openModals.push(modalId);
     
-    // If opening customer modals, ensure group dropdown is populated
-    if (modalId === 'customerModal' || modalId === 'editCustomerModal') {
+    // If opening customer modals, load all groups immediately
+    if (modalId === 'customerModal') {
+      const categorySelect = modal.querySelector('select[name="category_id"]');
+      const categoryId = categorySelect ? categorySelect.value : null;
+      // Load all groups organized by category (current category first if selected)
+      updateGroupSelectMulti(categoryId, 'customer-groups-container', []);
+    }
+    if (modalId === 'editCustomerModal') {
+      // Edit modal groups are loaded by loadEditData function
       const categorySelect = modal.querySelector('select[name="category_id"]');
       const categoryId = categorySelect ? categorySelect.value : null;
       if (categoryId) {
@@ -1545,6 +1552,7 @@ window.handleFormSubmit = function(event, callback) {
 };
 
 // ==================== Multi-Select Group Component ====================
+// Shows ALL groups organized by category for maximum flexibility
 window.updateGroupSelectMulti = function(categoryId, containerId, selectedGroupIds = []) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -1553,6 +1561,10 @@ window.updateGroupSelectMulti = function(categoryId, containerId, selectedGroupI
   let hiddenInputId = 'customer-group-ids';
   if (containerId.includes('edit-customer')) {
     hiddenInputId = 'edit-customer-group-ids';
+  } else if (containerId.includes('subscription')) {
+    hiddenInputId = 'subscription-group-ids';
+  } else if (containerId.includes('edit-subscription')) {
+    hiddenInputId = 'edit-subscription-group-ids';
   }
   
   // Convert selectedGroupIds to array if it's a string
@@ -1563,33 +1575,83 @@ window.updateGroupSelectMulti = function(categoryId, containerId, selectedGroupI
     selectedGroupIds = selectedGroupIds ? [selectedGroupIds] : [];
   }
   
-  // Fetch groups for the selected category
-  fetch(`/api/groups?category_id=${categoryId}`)
-    .then(r => r.json())
-    .then(groups => {
+  // Fetch ALL groups and ALL categories to organize them
+  Promise.all([
+    fetch('/api/groups').then(r => r.json()),
+    fetch('/api/categories').then(r => r.json())
+  ])
+    .then(([groups, categories]) => {
       if (groups.length === 0) {
-        container.innerHTML = '<div class="multi-select-placeholder">No groups available in this category</div>';
+        container.innerHTML = '<div class="multi-select-placeholder">No groups available. Create a group first.</div>';
         return;
       }
       
       container.innerHTML = '';
       
+      // Create a map of category id to category name
+      const categoryMap = {};
+      categories.forEach(cat => {
+        categoryMap[cat.id] = cat.name;
+      });
+      
+      // Group the groups by category
+      const groupsByCategory = {};
       groups.forEach(group => {
-        const isSelected = selectedGroupIds.includes(group.id);
-        const option = document.createElement('div');
-        option.className = `multi-select-option ${isSelected ? 'selected' : ''}`;
-        option.dataset.groupId = group.id;
-        option.innerHTML = `
-          <span class="check-icon"></span>
-          <span>${group.name}</span>
-        `;
-        
-        option.addEventListener('click', function() {
-          this.classList.toggle('selected');
-          updateGroupIdsHiddenInput(containerId, hiddenInputId);
+        const catId = group.category_id;
+        if (!groupsByCategory[catId]) {
+          groupsByCategory[catId] = [];
+        }
+        groupsByCategory[catId].push(group);
+      });
+      
+      // Sort categories - put current category first if specified
+      let sortedCategoryIds = Object.keys(groupsByCategory).map(Number);
+      if (categoryId) {
+        sortedCategoryIds.sort((a, b) => {
+          if (a == categoryId) return -1;
+          if (b == categoryId) return 1;
+          return (categoryMap[a] || '').localeCompare(categoryMap[b] || '');
         });
-        
-        container.appendChild(option);
+      }
+      
+      // Create sections for each category
+      sortedCategoryIds.forEach(catId => {
+        const catGroups = groupsByCategory[catId];
+        if (catGroups && catGroups.length > 0) {
+          const catName = categoryMap[catId] || 'Unknown Category';
+          const isCurrent = catId == categoryId;
+          
+          // Category header
+          const header = document.createElement('div');
+          header.className = 'multi-select-category-header';
+          header.innerHTML = `<span class="category-icon">📁</span> ${catName}${isCurrent ? ' <span class="current-badge">(Current)</span>' : ''}`;
+          container.appendChild(header);
+          
+          // Groups wrapper for this category
+          const groupsWrapper = document.createElement('div');
+          groupsWrapper.className = 'multi-select-group-wrapper';
+          
+          catGroups.forEach(group => {
+            const isSelected = selectedGroupIds.includes(group.id);
+            const option = document.createElement('div');
+            option.className = `multi-select-option ${isSelected ? 'selected' : ''}`;
+            option.dataset.groupId = group.id;
+            option.dataset.categoryId = catId;
+            option.innerHTML = `
+              <span class="check-icon"></span>
+              <span class="group-name">${group.name}</span>
+            `;
+            
+            option.addEventListener('click', function() {
+              this.classList.toggle('selected');
+              updateGroupIdsHiddenInput(containerId, hiddenInputId);
+            });
+            
+            groupsWrapper.appendChild(option);
+          });
+          
+          container.appendChild(groupsWrapper);
+        }
       });
       
       // Update hidden input

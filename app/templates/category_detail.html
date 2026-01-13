@@ -119,13 +119,16 @@
                         <td>{{ customer.phone or '-' }}</td>
                         <td>
                             {% if customer.groups and customer.groups|length > 0 %}
-                                {% for grp in customer.groups %}
-                                <span class="badge badge-secondary">{{ grp.name }}</span>
-                                {% endfor %}
+                                <a href="/groups/{{ customer.groups[0].id }}" class="badge badge-success">{{ customer.groups[0].name }}</a>
+                                {% if customer.groups|length > 1 %}
+                                <span class="group-count-badge" title="Also in: {% for grp in customer.groups[1:] %}{{ grp.name }}{% if not loop.last %}, {% endif %}{% endfor %}">
+                                    +{{ customer.groups|length - 1 }}
+                                </span>
+                                {% endif %}
                             {% elif customer.primary_group %}
-                            <span class="badge badge-secondary">{{ customer.primary_group.name }}</span>
+                            <a href="/groups/{{ customer.primary_group.id }}" class="badge badge-success">{{ customer.primary_group.name }}</a>
                             {% else %}
-                            -
+                            <span class="text-secondary">-</span>
                             {% endif %}
                         </td>
                         <td>{{ customer.tags or '-' }}</td>
