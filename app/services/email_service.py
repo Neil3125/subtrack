@@ -58,6 +58,49 @@ class EmailService:
         config = self._get_config()
         return bool(config["smtp_user"] and config["smtp_password"])
     
+    def get_diagnostic_info(self) -> dict:
+        """Get diagnostic information about email configuration (safe to expose)."""
+        config = self._get_config()
+        return {
+            "configured": self.is_configured(),
+            "smtp_host": config["smtp_host"],
+            "smtp_port": config["smtp_port"],
+            "smtp_user": config["smtp_user"][:3] + "***" if config["smtp_user"] else "(not set)",
+            "smtp_password_set": bool(config["smtp_password"]),
+            "smtp_password_length": len(config["smtp_password"]) if config["smtp_password"] else 0,
+            "from_email": config["from_email"],
+            "from_name": config["from_name"]
+        }
+    
+    def test_connection(self) -> Tuple[bool, str]:
+        """Test SMTP connection without sending an email."""
+        if not self.is_configured():
+            return False, "Email service not configured. Set SMTP_USER and SMTP_PASSWORD environment variables."
+        
+        config = self._get_config()
+        try:
+            logger.info(f"Testing SMTP connection to {config['smtp_host']}:{config['smtp_port']}")
+            with smtplib.SMTP(config["smtp_host"], config["smtp_port"], timeout=10) as server:
+                server.set_debuglevel(1)  # Enable debug output
+                logger.info("Starting TLS...")
+                server.starttls()
+                logger.info(f"Logging in as {config['smtp_user']}...")
+                server.login(config["smtp_user"], config["smtp_password"])
+                logger.info("Login successful!")
+                return True, "SMTP connection and authentication successful"
+        except smtplib.SMTPAuthenticationError as e:
+            error_msg = f"Authentication failed: {e.smtp_code} - {e.smtp_error.decode() if isinstance(e.smtp_error, bytes) else e.smtp_error}"
+            logger.error(error_msg)
+            return False, error_msg
+        except smtplib.SMTPException as e:
+            error_msg = f"SMTP error: {str(e)}"
+            logger.error(error_msg)
+            return False, error_msg
+        except Exception as e:
+            error_msg = f"Connection error: {str(e)}"
+            logger.error(error_msg)
+            return False, error_msg
+    
     def send_email(
         self,
         to_email: str,
@@ -78,11 +121,15 @@ class EmailService:
             logger.warning("Email service not configured - SMTP credentials missing")
             return False, "Email service not configured. Set SMTP_USER and SMTP_PASSWORD environment variables."
         
+        config = self._get_config()
+        logger.info(f"Attempting to send email to {to_email}")
+        logger.info(f"SMTP Config: host={config['smtp_host']}, port={config['smtp_port']}, user={config['smtp_user'][:3]}***")
+        
         try:
             # Create message
             msg = MIMEMultipart("alternative")
             msg["Subject"] = subject
-            msg["From"] = f"{self.from_name} <{self.from_email}>"
+            msg["From"] = f"{config['from_name']} <{config['from_email']}>"
             msg["To"] = to_email
             
             # Add text and HTML parts
@@ -93,24 +140,39 @@ class EmailService:
             part2 = MIMEText(body_html, "html")
             msg.attach(part2)
             
-            # Send email
-            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+            # Send email with timeout
+            logger.info(f"Connecting to SMTP server {config['smtp_host']}:{config['smtp_port']}...")
+            with smtplib.SMTP(config["smtp_host"], config["smtp_port"], timeout=30) as server:
+                logger.info("Connected. Starting TLS...")
                 server.starttls()
-                server.login(self.smtp_user, self.smtp_password)
-                server.sendmail(self.from_email, to_email, msg.as_string())
+                logger.info(f"TLS started. Logging in as {config['smtp_user']}...")
+                server.login(config["smtp_user"], config["smtp_password"])
+                logger.info(f"Logged in. Sending email to {to_email}...")
+                server.sendmail(config["from_email"], to_email, msg.as_string())
+                logger.info(f"Email sent successfully to {to_email}")
             
-            logger.info(f"Email sent successfully to {to_email}")
             return True, "Email sent successfully"
             
         except smtplib.SMTPAuthenticationError as e:
-            logger.error(f"SMTP authentication failed: {e}")
-            return False, "Email authentication failed. Check SMTP credentials."
+            error_msg = f"Authentication failed: {e.smtp_code} - {e.smtp_error.decode() if isinstance(e.smtp_error, bytes) else e.smtp_error}"
+            logger.error(f"SMTP authentication failed: {error_msg}")
+            return False, f"Email authentication failed: {error_msg}"
+        except smtplib.SMTPRecipientsRefused as e:
+            error_msg = f"Recipient refused: {to_email}"
+            logger.error(error_msg)
+            return False, error_msg
+        except smtplib.SMTPSenderRefused as e:
+            error_msg = f"Sender refused: {config['from_email']}"
+            logger.error(error_msg)
+            return False, error_msg
         except smtplib.SMTPException as e:
-            logger.error(f"SMTP error: {e}")
-            return False, f"Failed to send email: {str(e)}"
+            error_msg = f"SMTP error: {str(e)}"
+            logger.error(error_msg)
+            return False, error_msg
         except Exception as e:
-            logger.error(f"Unexpected error sending email: {e}")
-            return False, f"Unexpected error: {str(e)}"
+            error_msg = f"Unexpected error: {type(e).__name__}: {str(e)}"
+            logger.error(error_msg)
+            return False, error_msg
     
     def generate_renewal_notice_html(
         self,

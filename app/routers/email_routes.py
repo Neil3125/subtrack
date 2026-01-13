@@ -19,14 +19,22 @@ router = APIRouter()
 @router.get("/config")
 def get_email_config():
     """Get email configuration status (without exposing credentials)."""
+    diag = email_service.get_diagnostic_info()
     return {
-        "configured": email_service.is_configured(),
-        "smtp_host": email_service.smtp_host,
-        "smtp_port": email_service.smtp_port,
-        "from_email": email_service.from_email if email_service.is_configured() else None,
-        "message": "Email service is configured and ready" if email_service.is_configured() 
+        **diag,
+        "message": "Email service is configured and ready" if diag["configured"] 
                    else "Email service not configured. Set SMTP_USER and SMTP_PASSWORD environment variables."
     }
+
+
+@router.post("/test-connection")
+def test_email_connection():
+    """Test SMTP connection without sending an email."""
+    success, message = email_service.test_connection()
+    if success:
+        return {"success": True, "message": message}
+    else:
+        raise HTTPException(status_code=500, detail=message)
 
 
 @router.post("/test")
