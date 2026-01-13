@@ -3,28 +3,23 @@ from sqlalchemy import Column, Integer, String, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
 
-# Try to import association tables - they may not exist if migration hasn't run
-try:
-    from app.models.associations import customer_categories, customer_groups
-    ASSOCIATIONS_AVAILABLE = True
-except Exception:
-    customer_categories = None
-    customer_groups = None
-    ASSOCIATIONS_AVAILABLE = False
+# Import association tables for many-to-many relationships
+from app.models.associations import customer_categories, customer_groups
 
 
 class Customer(Base):
     """Customer model for tracking subscription owners.
     
-    Supports many-to-many relationships with categories and groups when available.
-    Falls back to legacy single category_id/group_id if migration hasn't been run.
+    Supports many-to-many relationships with groups via the customer_groups association table.
+    The category_id field is the primary category assignment.
     """
     
     __tablename__ = "customers"
     
     id = Column(Integer, primary_key=True, index=True)
-    # Legacy fields - used as primary relationship fields
+    # Primary category field
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True, index=True)
+    # Legacy single group field - kept for backward compatibility
     group_id = Column(Integer, ForeignKey("groups.id"), nullable=True, index=True)
     
     name = Column(String(200), nullable=False, index=True)
@@ -34,9 +29,19 @@ class Customer(Base):
     tags = Column(Text, nullable=True)  # Comma-separated tags
     notes = Column(Text, nullable=True)
     
-    # Legacy relationships - always available
+    # Primary category relationship
     category = relationship("Category", foreign_keys=[category_id], viewonly=True)
-    group = relationship("Group", foreign_keys=[group_id], viewonly=True)
+    
+    # Legacy single group relationship (for backward compatibility)
+    _legacy_group = relationship("Group", foreign_keys=[group_id], viewonly=True)
+    
+    # Many-to-many relationship with groups
+    _groups = relationship(
+        "Group",
+        secondary=customer_groups,
+        backref="customers_multi",
+        lazy="selectin"
+    )
     
     # Subscriptions relationship
     subscriptions = relationship("Subscription", back_populates="customer", cascade="all, delete-orphan")
@@ -53,9 +58,14 @@ class Customer(Base):
     
     @property
     def groups(self):
-        """Get list of groups - returns list with single group for compatibility."""
-        if self.group:
-            return [self.group]
+        """Get list of all groups the customer belongs to (many-to-many).
+        
+        Falls back to legacy single group if no many-to-many groups are set.
+        """
+        if self._groups and len(self._groups) > 0:
+            return list(self._groups)
+        elif self._legacy_group:
+            return [self._legacy_group]
         return []
     
     @property
@@ -65,8 +75,10 @@ class Customer(Base):
     
     @property
     def primary_group(self):
-        """Alias for group for backward compatibility."""
-        return self.group
+        """Get the primary (first) group for backward compatibility."""
+        if self._groups and len(self._groups) > 0:
+            return self._groups[0]
+        return self._legacy_group
     
     @property
     def category_names(self):
@@ -78,6 +90,20 @@ class Customer(Base):
     @property
     def group_names(self):
         """Get comma-separated list of group names."""
-        if self.group:
-            return self.group.name
+        groups = self.groups
+        if groups:
+            return ", ".join([g.name for g in groups])
         return ""
+    
+    def set_groups(self, groups_list):
+        """Set the many-to-many groups relationship.
+        
+        Args:
+            groups_list: List of Group objects to assign to this customer
+        """
+        self._groups = groups_list
+        # Also update legacy group_id for backward compatibility
+        if groups_list and len(groups_list) > 0:
+            self.group_id = groups_list[0].id
+        else:
+            self.group_id = None

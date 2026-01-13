@@ -31,7 +31,7 @@
             <button class="btn btn-secondary" onclick="openModal('addExistingCustomerModal')">
                 👥 Add Existing Customer
             </button>
-            <button class="btn btn-primary" onclick="openModal('customerModal')">
+            <button class="btn btn-primary" onclick="openCustomerModalForGroup({{ group.category.id }}, {{ group.id }})">
                 ➕ New Customer
             </button>
         </div>

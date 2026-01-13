@@ -16,7 +16,8 @@ class Group(Base):
     
     # Relationships
     category = relationship("Category", back_populates="groups")
-    customers = relationship("Customer", back_populates="group", viewonly=True)
+    # Legacy relationship for customers with single group_id (backward compatibility)
+    customers = relationship("Customer", back_populates="_legacy_group", viewonly=True, foreign_keys="Customer.group_id")
     
     def __repr__(self):
         return f"<Group(id={self.id}, name='{self.name}', category_id={self.category_id})>"

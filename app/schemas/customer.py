@@ -78,9 +78,12 @@ class CustomerResponse(BaseModel):
     category_id: Optional[int] = None
     group_id: Optional[int] = None
     
-    # Many-to-many relationships (will be empty if migration not run)
+    # Many-to-many relationships
     categories: List[CategoryInfo] = []
     groups: List[GroupInfo] = []
+    
+    # List of group IDs for easier frontend handling
+    group_ids: List[int] = []
     
     # Computed fields for display
     category_names: Optional[str] = ""
@@ -104,5 +107,12 @@ class CustomerResponse(BaseModel):
             if grps and hasattr(grps[0], 'id'):
                 data['groups'] = [{'id': g.id, 'name': g.name, 'category_id': g.category_id} for g in grps]
                 data['group_names'] = ', '.join([g.name for g in grps])
+                # Also populate group_ids for easier frontend handling
+                data['group_ids'] = [g.id for g in grps]
+        
+        # Ensure group_ids is populated from groups if not already set
+        if 'group_ids' not in data or not data['group_ids']:
+            if 'groups' in data and data['groups']:
+                data['group_ids'] = [g['id'] if isinstance(g, dict) else g.id for g in data['groups']]
         
         super().__init__(**data)

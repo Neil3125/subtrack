@@ -1057,9 +1057,71 @@ window.openCustomerModalForCategory = function(categoryId) {
     const categorySelect = document.querySelector('#customerModal select[name="category_id"]');
     if (categorySelect) {
       categorySelect.value = categoryId;
-      updateGroupSelect(categoryId, 'group_id');
+      // Load groups with multi-select, prioritizing the current category
+      updateGroupSelectMulti(categoryId, 'customer-groups-container', []);
     }
   }, 50);
+};
+
+// Open Customer Modal with pre-selected category AND group (from group detail page)
+window.openCustomerModalForGroup = function(categoryId, groupId) {
+  openModal('customerModal');
+  // Pre-select the category and pre-select the group
+  setTimeout(() => {
+    const categorySelect = document.querySelector('#customerModal select[name="category_id"]');
+    if (categorySelect) {
+      categorySelect.value = categoryId;
+      // Load groups with multi-select, pre-selecting the current group
+      updateGroupSelectMulti(categoryId, 'customer-groups-container', groupId ? [groupId] : []);
+    }
+  }, 50);
+};
+
+// Open Subscription Modal with pre-selected category (from category detail page)
+window.openSubscriptionModalForCategory = function(categoryId) {
+  openModal('subscriptionModal');
+  setTimeout(() => {
+    const categorySelect = document.querySelector('#subscriptionModal select[name="category_id"]');
+    if (categorySelect) {
+      categorySelect.value = categoryId;
+      // Load customers filtered by this category
+      updateCustomerSelect(categoryId, 'subscription-customer-select', null);
+    }
+  }, 50);
+};
+
+// Open Subscription Modal with pre-selected category and customer (from customer detail page)
+window.openSubscriptionModalForCustomer = function(categoryId, customerId) {
+  openModal('subscriptionModal');
+  setTimeout(() => {
+    const categorySelect = document.querySelector('#subscriptionModal select[name="category_id"]');
+    const customerSelect = document.querySelector('#subscriptionModal select[name="customer_id"]');
+    
+    if (categorySelect) {
+      categorySelect.value = categoryId;
+    }
+    
+    // Load customers and pre-select the current customer
+    if (customerSelect) {
+      fetch(`/partials/customer-options?category_id=${categoryId}&selected_customer_id=${customerId}`)
+        .then(response => response.text())
+        .then(html => {
+          customerSelect.innerHTML = html;
+        })
+        .catch(error => {
+          console.error('Error loading customers:', error);
+          // Fallback: just set the value if options already exist
+          customerSelect.value = customerId;
+        });
+    }
+  }, 50);
+};
+
+// Open Add Existing Customer Modal with category context
+window.openAddExistingCustomerModal = function(categoryId) {
+  // Store the category context for the modal
+  window._addExistingCustomerCategoryId = categoryId;
+  openModal('addExistingCustomerModal');
 };
 
 // Create Group
