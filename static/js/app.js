@@ -1056,40 +1056,114 @@ window.createGroup = function(formData) {
   });
 };
 
-// Create Customer
+// Create Customer with comprehensive error handling
 window.createCustomer = function(formData) {
+  // Client-side validation first
+  const validationErrors = [];
+  
+  if (!formData.name || !formData.name.trim()) {
+    validationErrors.push('Customer name is required');
+  }
+  
+  if (!formData.category_id) {
+    validationErrors.push('Category is required');
+  }
+  
+  if (!formData.country || !formData.country.trim()) {
+    validationErrors.push('Country is required');
+  }
+  
+  // Validate email format if provided
+  if (formData.email && formData.email.trim()) {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailPattern.test(formData.email)) {
+      validationErrors.push('Invalid email format');
+    }
+  }
+  
+  // Show validation errors and stop if any
+  if (validationErrors.length > 0) {
+    showToast('Validation Error: ' + validationErrors.join('; '), 'error');
+    console.warn('Customer creation validation failed:', validationErrors);
+    return;
+  }
+  
+  // Prepare request payload
+  const payload = {
+    name: formData.name.trim(),
+    category_id: parseInt(formData.category_id),
+    group_id: formData.group_id ? parseInt(formData.group_id) : null,
+    email: formData.email ? formData.email.trim() : null,
+    phone: formData.phone ? formData.phone.trim() : null,
+    country: formData.country.trim(),
+    tags: formData.tags ? formData.tags.trim() : null,
+    notes: formData.notes ? formData.notes.trim() : null
+  };
+  
+  // Log request for debugging (no sensitive data)
+  console.log('Creating customer with payload:', {
+    ...payload,
+    email: payload.email ? '[REDACTED]' : null
+  });
+  
   fetch('/api/customers', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      name: formData.name,
-      category_id: parseInt(formData.category_id),
-      group_id: formData.group_id ? parseInt(formData.group_id) : null,
-      email: formData.email || null,
-      phone: formData.phone || null,
-      country: formData.country || null,
-      tags: formData.tags || null,
-      notes: formData.notes || null
-    })
+    body: JSON.stringify(payload)
   })
   .then(response => {
+    // Log response status for debugging
+    console.log('Customer creation response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+    
     if (!response.ok) {
       return response.json().then(err => {
-        throw new Error(err.detail || 'Failed to create customer');
+        // Log full error details
+        console.error('Customer creation failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: err,
+          payload: { ...payload, email: payload.email ? '[REDACTED]' : null }
+        });
+        
+        // Extract error message
+        let errorMessage = 'Failed to create customer';
+        if (err.detail) {
+          errorMessage = typeof err.detail === 'string' 
+            ? err.detail 
+            : JSON.stringify(err.detail);
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
+        
+        throw new Error(errorMessage);
+      }).catch(parseError => {
+        // Handle JSON parse errors
+        if (parseError.message && parseError.message !== 'Failed to create customer') {
+          throw parseError;
+        }
+        console.error('Failed to parse error response:', parseError);
+        throw new Error(`Server error (${response.status}): ${response.statusText}`);
       });
     }
     return response.json();
   })
   .then(data => {
+    console.log('Customer created successfully:', { id: data.id, name: data.name });
     showToast('Customer created successfully', 'success');
     closeAllModals();
     setTimeout(() => window.location.reload(), 500);
   })
   .catch(error => {
-    showToast('Error: ' + error.message, 'error');
-    console.error('Error:', error);
+    // Show user-friendly error message
+    const errorMsg = error.message || 'Unknown error occurred';
+    showToast('Error: ' + errorMsg, 'error');
+    console.error('Customer creation error:', error);
   });
 };
 
@@ -1176,40 +1250,101 @@ window.updateGroup = function(formData, id) {
   });
 };
 
-// Update Customer
+// Update Customer with comprehensive error handling
 window.updateCustomer = function(formData, id) {
+  // Client-side validation first
+  const validationErrors = [];
+  
+  if (!formData.name || !formData.name.trim()) {
+    validationErrors.push('Customer name is required');
+  }
+  
+  if (!formData.category_id) {
+    validationErrors.push('Category is required');
+  }
+  
+  // Validate email format if provided
+  if (formData.email && formData.email.trim()) {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailPattern.test(formData.email)) {
+      validationErrors.push('Invalid email format');
+    }
+  }
+  
+  // Show validation errors and stop if any
+  if (validationErrors.length > 0) {
+    showToast('Validation Error: ' + validationErrors.join('; '), 'error');
+    console.warn('Customer update validation failed:', validationErrors);
+    return;
+  }
+  
+  // Prepare request payload
+  const payload = {
+    name: formData.name.trim(),
+    category_id: parseInt(formData.category_id),
+    group_id: formData.group_id ? parseInt(formData.group_id) : null,
+    email: formData.email ? formData.email.trim() : null,
+    phone: formData.phone ? formData.phone.trim() : null,
+    country: formData.country ? formData.country.trim() : null,
+    tags: formData.tags ? formData.tags.trim() : null,
+    notes: formData.notes ? formData.notes.trim() : null
+  };
+  
+  // Log request for debugging
+  console.log('Updating customer with payload:', {
+    id,
+    ...payload,
+    email: payload.email ? '[REDACTED]' : null
+  });
+  
   fetch(`/api/customers/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      name: formData.name,
-      category_id: parseInt(formData.category_id),
-      group_id: formData.group_id ? parseInt(formData.group_id) : null,
-      email: formData.email || null,
-      phone: formData.phone || null,
-      country: formData.country || null,
-      tags: formData.tags || null,
-      notes: formData.notes || null
-    })
+    body: JSON.stringify(payload)
   })
   .then(response => {
+    console.log('Customer update response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+    
     if (!response.ok) {
       return response.json().then(err => {
-        throw new Error(err.detail || 'Failed to update customer');
+        console.error('Customer update failed:', {
+          status: response.status,
+          error: err,
+          customerId: id
+        });
+        
+        let errorMessage = 'Failed to update customer';
+        if (err.detail) {
+          errorMessage = typeof err.detail === 'string' 
+            ? err.detail 
+            : JSON.stringify(err.detail);
+        }
+        throw new Error(errorMessage);
+      }).catch(parseError => {
+        if (parseError.message && parseError.message !== 'Failed to update customer') {
+          throw parseError;
+        }
+        throw new Error(`Server error (${response.status}): ${response.statusText}`);
       });
     }
     return response.json();
   })
   .then(data => {
+    console.log('Customer updated successfully:', { id: data.id, name: data.name });
     showToast('Customer updated successfully', 'success');
     closeAllModals();
     setTimeout(() => window.location.reload(), 500);
   })
   .catch(error => {
-    showToast('Error: ' + error.message, 'error');
-    console.error('Error:', error);
+    const errorMsg = error.message || 'Unknown error occurred';
+    showToast('Error: ' + errorMsg, 'error');
+    console.error('Customer update error:', error);
   });
 };
 
@@ -2149,6 +2284,145 @@ window.loadAIConfig = function() {
   if (enabledCheckbox) enabledCheckbox.checked = enabled;
 };
 
+// ==================== Email Notification Functions ====================
+
+// Send renewal notice for a subscription
+window.sendRenewalNotice = function(subscriptionId) {
+  if (!confirm('Send renewal notice email to the customer?')) {
+    return;
+  }
+  
+  showToast('Sending renewal notice...', 'info');
+  
+  fetch(`/api/email/renewal-notice/${subscriptionId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => {
+        throw new Error(err.detail || 'Failed to send renewal notice');
+      });
+    }
+    return response.json();
+  })
+  .then(data => {
+    showToast(`✅ Renewal notice sent to ${data.recipient}`, 'success');
+  })
+  .catch(error => {
+    showToast('Error: ' + error.message, 'error');
+    console.error('Send renewal notice error:', error);
+  });
+};
+
+// Send renewal notice to a custom email address
+window.sendRenewalNoticeWithEmail = function(subscriptionId) {
+  const email = prompt('Enter email address to send renewal notice to:');
+  if (!email) return;
+  
+  // Validate email format
+  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailPattern.test(email)) {
+    showToast('Invalid email format', 'error');
+    return;
+  }
+  
+  showToast('Sending renewal notice...', 'info');
+  
+  fetch(`/api/email/renewal-notice/${subscriptionId}?override_email=${encodeURIComponent(email)}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => {
+        throw new Error(err.detail || 'Failed to send renewal notice');
+      });
+    }
+    return response.json();
+  })
+  .then(data => {
+    showToast(`✅ Renewal notice sent to ${data.recipient}`, 'success');
+  })
+  .catch(error => {
+    showToast('Error: ' + error.message, 'error');
+    console.error('Send renewal notice error:', error);
+  });
+};
+
+// View notice history for a subscription
+window.viewNoticeHistory = function(subscriptionId) {
+  fetch(`/api/email/renewal-notices?subscription_id=${subscriptionId}`)
+    .then(response => response.json())
+    .then(notices => {
+      if (notices.length === 0) {
+        showToast('No renewal notices have been sent for this subscription', 'info');
+        return;
+      }
+      
+      // Create a simple modal to display history
+      let historyHtml = '<div style="max-height: 400px; overflow-y: auto;">';
+      historyHtml += '<table style="width: 100%; border-collapse: collapse;">';
+      historyHtml += '<tr style="border-bottom: 1px solid var(--color-border);"><th style="text-align: left; padding: 8px;">Date</th><th style="text-align: left; padding: 8px;">Recipient</th><th style="text-align: left; padding: 8px;">Status</th></tr>';
+      
+      notices.forEach(notice => {
+        const date = new Date(notice.sent_at).toLocaleString();
+        const status = notice.success ? '✅ Sent' : `❌ Failed: ${notice.error_message || 'Unknown error'}`;
+        historyHtml += `<tr style="border-bottom: 1px solid var(--color-border);">
+          <td style="padding: 8px;">${date}</td>
+          <td style="padding: 8px;">${notice.recipient_email || 'N/A'}</td>
+          <td style="padding: 8px;">${status}</td>
+        </tr>`;
+      });
+      
+      historyHtml += '</table></div>';
+      
+      // Show in an alert for now (could be improved with a proper modal)
+      const historyWindow = window.open('', 'Notice History', 'width=600,height=400');
+      historyWindow.document.write(`
+        <html>
+        <head>
+          <title>Renewal Notice History</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+            th { background: #f5f5f5; }
+          </style>
+        </head>
+        <body>
+          <h2>📧 Renewal Notice History</h2>
+          ${historyHtml}
+        </body>
+        </html>
+      `);
+    })
+    .catch(error => {
+      showToast('Error loading notice history', 'error');
+      console.error('Load notice history error:', error);
+    });
+};
+
+// Check email configuration status
+window.checkEmailConfig = function() {
+  fetch('/api/email/config')
+    .then(response => response.json())
+    .then(config => {
+      if (config.configured) {
+        showToast(`Email configured: ${config.from_email}`, 'success');
+      } else {
+        showToast('Email not configured. Set SMTP_USER and SMTP_PASSWORD in environment.', 'warning');
+      }
+    })
+    .catch(error => {
+      showToast('Error checking email config', 'error');
+    });
+};
+
 // ==================== Export Functions ====================
 window.openShortcutsModal = function() {
   openModal('shortcutsModal');
@@ -2180,5 +2454,9 @@ window.SubTrack = {
   rejectLink,
   unlinkRelationship,
   saveAIConfig,
-  loadAIConfig
+  loadAIConfig,
+  sendRenewalNotice,
+  sendRenewalNoticeWithEmail,
+  viewNoticeHistory,
+  checkEmailConfig
 };

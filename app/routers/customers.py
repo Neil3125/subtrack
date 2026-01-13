@@ -2,13 +2,27 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import distinct
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
+import logging
+import re
 from app.database import get_db
 from app.models import Customer, Category, Group
 from app.schemas import CustomerCreate, CustomerUpdate, CustomerResponse
 from app.data_persistence import auto_save
 
+# Set up logging for debugging
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
+
+
+def validate_email_format(email: str) -> bool:
+    """Validate email format using regex."""
+    if not email:
+        return True  # Empty email is valid (optional field)
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
 
 
 @router.post("", response_model=CustomerResponse, status_code=201)
@@ -18,6 +32,22 @@ def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks,
     Uses category_id and group_id fields. Also accepts category_ids/group_ids arrays
     but only the first value will be used (legacy single-value support).
     """
+    
+    # Log incoming request (redact sensitive data)
+    logger.info(f"Creating customer: name={customer.name}, category_id={customer.category_id}, country={customer.country}")
+    
+    # Validate required fields with clear messages
+    validation_errors = []
+    
+    if not customer.name or not customer.name.strip():
+        validation_errors.append("Customer name is required")
+    
+    if not customer.country or not customer.country.strip():
+        validation_errors.append("Country is required")
+    
+    # Validate email format if provided
+    if customer.email and not validate_email_format(customer.email):
+        validation_errors.append(f"Invalid email format: {customer.email}")
     
     # Determine which fields to use - prefer single values, fall back to arrays
     category_id = customer.category_id
@@ -29,36 +59,75 @@ def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks,
         group_id = customer.group_ids[0] if customer.group_ids else None
     
     if not category_id:
-        raise HTTPException(status_code=400, detail="Category is required")
+        validation_errors.append("Category is required")
+    
+    # Return all validation errors at once
+    if validation_errors:
+        error_message = "; ".join(validation_errors)
+        logger.warning(f"Validation failed for customer creation: {error_message}")
+        raise HTTPException(status_code=400, detail=error_message)
     
     # Verify category exists
     category = db.query(Category).filter(Category.id == category_id).first()
     if not category:
-        raise HTTPException(status_code=404, detail="Category not found")
+        logger.warning(f"Category not found: {category_id}")
+        raise HTTPException(status_code=404, detail=f"Category with ID {category_id} not found")
     
     # Verify group exists if provided
     if group_id:
         group = db.query(Group).filter(Group.id == group_id).first()
         if not group:
-            raise HTTPException(status_code=404, detail="Group not found")
+            logger.warning(f"Group not found: {group_id}")
+            raise HTTPException(status_code=404, detail=f"Group with ID {group_id} not found")
     
-    # Create customer with basic fields
-    customer_data = customer.model_dump(exclude={'category_id', 'group_id', 'category_ids', 'group_ids'})
+    # Check for duplicate customer (same name + email in same category)
+    if customer.email:
+        existing_customer = db.query(Customer).filter(
+            Customer.email == customer.email,
+            Customer.category_id == category_id
+        ).first()
+        if existing_customer:
+            logger.warning(f"Duplicate customer: email {customer.email} already exists in category {category_id}")
+            raise HTTPException(
+                status_code=409, 
+                detail=f"A customer with email '{customer.email}' already exists in this category"
+            )
     
-    # Set the category_id and group_id
-    customer_data['category_id'] = category_id
-    customer_data['group_id'] = group_id
-    
-    db_customer = Customer(**customer_data)
-    
-    db.add(db_customer)
-    db.commit()
-    db.refresh(db_customer)
-    
-    # Auto-save data to file
-    background_tasks.add_task(auto_save, db)
-    
-    return db_customer
+    try:
+        # Create customer with basic fields
+        customer_data = customer.model_dump(exclude={'category_id', 'group_id', 'category_ids', 'group_ids'})
+        
+        # Set the category_id and group_id
+        customer_data['category_id'] = category_id
+        customer_data['group_id'] = group_id
+        
+        db_customer = Customer(**customer_data)
+        
+        db.add(db_customer)
+        db.commit()
+        db.refresh(db_customer)
+        
+        logger.info(f"Customer created successfully: id={db_customer.id}, name={db_customer.name}")
+        
+        # Auto-save data to file
+        background_tasks.add_task(auto_save, db)
+        
+        return db_customer
+        
+    except IntegrityError as e:
+        db.rollback()
+        logger.error(f"Database integrity error creating customer: {str(e)}")
+        raise HTTPException(
+            status_code=409, 
+            detail="A customer with this information already exists or database constraint violated"
+        )
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Unexpected error creating customer: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to create customer: {str(e)}"
+        )
 
 
 @router.get("/countries", response_model=List[str])

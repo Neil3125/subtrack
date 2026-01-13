@@ -953,5 +953,271 @@
     </script>
     
     {% block extra_scripts %}{% endblock %}
+    
+    <!-- Floating Action Button (FAB) for Quick Add -->
+    <div id="fab-container" class="fab-container">
+        <button id="fab-main" class="fab-main" onclick="toggleFabMenu()" aria-label="Quick Add Menu">
+            <span class="fab-icon">+</span>
+        </button>
+        <div id="fab-menu" class="fab-menu">
+            <button class="fab-action" onclick="closeFabMenu(); openModal('customerModal');" data-tooltip="Add Customer">
+                <span class="fab-action-icon">👤</span>
+                <span class="fab-action-label">Customer</span>
+            </button>
+            <button class="fab-action" onclick="closeFabMenu(); openModal('subscriptionModal');" data-tooltip="Add Subscription">
+                <span class="fab-action-icon">📋</span>
+                <span class="fab-action-label">Subscription</span>
+            </button>
+            <button class="fab-action" onclick="closeFabMenu(); openModal('categoryModal');" data-tooltip="Add Category">
+                <span class="fab-action-icon">📁</span>
+                <span class="fab-action-label">Category</span>
+            </button>
+            <button class="fab-action" onclick="closeFabMenu(); openModal('groupModal');" data-tooltip="Add Group">
+                <span class="fab-action-icon">👥</span>
+                <span class="fab-action-label">Group</span>
+            </button>
+        </div>
+    </div>
+    
+    <style>
+    /* Floating Action Button Styles */
+    .fab-container {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    /* Safe area for mobile devices */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+        .fab-container {
+            bottom: calc(24px + env(safe-area-inset-bottom));
+            right: calc(24px + env(safe-area-inset-right));
+        }
+    }
+    
+    .fab-main {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%);
+        border: none;
+        color: white;
+        font-size: 28px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        outline: none;
+    }
+    
+    .fab-main:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5), 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .fab-main:active {
+        transform: scale(0.95);
+    }
+    
+    .fab-main.open {
+        transform: rotate(45deg);
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    
+    .fab-main.open:hover {
+        transform: rotate(45deg) scale(1.1);
+    }
+    
+    .fab-icon {
+        line-height: 1;
+        transition: transform 0.3s ease;
+    }
+    
+    .fab-menu {
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 10px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(20px) scale(0.8);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+    }
+    
+    .fab-menu.open {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+    }
+    
+    .fab-action {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        background: var(--color-bg-card, white);
+        border: 1px solid var(--color-border, #e2e8f0);
+        border-radius: 24px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        font-size: 14px;
+        color: var(--color-text, #1e293b);
+    }
+    
+    .fab-action:hover {
+        transform: translateX(-4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        background: var(--color-bg-hover, #f8fafc);
+    }
+    
+    .fab-action:active {
+        transform: scale(0.95);
+    }
+    
+    .fab-action-icon {
+        font-size: 18px;
+    }
+    
+    .fab-action-label {
+        font-weight: 500;
+    }
+    
+    /* Animation for menu items appearing */
+    .fab-menu.open .fab-action {
+        animation: fabItemAppear 0.3s ease forwards;
+    }
+    
+    .fab-menu.open .fab-action:nth-child(1) { animation-delay: 0ms; }
+    .fab-menu.open .fab-action:nth-child(2) { animation-delay: 50ms; }
+    .fab-menu.open .fab-action:nth-child(3) { animation-delay: 100ms; }
+    .fab-menu.open .fab-action:nth-child(4) { animation-delay: 150ms; }
+    
+    @keyframes fabItemAppear {
+        from {
+            opacity: 0;
+            transform: translateY(10px) scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    /* Backdrop when menu is open */
+    .fab-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .fab-backdrop.open {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* Mobile adjustments */
+    @media (max-width: 640px) {
+        .fab-container {
+            bottom: 16px;
+            right: 16px;
+        }
+        
+        .fab-main {
+            width: 52px;
+            height: 52px;
+            font-size: 24px;
+        }
+        
+        .fab-action {
+            padding: 8px 14px;
+            font-size: 13px;
+        }
+        
+        .fab-action-icon {
+            font-size: 16px;
+        }
+    }
+    
+    /* Hide FAB on login/auth pages */
+    body.auth-page .fab-container {
+        display: none;
+    }
+    </style>
+    
+    <script>
+    // FAB Menu Toggle Functions
+    let fabBackdrop = null;
+    
+    function toggleFabMenu() {
+        const fabMain = document.getElementById('fab-main');
+        const fabMenu = document.getElementById('fab-menu');
+        
+        if (fabMenu.classList.contains('open')) {
+            closeFabMenu();
+        } else {
+            openFabMenu();
+        }
+    }
+    
+    function openFabMenu() {
+        const fabMain = document.getElementById('fab-main');
+        const fabMenu = document.getElementById('fab-menu');
+        
+        fabMain.classList.add('open');
+        fabMenu.classList.add('open');
+        
+        // Create backdrop
+        if (!fabBackdrop) {
+            fabBackdrop = document.createElement('div');
+            fabBackdrop.className = 'fab-backdrop';
+            fabBackdrop.onclick = closeFabMenu;
+            document.body.appendChild(fabBackdrop);
+        }
+        fabBackdrop.classList.add('open');
+    }
+    
+    function closeFabMenu() {
+        const fabMain = document.getElementById('fab-main');
+        const fabMenu = document.getElementById('fab-menu');
+        
+        fabMain.classList.remove('open');
+        fabMenu.classList.remove('open');
+        
+        if (fabBackdrop) {
+            fabBackdrop.classList.remove('open');
+        }
+    }
+    
+    // Close FAB menu on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeFabMenu();
+        }
+    });
+    
+    // Close FAB when a modal opens
+    const originalOpenModal = window.openModal;
+    window.openModal = function(modalId) {
+        closeFabMenu();
+        return originalOpenModal(modalId);
+    };
+    </script>
 </body>
 </html>
