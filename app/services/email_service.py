@@ -1,49 +1,34 @@
-"""Email service for sending renewal notifications."""
-import smtplib
+"""Email service for sending renewal notifications via MailerSend API."""
+import httpx
 import logging
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from typing import Optional, Tuple
 from datetime import date
 import os
 
 logger = logging.getLogger(__name__)
 
+# MailerSend API endpoint
+MAILERSEND_API_URL = "https://api.mailersend.com/v1/email"
+
 
 class EmailService:
-    """Service for sending email notifications."""
+    """Service for sending email notifications via MailerSend API."""
     
     def __init__(self):
         """Initialize email service - config is loaded fresh each time."""
         pass
     
     def _get_config(self):
-        """Get SMTP configuration from environment (fresh read each time)."""
-        smtp_user = os.environ.get("SMTP_USER", "")
+        """Get MailerSend configuration from environment (fresh read each time)."""
         return {
-            "smtp_host": os.environ.get("SMTP_HOST", "smtp.gmail.com"),
-            "smtp_port": int(os.environ.get("SMTP_PORT", "587")),
-            "smtp_user": smtp_user,
-            "smtp_password": os.environ.get("SMTP_PASSWORD", ""),
-            "from_email": os.environ.get("SMTP_FROM_EMAIL", smtp_user),
-            "from_name": os.environ.get("SMTP_FROM_NAME", "SubTrack Notifications")
+            "api_token": os.environ.get("MAILERSEND_API_TOKEN", ""),
+            "from_email": os.environ.get("MAILERSEND_FROM_EMAIL", ""),
+            "from_name": os.environ.get("MAILERSEND_FROM_NAME", "SubTrack Notifications")
         }
     
     @property
-    def smtp_host(self):
-        return self._get_config()["smtp_host"]
-    
-    @property
-    def smtp_port(self):
-        return self._get_config()["smtp_port"]
-    
-    @property
-    def smtp_user(self):
-        return self._get_config()["smtp_user"]
-    
-    @property
-    def smtp_password(self):
-        return self._get_config()["smtp_password"]
+    def api_token(self):
+        return self._get_config()["api_token"]
     
     @property
     def from_email(self):
@@ -56,48 +41,56 @@ class EmailService:
     def is_configured(self) -> bool:
         """Check if email service is properly configured."""
         config = self._get_config()
-        return bool(config["smtp_user"] and config["smtp_password"])
+        return bool(config["api_token"] and config["from_email"])
     
     def get_diagnostic_info(self) -> dict:
         """Get diagnostic information about email configuration (safe to expose)."""
         config = self._get_config()
         return {
             "configured": self.is_configured(),
-            "smtp_host": config["smtp_host"],
-            "smtp_port": config["smtp_port"],
-            "smtp_user": config["smtp_user"][:3] + "***" if config["smtp_user"] else "(not set)",
-            "smtp_password_set": bool(config["smtp_password"]),
-            "smtp_password_length": len(config["smtp_password"]) if config["smtp_password"] else 0,
-            "from_email": config["from_email"],
+            "provider": "MailerSend",
+            "api_token_set": bool(config["api_token"]),
+            "api_token_preview": config["api_token"][:10] + "***" if config["api_token"] else "(not set)",
+            "from_email": config["from_email"] if config["from_email"] else "(not set)",
             "from_name": config["from_name"]
         }
     
     def test_connection(self) -> Tuple[bool, str]:
-        """Test SMTP connection without sending an email."""
+        """Test MailerSend API connection by validating credentials."""
         if not self.is_configured():
-            return False, "Email service not configured. Set SMTP_USER and SMTP_PASSWORD environment variables."
+            return False, "Email service not configured. Set MAILERSEND_API_TOKEN and MAILERSEND_FROM_EMAIL environment variables."
         
         config = self._get_config()
         try:
-            logger.info(f"Testing SMTP connection to {config['smtp_host']}:{config['smtp_port']}")
-            with smtplib.SMTP(config["smtp_host"], config["smtp_port"], timeout=10) as server:
-                server.set_debuglevel(1)  # Enable debug output
-                logger.info("Starting TLS...")
-                server.starttls()
-                logger.info(f"Logging in as {config['smtp_user']}...")
-                server.login(config["smtp_user"], config["smtp_password"])
-                logger.info("Login successful!")
-                return True, "SMTP connection and authentication successful"
-        except smtplib.SMTPAuthenticationError as e:
-            error_msg = f"Authentication failed: {e.smtp_code} - {e.smtp_error.decode() if isinstance(e.smtp_error, bytes) else e.smtp_error}"
+            # Test by checking account info via API
+            logger.info("Testing MailerSend API connection...")
+            with httpx.Client(timeout=10) as client:
+                response = client.get(
+                    "https://api.mailersend.com/v1/api-quota",
+                    headers={
+                        "Authorization": f"Bearer {config['api_token']}",
+                        "Content-Type": "application/json"
+                    }
+                )
+                
+                if response.status_code == 200:
+                    logger.info("MailerSend API connection successful!")
+                    return True, "MailerSend API connection successful"
+                elif response.status_code == 401:
+                    return False, "MailerSend API authentication failed - invalid API token"
+                else:
+                    return False, f"MailerSend API error: {response.status_code} - {response.text}"
+                    
+        except httpx.TimeoutException:
+            error_msg = "Connection timeout - MailerSend API took too long to respond"
             logger.error(error_msg)
             return False, error_msg
-        except smtplib.SMTPException as e:
-            error_msg = f"SMTP error: {str(e)}"
+        except httpx.RequestError as e:
+            error_msg = f"Connection error: {str(e)}"
             logger.error(error_msg)
             return False, error_msg
         except Exception as e:
-            error_msg = f"Connection error: {str(e)}"
+            error_msg = f"Unexpected error: {type(e).__name__}: {str(e)}"
             logger.error(error_msg)
             return False, error_msg
     
@@ -109,7 +102,7 @@ class EmailService:
         body_text: Optional[str] = None
     ) -> Tuple[bool, str]:
         """
-        Send an email.
+        Send an email via MailerSend API.
         
         Returns:
             Tuple of (success: bool, message: str)
@@ -118,55 +111,71 @@ class EmailService:
             return False, "No recipient email provided"
         
         if not self.is_configured():
-            logger.warning("Email service not configured - SMTP credentials missing")
-            return False, "Email service not configured. Set SMTP_USER and SMTP_PASSWORD environment variables."
+            logger.warning("Email service not configured - MailerSend credentials missing")
+            return False, "Email service not configured. Set MAILERSEND_API_TOKEN and MAILERSEND_FROM_EMAIL environment variables."
         
         config = self._get_config()
-        logger.info(f"Attempting to send email to {to_email}")
-        logger.info(f"SMTP Config: host={config['smtp_host']}, port={config['smtp_port']}, user={config['smtp_user'][:3]}***")
+        logger.info(f"Attempting to send email to {to_email} via MailerSend")
         
         try:
-            # Create message
-            msg = MIMEMultipart("alternative")
-            msg["Subject"] = subject
-            msg["From"] = f"{config['from_name']} <{config['from_email']}>"
-            msg["To"] = to_email
+            # Build the request payload
+            payload = {
+                "from": {
+                    "email": config["from_email"],
+                    "name": config["from_name"]
+                },
+                "to": [
+                    {"email": to_email}
+                ],
+                "subject": subject,
+                "html": body_html
+            }
             
-            # Add text and HTML parts
+            # Add plain text version if provided
             if body_text:
-                part1 = MIMEText(body_text, "plain")
-                msg.attach(part1)
+                payload["text"] = body_text
             
-            part2 = MIMEText(body_html, "html")
-            msg.attach(part2)
-            
-            # Send email with timeout
-            logger.info(f"Connecting to SMTP server {config['smtp_host']}:{config['smtp_port']}...")
-            with smtplib.SMTP(config["smtp_host"], config["smtp_port"], timeout=30) as server:
-                logger.info("Connected. Starting TLS...")
-                server.starttls()
-                logger.info(f"TLS started. Logging in as {config['smtp_user']}...")
-                server.login(config["smtp_user"], config["smtp_password"])
-                logger.info(f"Logged in. Sending email to {to_email}...")
-                server.sendmail(config["from_email"], to_email, msg.as_string())
-                logger.info(f"Email sent successfully to {to_email}")
-            
-            return True, "Email sent successfully"
-            
-        except smtplib.SMTPAuthenticationError as e:
-            error_msg = f"Authentication failed: {e.smtp_code} - {e.smtp_error.decode() if isinstance(e.smtp_error, bytes) else e.smtp_error}"
-            logger.error(f"SMTP authentication failed: {error_msg}")
-            return False, f"Email authentication failed: {error_msg}"
-        except smtplib.SMTPRecipientsRefused as e:
-            error_msg = f"Recipient refused: {to_email}"
+            # Send via MailerSend API
+            logger.info("Sending email via MailerSend API...")
+            with httpx.Client(timeout=30) as client:
+                response = client.post(
+                    MAILERSEND_API_URL,
+                    json=payload,
+                    headers={
+                        "Authorization": f"Bearer {config['api_token']}",
+                        "Content-Type": "application/json",
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                )
+                
+                # MailerSend returns 202 Accepted on success
+                if response.status_code == 202:
+                    logger.info(f"Email sent successfully to {to_email}")
+                    return True, "Email sent successfully"
+                elif response.status_code == 401:
+                    error_msg = "MailerSend API authentication failed - invalid API token"
+                    logger.error(error_msg)
+                    return False, error_msg
+                elif response.status_code == 422:
+                    # Validation error - parse the response for details
+                    try:
+                        error_data = response.json()
+                        error_msg = f"Validation error: {error_data.get('message', response.text)}"
+                    except:
+                        error_msg = f"Validation error: {response.text}"
+                    logger.error(error_msg)
+                    return False, error_msg
+                else:
+                    error_msg = f"MailerSend API error: {response.status_code} - {response.text}"
+                    logger.error(error_msg)
+                    return False, error_msg
+                    
+        except httpx.TimeoutException:
+            error_msg = "Connection timeout - MailerSend API took too long to respond"
             logger.error(error_msg)
             return False, error_msg
-        except smtplib.SMTPSenderRefused as e:
-            error_msg = f"Sender refused: {config['from_email']}"
-            logger.error(error_msg)
-            return False, error_msg
-        except smtplib.SMTPException as e:
-            error_msg = f"SMTP error: {str(e)}"
+        except httpx.RequestError as e:
+            error_msg = f"Network error: {str(e)}"
             logger.error(error_msg)
             return False, error_msg
         except Exception as e:
