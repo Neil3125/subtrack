@@ -60,6 +60,50 @@ def send_test_email(to_email: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=message)
 
 
+@router.get("/preview/{subscription_id}")
+def preview_renewal_notice(
+    subscription_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Preview a renewal notice email for a specific subscription (without sending).
+    Returns the HTML that would be sent.
+    """
+    # Get subscription with customer
+    subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
+    if not subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    
+    customer = subscription.customer
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found for this subscription")
+    
+    # Generate the preview
+    preview_html = email_service.generate_renewal_notice_html(
+        customer_name=customer.name,
+        subscription_vendor=subscription.vendor_name,
+        subscription_plan=subscription.plan_name,
+        renewal_date=subscription.next_renewal_date,
+        cost=subscription.cost,
+        currency=subscription.currency,
+        days_until_renewal=subscription.days_until_renewal()
+    )
+    
+    return {
+        "subscription_id": subscription_id,
+        "customer_name": customer.name,
+        "customer_email": customer.email,
+        "vendor": subscription.vendor_name,
+        "plan": subscription.plan_name,
+        "renewal_date": subscription.next_renewal_date.isoformat(),
+        "days_until_renewal": subscription.days_until_renewal(),
+        "cost": subscription.cost,
+        "currency": subscription.currency,
+        "email_configured": email_service.is_configured(),
+        "preview_html": preview_html
+    }
+
+
 @router.post("/renewal-notice/{subscription_id}")
 def send_renewal_notice(
     subscription_id: int,

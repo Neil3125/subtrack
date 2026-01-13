@@ -14,17 +14,49 @@ class EmailService:
     """Service for sending email notifications."""
     
     def __init__(self):
-        """Initialize email service with environment configuration."""
-        self.smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-        self.smtp_port = int(os.environ.get("SMTP_PORT", "587"))
-        self.smtp_user = os.environ.get("SMTP_USER", "")
-        self.smtp_password = os.environ.get("SMTP_PASSWORD", "")
-        self.from_email = os.environ.get("SMTP_FROM_EMAIL", self.smtp_user)
-        self.from_name = os.environ.get("SMTP_FROM_NAME", "SubTrack Notifications")
+        """Initialize email service - config is loaded fresh each time."""
+        pass
+    
+    def _get_config(self):
+        """Get SMTP configuration from environment (fresh read each time)."""
+        smtp_user = os.environ.get("SMTP_USER", "")
+        return {
+            "smtp_host": os.environ.get("SMTP_HOST", "smtp.gmail.com"),
+            "smtp_port": int(os.environ.get("SMTP_PORT", "587")),
+            "smtp_user": smtp_user,
+            "smtp_password": os.environ.get("SMTP_PASSWORD", ""),
+            "from_email": os.environ.get("SMTP_FROM_EMAIL", smtp_user),
+            "from_name": os.environ.get("SMTP_FROM_NAME", "SubTrack Notifications")
+        }
+    
+    @property
+    def smtp_host(self):
+        return self._get_config()["smtp_host"]
+    
+    @property
+    def smtp_port(self):
+        return self._get_config()["smtp_port"]
+    
+    @property
+    def smtp_user(self):
+        return self._get_config()["smtp_user"]
+    
+    @property
+    def smtp_password(self):
+        return self._get_config()["smtp_password"]
+    
+    @property
+    def from_email(self):
+        return self._get_config()["from_email"]
+    
+    @property
+    def from_name(self):
+        return self._get_config()["from_name"]
         
     def is_configured(self) -> bool:
         """Check if email service is properly configured."""
-        return bool(self.smtp_user and self.smtp_password)
+        config = self._get_config()
+        return bool(config["smtp_user"] and config["smtp_password"])
     
     def send_email(
         self,
@@ -80,26 +112,22 @@ class EmailService:
             logger.error(f"Unexpected error sending email: {e}")
             return False, f"Unexpected error: {str(e)}"
     
-    def send_renewal_notice(
+    def generate_renewal_notice_html(
         self,
         customer_name: str,
-        customer_email: str,
         subscription_vendor: str,
         subscription_plan: Optional[str],
         renewal_date: date,
         cost: float,
         currency: str,
         days_until_renewal: int
-    ) -> Tuple[bool, str]:
+    ) -> str:
         """
-        Send a subscription renewal notice email.
+        Generate HTML for a renewal notice email (for preview or sending).
         
         Returns:
-            Tuple of (success: bool, message: str)
+            HTML string for the email body
         """
-        if not customer_email:
-            return False, f"Customer '{customer_name}' has no email address"
-        
         # Format the renewal date
         renewal_date_str = renewal_date.strftime("%B %d, %Y")
         
@@ -119,9 +147,7 @@ class EmailService:
         
         plan_info = f" ({subscription_plan})" if subscription_plan else ""
         
-        subject = f"[{urgency}] Subscription Renewal: {subscription_vendor}{plan_info} - {renewal_date_str}"
-        
-        body_html = f"""
+        return f"""
         <!DOCTYPE html>
         <html>
         <head>
@@ -177,7 +203,55 @@ class EmailService:
         </body>
         </html>
         """
+    
+    def send_renewal_notice(
+        self,
+        customer_name: str,
+        customer_email: str,
+        subscription_vendor: str,
+        subscription_plan: Optional[str],
+        renewal_date: date,
+        cost: float,
+        currency: str,
+        days_until_renewal: int
+    ) -> Tuple[bool, str]:
+        """
+        Send a subscription renewal notice email.
         
+        Returns:
+            Tuple of (success: bool, message: str)
+        """
+        if not customer_email:
+            return False, f"Customer '{customer_name}' has no email address"
+        
+        # Generate HTML body
+        body_html = self.generate_renewal_notice_html(
+            customer_name=customer_name,
+            subscription_vendor=subscription_vendor,
+            subscription_plan=subscription_plan,
+            renewal_date=renewal_date,
+            cost=cost,
+            currency=currency,
+            days_until_renewal=days_until_renewal
+        )
+        
+        # Format the renewal date for subject
+        renewal_date_str = renewal_date.strftime("%B %d, %Y")
+        
+        # Determine urgency for subject
+        if days_until_renewal <= 0:
+            urgency = "OVERDUE"
+        elif days_until_renewal <= 7:
+            urgency = "URGENT"
+        elif days_until_renewal <= 14:
+            urgency = "SOON"
+        else:
+            urgency = "UPCOMING"
+        
+        plan_info = f" ({subscription_plan})" if subscription_plan else ""
+        subject = f"[{urgency}] Subscription Renewal: {subscription_vendor}{plan_info} - {renewal_date_str}"
+        
+        # Plain text version
         body_text = f"""
 Subscription Renewal Notice - {urgency}
 

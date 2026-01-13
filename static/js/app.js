@@ -917,19 +917,22 @@ window.loadEditData = function(type, id) {
         loadCustomerSubscriptions(id);
       }
 
-      // Special handling: subscription edit needs customer dropdown populated based on category
+      // Special handling: subscription edit needs customer dropdown populated
       if (type === 'subscription') {
         const categoryField = form.querySelector('select[name="category_id"]');
         const customerField = form.querySelector('select[name="customer_id"]');
-        const categoryId = categoryField ? categoryField.value : null;
         const customerId = data.customer_id;
         const saveBtn = form.querySelector('button[type="submit"]');
 
-        // Function to load customers and update save button state
-        const loadCustomersForCategory = (catId, selectedCustId) => {
-          const url = selectedCustId 
-            ? `/partials/customer-options?category_id=${catId}&selected_customer_id=${selectedCustId}`
-            : `/partials/customer-options?category_id=${catId}`;
+        // Function to load customers - show ALL customers grouped by category
+        const loadCustomers = (selectedCustId, filterByCategoryId = null) => {
+          let url = `/partials/customer-options?show_all=true`;
+          if (selectedCustId) {
+            url += `&selected_customer_id=${selectedCustId}`;
+          }
+          if (filterByCategoryId) {
+            url += `&category_id=${filterByCategoryId}`;
+          }
           
           fetch(url)
             .then(response => response.text())
@@ -944,7 +947,7 @@ window.loadEditData = function(type, id) {
                 // Disable save button if no customers available
                 if (saveBtn) {
                   saveBtn.disabled = true;
-                  saveBtn.title = 'No customers available in this category';
+                  saveBtn.title = 'No customers available';
                 }
               } else {
                 // Re-enable save button if customers are available
@@ -960,15 +963,15 @@ window.loadEditData = function(type, id) {
             });
         };
 
-        // Load customers for the current category with preselection
-        if (categoryId) {
-          loadCustomersForCategory(categoryId, customerId);
-        }
+        // Load ALL customers with preselection of current customer
+        loadCustomers(customerId);
 
-        // Listen for category changes to reload customers
+        // Listen for category changes to filter customers (optional)
         if (categoryField && !categoryField.dataset.customerHooked) {
           categoryField.addEventListener('change', function() {
-            loadCustomersForCategory(this.value, null);
+            // When category changes, still show all customers but could filter
+            // For now, keep showing all to allow reassigning to any customer
+            loadCustomers(null);
           });
           categoryField.dataset.customerHooked = 'true';
         }
@@ -2285,6 +2288,93 @@ window.loadAIConfig = function() {
 };
 
 // ==================== Email Notification Functions ====================
+
+// Preview renewal notice before sending
+window.previewRenewalNotice = function(subscriptionId) {
+  showToast('Loading preview...', 'info');
+  
+  fetch(`/api/email/preview/${subscriptionId}`)
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => {
+          throw new Error(err.detail || 'Failed to load preview');
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Open preview in a new window
+      const previewWindow = window.open('', 'Email Preview', 'width=700,height=800,scrollbars=yes');
+      previewWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Email Preview - ${data.vendor}</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f1f5f9; }
+            .preview-header { background: #1e293b; color: white; padding: 20px; margin: -20px -20px 20px -20px; }
+            .preview-header h2 { margin: 0 0 10px 0; }
+            .preview-meta { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 14px; }
+            .preview-meta dt { color: #94a3b8; }
+            .preview-meta dd { margin: 0; }
+            .preview-actions { margin: 20px 0; padding: 15px; background: ${data.email_configured ? '#dcfce7' : '#fef3c7'}; border-radius: 8px; }
+            .preview-actions p { margin: 0 0 10px 0; font-size: 14px; }
+            .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin-right: 10px; }
+            .btn-primary { background: #667eea; color: white; }
+            .btn-primary:hover { background: #5a67d8; }
+            .btn-secondary { background: #e2e8f0; color: #475569; }
+            .email-frame { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: white; }
+            .email-frame iframe { width: 100%; height: 600px; border: none; }
+          </style>
+        </head>
+        <body>
+          <div class="preview-header">
+            <h2>📧 Email Preview</h2>
+            <dl class="preview-meta">
+              <dt>To:</dt>
+              <dd>${data.customer_email || '(No email - will need to specify)'}</dd>
+              <dt>Customer:</dt>
+              <dd>${data.customer_name}</dd>
+              <dt>Subscription:</dt>
+              <dd>${data.vendor}${data.plan ? ' (' + data.plan + ')' : ''}</dd>
+              <dt>Renewal:</dt>
+              <dd>${data.renewal_date} (${data.days_until_renewal} days)</dd>
+              <dt>Amount:</dt>
+              <dd>${data.currency} ${data.cost.toFixed(2)}</dd>
+            </dl>
+          </div>
+          
+          <div class="preview-actions">
+            <p>${data.email_configured 
+              ? '✅ Email service is configured and ready to send.' 
+              : '⚠️ Email service not configured. Set SMTP_USER and SMTP_PASSWORD environment variables.'}</p>
+            ${data.customer_email 
+              ? '<button class="btn btn-primary" onclick="window.opener.sendRenewalNotice(' + subscriptionId + '); window.close();">Send This Email</button>'
+              : '<button class="btn btn-primary" onclick="window.opener.sendRenewalNoticeWithEmail(' + subscriptionId + '); window.close();">Send to Custom Email</button>'}
+            <button class="btn btn-secondary" onclick="window.close();">Close Preview</button>
+          </div>
+          
+          <div class="email-frame">
+            <iframe id="email-content"></iframe>
+          </div>
+          
+          <script>
+            // Write HTML content to iframe
+            const iframe = document.getElementById('email-content');
+            const doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(${JSON.stringify(data.preview_html)});
+            doc.close();
+          </script>
+        </body>
+        </html>
+      `);
+    })
+    .catch(error => {
+      showToast('Error: ' + error.message, 'error');
+      console.error('Preview error:', error);
+    });
+};
 
 // Send renewal notice for a subscription
 window.sendRenewalNotice = function(subscriptionId) {

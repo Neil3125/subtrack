@@ -552,25 +552,50 @@ async def customer_options_partial(
     request: Request,
     category_id: int = None,
     selected_customer_id: int = None,
+    show_all: bool = False,
     db: Session = Depends(get_db)
 ):
-    """Render customer options for dropdown - used in subscription modals."""
-    query = db.query(Customer)
+    """Render customer options for dropdown - used in subscription modals.
     
-    # Filter by category if provided
-    if category_id:
-        query = query.filter(Customer.category_id == category_id)
-    
-    customers = query.order_by(Customer.name).all()
-    
+    Args:
+        category_id: Filter customers by category (optional)
+        selected_customer_id: Pre-select this customer
+        show_all: If True, show all customers grouped by category
+    """
     # Build HTML options
     html = '<option value="">Select a customer</option>'
     
-    if not customers:
-        html += '<option value="" disabled>No customers in this category — create one first</option>'
+    if show_all or not category_id:
+        # Show ALL customers, grouped by category for better navigation
+        categories = db.query(Category).order_by(Category.name).all()
+        
+        has_any_customers = False
+        for cat in categories:
+            cat_customers = db.query(Customer).filter(
+                Customer.category_id == cat.id
+            ).order_by(Customer.name).all()
+            
+            if cat_customers:
+                has_any_customers = True
+                html += f'<optgroup label="{cat.name}">'
+                for customer in cat_customers:
+                    selected = 'selected' if selected_customer_id and customer.id == selected_customer_id else ''
+                    html += f'<option value="{customer.id}" {selected}>{customer.name}</option>'
+                html += '</optgroup>'
+        
+        if not has_any_customers:
+            html += '<option value="" disabled>No customers found — create one first</option>'
     else:
-        for customer in customers:
-            selected = 'selected' if selected_customer_id and customer.id == selected_customer_id else ''
-            html += f'<option value="{customer.id}" {selected}>{customer.name}</option>'
+        # Filter by category
+        customers = db.query(Customer).filter(
+            Customer.category_id == category_id
+        ).order_by(Customer.name).all()
+        
+        if not customers:
+            html += '<option value="" disabled>No customers in this category — create one first</option>'
+        else:
+            for customer in customers:
+                selected = 'selected' if selected_customer_id and customer.id == selected_customer_id else ''
+                html += f'<option value="{customer.id}" {selected}>{customer.name}</option>'
     
     return HTMLResponse(content=html)

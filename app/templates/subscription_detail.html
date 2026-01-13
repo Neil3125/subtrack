@@ -127,12 +127,18 @@
                 <div class="flex flex-col gap-2">
                     {% if subscription.customer and subscription.customer.email %}
                     <p class="text-sm text-secondary mb-2">Send to: {{ subscription.customer.email }}</p>
+                    {% else %}
+                    <p class="text-sm text-warning mb-2">⚠️ Customer has no email address</p>
+                    {% endif %}
+                    <button class="btn btn-sm btn-secondary" onclick="previewRenewalNotice({{ subscription.id }})">
+                        👁️ Preview Email
+                    </button>
+                    {% if subscription.customer and subscription.customer.email %}
                     <button class="btn btn-sm btn-primary" onclick="sendRenewalNotice({{ subscription.id }})">
                         📧 Send Renewal Notice
                     </button>
                     {% else %}
-                    <p class="text-sm text-warning mb-2">⚠️ Customer has no email address</p>
-                    <button class="btn btn-sm btn-secondary" onclick="sendRenewalNoticeWithEmail({{ subscription.id }})">
+                    <button class="btn btn-sm btn-primary" onclick="sendRenewalNoticeWithEmail({{ subscription.id }})">
                         📧 Send to Custom Email
                     </button>
                     {% endif %}

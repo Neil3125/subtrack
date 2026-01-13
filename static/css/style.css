@@ -570,6 +570,39 @@ a:hover {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* Scrollable select dropdown for long lists */
+.form-select {
+  max-height: 200px;
+  overflow-y: auto;
+  cursor: pointer;
+}
+
+/* For select elements, we need to set size attribute via JS for scrollable behavior */
+/* But we can style them better here */
+.form-select option {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.form-select option:hover,
+.form-select option:focus {
+  background-color: var(--color-primary-light, #e0e7ff);
+}
+
+/* Customer select specific styling - taller for better visibility */
+#subscription-customer-select,
+#edit-subscription-customer-select,
+select[name="customer_id"] {
+  min-height: 42px;
+}
+
+/* When expanded (with size attribute), make it scrollable */
+.form-select[size] {
+  height: auto;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
