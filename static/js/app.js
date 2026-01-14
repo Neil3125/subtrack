@@ -1084,16 +1084,233 @@ window.openSubscriptionModalForCategory = function(categoryId) {
 window.openSubscriptionModalForCustomer = function(categoryId, customerId, customerName) {
   openModal('subscriptionModal');
   setTimeout(() => {
-    const categorySelect = document.querySelector('#subscriptionModal select[name="category_id"]');
-    
-    // Set category
-    if (categorySelect && categoryId) {
-      categorySelect.value = categoryId;
+    // Pre-select category in multi-select
+    if (categoryId) {
+      preselectSubscriptionCategories([categoryId]);
     }
     
     // Load all customers and pre-select the current customer
     loadCustomersForSubscription(categoryId, customerId, customerName);
+    
+    // Show context indicator
+    if (customerId && customerName) {
+      showCustomerContextIndicator(customerName);
+      // Load customer suggestions
+      loadCustomerSuggestions(customerId);
+    }
   }, 100);
+};
+
+// Show context indicator when customer is pre-selected
+function showCustomerContextIndicator(customerName) {
+  const indicator = document.getElementById('customer-context-indicator');
+  if (indicator) {
+    indicator.style.display = 'flex';
+    const textEl = indicator.querySelector('.context-text');
+    if (textEl) {
+      textEl.textContent = `Creating subscription for: ${customerName}`;
+    }
+  }
+}
+
+// Clear customer pre-selection and allow changing
+window.clearCustomerPreselection = function() {
+  const indicator = document.getElementById('customer-context-indicator');
+  if (indicator) {
+    indicator.style.display = 'none';
+  }
+  
+  // Enable dropdown interaction
+  const trigger = document.getElementById('subscription-customer-trigger');
+  if (trigger) {
+    trigger.classList.remove('locked');
+  }
+  
+  // Hide suggestions panel
+  const suggestionsPanel = document.getElementById('customer-suggestions-panel');
+  if (suggestionsPanel) {
+    suggestionsPanel.style.display = 'none';
+  }
+};
+
+// Load customer suggestions based on their existing data
+window.loadCustomerSuggestions = function(customerId) {
+  if (!customerId) return;
+  
+  const suggestionsPanel = document.getElementById('customer-suggestions-panel');
+  const suggestionsContent = document.getElementById('customer-suggestions-content');
+  
+  if (!suggestionsPanel || !suggestionsContent) return;
+  
+  // Fetch customer's existing subscriptions to suggest categories/vendors
+  fetch(`/api/subscriptions?customer_id=${customerId}`)
+    .then(response => response.json())
+    .then(subscriptions => {
+      if (!subscriptions || subscriptions.length === 0) {
+        suggestionsPanel.style.display = 'none';
+        return;
+      }
+      
+      // Extract unique categories and vendors
+      const categories = {};
+      const vendors = {};
+      
+      subscriptions.forEach(sub => {
+        if (sub.category_id) {
+          categories[sub.category_id] = sub.category_name || 'Unknown';
+        }
+        if (sub.vendor_name) {
+          vendors[sub.vendor_name] = (vendors[sub.vendor_name] || 0) + 1;
+        }
+      });
+      
+      let html = '';
+      
+      // Category suggestions
+      const categoryIds = Object.keys(categories);
+      if (categoryIds.length > 0) {
+        html += '<div class="suggestion-section"><strong style="font-size: 12px; color: var(--color-text-secondary);">📁 Customer\'s Categories:</strong></div>';
+        categoryIds.forEach(catId => {
+          html += `<div class="suggestion-item" onclick="applyCategorySuggestion('${catId}')">
+            <span class="suggestion-label">${categories[catId]}</span>
+            <span class="suggestion-action">+ Add</span>
+          </div>`;
+        });
+      }
+      
+      // Vendor suggestions (top 3 most used)
+      const sortedVendors = Object.entries(vendors).sort((a, b) => b[1] - a[1]).slice(0, 3);
+      if (sortedVendors.length > 0) {
+        html += '<div class="suggestion-section" style="margin-top: 8px;"><strong style="font-size: 12px; color: var(--color-text-secondary);">🏢 Frequently Used Vendors:</strong></div>';
+        sortedVendors.forEach(([vendor, count]) => {
+          html += `<div class="suggestion-item" onclick="applyVendorSuggestion('${vendor.replace(/'/g, "\\'")}')">
+            <span class="suggestion-label">${vendor} <span style="color: var(--color-text-tertiary);">(${count}x)</span></span>
+            <span class="suggestion-action">+ Use</span>
+          </div>`;
+        });
+      }
+      
+      if (html) {
+        suggestionsContent.innerHTML = html;
+        suggestionsPanel.style.display = 'block';
+      } else {
+        suggestionsPanel.style.display = 'none';
+      }
+    })
+    .catch(error => {
+      console.error('Error loading customer suggestions:', error);
+      suggestionsPanel.style.display = 'none';
+    });
+};
+
+// Apply category suggestion
+window.applyCategorySuggestion = function(categoryId) {
+  preselectSubscriptionCategories([parseInt(categoryId)]);
+};
+
+// Apply vendor suggestion
+window.applyVendorSuggestion = function(vendorName) {
+  const vendorInput = document.querySelector('#subscriptionModal input[name="vendor_name"]');
+  if (vendorInput) {
+    vendorInput.value = vendorName;
+    vendorInput.focus();
+  }
+};
+
+// ==================== Subscription Category Multi-Select ====================
+
+// Toggle subscription category item selection
+window.toggleSubscriptionCategoryItem = function(itemElement) {
+  itemElement.classList.toggle('selected');
+  updateSubscriptionCategoryDisplay();
+};
+
+// Update subscription category display
+function updateSubscriptionCategoryDisplay() {
+  const wrapper = document.getElementById('subscription-category-multiselect');
+  if (!wrapper) return;
+  
+  const trigger = wrapper.querySelector('.multi-select-trigger');
+  const hiddenInputIds = document.getElementById('subscription-category-ids');
+  const hiddenInputId = document.getElementById('subscription-category-id');
+  const selectedItems = wrapper.querySelectorAll('.multi-select-item.selected');
+  
+  // Collect selected IDs and names
+  const selectedIds = [];
+  const selectedNames = [];
+  
+  selectedItems.forEach(item => {
+    selectedIds.push(item.dataset.id);
+    selectedNames.push(item.dataset.name);
+  });
+  
+  // Update hidden inputs
+  if (hiddenInputIds) {
+    hiddenInputIds.value = selectedIds.join(',');
+  }
+  // Set first category as the primary (for backward compatibility)
+  if (hiddenInputId) {
+    hiddenInputId.value = selectedIds.length > 0 ? selectedIds[0] : '';
+  }
+  
+  // Update trigger display
+  if (trigger) {
+    trigger.innerHTML = '';
+    
+    if (selectedNames.length === 0) {
+      const placeholder = document.createElement('span');
+      placeholder.className = 'placeholder';
+      placeholder.textContent = 'Select categories...';
+      trigger.appendChild(placeholder);
+    } else {
+      selectedNames.forEach((name, index) => {
+        const tag = document.createElement('span');
+        tag.className = 'multi-select-tag';
+        tag.innerHTML = `${name} <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeSubscriptionCategory('${selectedIds[index]}')">&times;</span>`;
+        trigger.appendChild(tag);
+      });
+    }
+    
+    // Add arrow
+    const arrow = document.createElement('span');
+    arrow.className = 'arrow';
+    arrow.textContent = '▼';
+    trigger.appendChild(arrow);
+  }
+}
+
+// Remove subscription category
+window.removeSubscriptionCategory = function(categoryId) {
+  const wrapper = document.getElementById('subscription-category-multiselect');
+  if (!wrapper) return;
+  
+  const item = wrapper.querySelector(`.multi-select-item[data-id="${categoryId}"]`);
+  if (item) {
+    item.classList.remove('selected');
+    updateSubscriptionCategoryDisplay();
+  }
+};
+
+// Pre-select subscription categories
+window.preselectSubscriptionCategories = function(categoryIds) {
+  const wrapper = document.getElementById('subscription-category-multiselect');
+  if (!wrapper) return;
+  
+  // Clear all selections first
+  wrapper.querySelectorAll('.multi-select-item').forEach(item => {
+    item.classList.remove('selected');
+  });
+  
+  // Select the specified categories
+  const ids = Array.isArray(categoryIds) ? categoryIds : [categoryIds];
+  ids.forEach(id => {
+    const item = wrapper.querySelector(`.multi-select-item[data-id="${id}"]`);
+    if (item) {
+      item.classList.add('selected');
+    }
+  });
+  
+  updateSubscriptionCategoryDisplay();
 };
 
 // ==================== Custom Customer Dropdown for Subscription Modal ====================
@@ -1108,8 +1325,18 @@ window.loadCustomersForSubscription = function(categoryId, preSelectedId = null,
   const selectedText = trigger ? trigger.querySelector('.selected-text') : null;
   const countMessage = document.getElementById('customer-count-message');
   
-  // Show loading state
-  if (listContainer) listContainer.innerHTML = '<div class="customer-dropdown-empty">Loading customers...</div>';
+  // Show loading state with spinner
+  if (listContainer) {
+    listContainer.innerHTML = `
+      <div class="customer-dropdown-loading">
+        <span class="loading-spinner-small"></span>
+        <span>Loading customers...</span>
+      </div>
+    `;
+  }
+  if (countMessage) {
+    countMessage.innerHTML = '<span class="loading-indicator">⏳ Loading customers...</span>';
+  }
   if (selectedText && !preSelectedName) {
     selectedText.textContent = 'Loading...';
     selectedText.classList.add('placeholder');
@@ -1135,12 +1362,21 @@ window.loadCustomersForSubscription = function(categoryId, preSelectedId = null,
       subscriptionCustomersCache = customers;
       
       if (!customers || customers.length === 0) {
-        if (listContainer) listContainer.innerHTML = '<div class="customer-dropdown-empty">No customers found. Create a customer first.</div>';
+        if (listContainer) {
+          listContainer.innerHTML = `
+            <div class="customer-dropdown-empty">
+              <div style="margin-bottom: 8px;">📭 No customers found</div>
+              <a href="/customers" class="btn btn-sm btn-primary" style="display: inline-block;">+ Create Customer First</a>
+            </div>
+          `;
+        }
         if (selectedText && !preSelectedName) {
           selectedText.textContent = 'No customers available';
           selectedText.classList.add('placeholder');
         }
-        if (countMessage) countMessage.textContent = 'No customers found';
+        if (countMessage) {
+          countMessage.innerHTML = '⚠️ <a href="/customers" style="color: var(--color-primary);">Create a customer first</a>';
+        }
         return;
       }
       
@@ -1187,10 +1423,20 @@ window.loadCustomersForSubscription = function(categoryId, preSelectedId = null,
     })
     .catch(error => {
       console.error('Error loading customers:', error);
-      if (listContainer) listContainer.innerHTML = '<div class="customer-dropdown-empty">Error loading customers. Please try again.</div>';
+      if (listContainer) {
+        listContainer.innerHTML = `
+          <div class="customer-dropdown-empty">
+            <div style="color: var(--color-danger); margin-bottom: 8px;">❌ Error loading customers</div>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="loadCustomersForSubscription(null, null, null)">🔄 Retry</button>
+          </div>
+        `;
+      }
       if (selectedText) {
         selectedText.textContent = 'Error loading customers';
         selectedText.classList.add('placeholder');
+      }
+      if (countMessage) {
+        countMessage.innerHTML = '<span style="color: var(--color-danger);">❌ Failed to load - <a href="#" onclick="loadCustomersForSubscription(null, null, null); return false;" style="color: var(--color-primary);">Retry</a></span>';
       }
     });
 };
@@ -1771,14 +2017,45 @@ window.createCustomer = function(formData) {
 
 // Create Subscription
 window.createSubscription = function(formData) {
+  // Validation
+  const validationErrors = [];
+  
+  if (!formData.customer_id) {
+    validationErrors.push('Please select a customer');
+  }
+  
+  // Handle category_ids (multi-select) or category_id (single select)
+  let categoryId = null;
+  if (formData.category_ids && formData.category_ids.trim()) {
+    const categoryIds = formData.category_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    if (categoryIds.length > 0) {
+      categoryId = categoryIds[0]; // Use first category as primary
+    }
+  } else if (formData.category_id) {
+    categoryId = parseInt(formData.category_id);
+  }
+  
+  if (!categoryId) {
+    validationErrors.push('Please select at least one category');
+  }
+  
+  if (!formData.vendor_name || !formData.vendor_name.trim()) {
+    validationErrors.push('Vendor name is required');
+  }
+  
+  if (validationErrors.length > 0) {
+    showToast('Validation Error: ' + validationErrors.join('; '), 'error');
+    return;
+  }
+  
   fetch('/api/subscriptions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      vendor_name: formData.vendor_name,
-      plan_name: formData.plan_name || null,
+      vendor_name: formData.vendor_name.trim(),
+      plan_name: formData.plan_name ? formData.plan_name.trim() : null,
       cost: parseFloat(formData.cost),
       currency: formData.currency || 'USD',
       billing_cycle: formData.billing_cycle,
@@ -1787,18 +2064,25 @@ window.createSubscription = function(formData) {
       status: formData.status || 'active',
       country: formData.country || null,
       customer_id: parseInt(formData.customer_id),
-      category_id: parseInt(formData.category_id),
-      notes: formData.notes || null
+      category_id: categoryId,
+      notes: formData.notes ? formData.notes.trim() : null
     })
   })
-  .then(response => response.json())
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => {
+        throw new Error(err.detail || 'Failed to create subscription');
+      });
+    }
+    return response.json();
+  })
   .then(data => {
     showToast('Subscription created successfully', 'success');
     closeAllModals();
     setTimeout(() => window.location.reload(), 500);
   })
   .catch(error => {
-    showToast('Error creating subscription', 'error');
+    showToast('Error: ' + (error.message || 'Failed to create subscription'), 'error');
     console.error('Error:', error);
   });
 };

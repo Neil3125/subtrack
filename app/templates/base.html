@@ -456,18 +456,19 @@
 
     <!-- Subscription Modal -->
     <div id="subscriptionModal" class="modal" style="display: none;">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 650px; max-height: 90vh; display: flex; flex-direction: column;">
             <div class="modal-header">
                 <h2 class="modal-title">Create Subscription</h2>
                 <button class="modal-close" onclick="closeModal('subscriptionModal')">×</button>
             </div>
             <form onsubmit="handleFormSubmit(event, createSubscription)">
-                <div class="modal-body">
-                    <div class="form-group">
+                <div class="modal-body" style="overflow-y: auto; flex: 1;">
+                    <!-- Customer Selection with Context Awareness -->
+                    <div class="form-group" id="subscription-customer-section">
                         <label class="form-label">Customer *</label>
                         <input type="hidden" name="customer_id" id="subscription-customer-id" required>
                         <div class="customer-dropdown-wrapper" id="subscription-customer-dropdown">
-                            <button type="button" class="customer-dropdown-trigger" onclick="toggleCustomerDropdown('subscription')">
+                            <button type="button" class="customer-dropdown-trigger" onclick="toggleCustomerDropdown('subscription')" id="subscription-customer-trigger">
                                 <span class="selected-text placeholder">Select a customer...</span>
                                 <span class="arrow">▼</span>
                             </button>
@@ -476,25 +477,53 @@
                                     <input type="text" placeholder="🔍 Search customers..." oninput="filterCustomerDropdown('subscription', this.value)">
                                 </div>
                                 <div class="customer-dropdown-list" id="subscription-customer-list">
-                                    <div class="customer-dropdown-empty">Loading customers...</div>
+                                    <div class="customer-dropdown-loading">
+                                        <span class="loading-spinner-small"></span>
+                                        <span>Loading customers...</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <input type="hidden" name="customer_id" id="subscription-customer-id" required>
-                        <small class="text-secondary" id="customer-count-message">Click to select a customer</small>
+                        <small class="text-secondary" id="customer-count-message">
+                            <span class="loading-indicator">⏳ Loading customers...</span>
+                        </small>
+                        <!-- Context indicator when customer is pre-selected -->
+                        <div id="customer-context-indicator" class="context-indicator" style="display: none;">
+                            <span class="context-icon">🔗</span>
+                            <span class="context-text">Customer pre-selected from current page</span>
+                            <button type="button" class="btn-text-link" onclick="clearCustomerPreselection()">Change</button>
+                        </div>
                     </div>
+                    
+                    <!-- Customer Suggestions Panel -->
+                    <div id="customer-suggestions-panel" class="suggestions-panel" style="display: none;">
+                        <div class="suggestions-header">
+                            <span class="suggestions-icon">💡</span>
+                            <span>Suggestions based on customer's existing data</span>
+                        </div>
+                        <div id="customer-suggestions-content"></div>
+                    </div>
+
+                    <!-- Category Multi-Select -->
                     <div class="form-group">
-                        <label class="form-label">Category *</label>
-                        <select 
-                            name="category_id" 
-                            id="subscription-category-select"
-                            class="form-select" 
-                            required>
-                            <option value="">Select a category</option>
-                            {% for category in categories|default([]) %}
-                            <option value="{{ category.id }}">{{ category.name }}</option>
-                            {% endfor %}
-                        </select>
+                        <label class="form-label">Categories *</label>
+                        <input type="hidden" name="category_ids" id="subscription-category-ids" value="">
+                        <input type="hidden" name="category_id" id="subscription-category-id" value="">
+                        <div class="multi-select-wrapper" id="subscription-category-multiselect">
+                            <div class="multi-select-trigger" onclick="toggleCategoryMultiSelect('subscription-category-multiselect')">
+                                <span class="placeholder">Select categories...</span>
+                                <span class="arrow">▼</span>
+                            </div>
+                            <div class="multi-select-menu">
+                                {% for category in categories|default([]) %}
+                                <div class="multi-select-item" data-id="{{ category.id }}" data-name="{{ category.name }}" onclick="toggleSubscriptionCategoryItem(this)">
+                                    <span class="checkbox"></span>
+                                    <span>{{ category.name }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <small class="text-secondary">Select one or more categories for this subscription</small>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Vendor Name *</label>

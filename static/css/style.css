@@ -1121,6 +1121,23 @@ select[name="customer_id"] {
   color: var(--color-text);
 }
 
+/* Modal content container - viewport constrained */
+.modal-content {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Modal footer - always visible at bottom */
+.modal-footer {
+  flex-shrink: 0;
+  background: var(--color-bg);
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+}
+
 /* Modal body - THIS IS THE SCROLLABLE PART */
 .modal-body {
   padding: var(--space-4) var(--space-5);
@@ -1128,6 +1145,7 @@ select[name="customer_id"] {
   overflow-x: hidden;
   flex: 1 1 auto;
   min-height: 0;
+  max-height: calc(90vh - 140px); /* Ensure content doesn't overflow viewport */
   max-height: calc(85vh - 140px); /* Account for header and footer */
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -2074,6 +2092,136 @@ select[name="customer_id"] {
   text-align: center;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+}
+
+/* Customer dropdown loading state */
+.customer-dropdown-loading {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.loading-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Context indicator for pre-selected items */
+.context-indicator {
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: linear-gradient(135deg, var(--color-primary-alpha), var(--color-bg-secondary));
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.context-indicator .context-icon {
+  font-size: 14px;
+}
+
+.context-indicator .context-text {
+  flex: 1;
+  color: var(--color-text-secondary);
+}
+
+.btn-text-link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  padding: 0;
+  text-decoration: underline;
+}
+
+.btn-text-link:hover {
+  color: var(--color-secondary);
+}
+
+/* Suggestions panel */
+.suggestions-panel {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  overflow: hidden;
+}
+
+.suggestions-header {
+  padding: var(--space-2) var(--space-3);
+  background: linear-gradient(135deg, var(--color-warning-alpha, rgba(245, 158, 11, 0.1)), var(--color-bg-secondary));
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-secondary);
+}
+
+.suggestions-header .suggestions-icon {
+  font-size: 16px;
+}
+
+#customer-suggestions-content {
+  padding: var(--space-3);
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.suggestion-item:hover {
+  border-color: var(--color-primary);
+  transform: translateX(2px);
+}
+
+.suggestion-item:last-child {
+  margin-bottom: 0;
+}
+
+.suggestion-item .suggestion-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.suggestion-item .suggestion-action {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+}
+
+/* Loading indicator styling */
+.loading-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-tertiary);
 }
 
 /* Multi-Select Category Dropdown */
