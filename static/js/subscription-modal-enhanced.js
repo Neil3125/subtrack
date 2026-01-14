@@ -96,9 +96,26 @@ window.toggleCustomerDropdown = function() {
     panel.style.display = 'block';
     wrapper.classList.add('open');
     
-    // Focus search input
+    // Ensure customer list is visible immediately
+    const listEl = document.getElementById('subscription-customer-list');
+    const loadingEl = document.getElementById('subscription-customer-loading');
+    
+    // If customers already loaded, show list immediately
+    if (subscriptionModalState.customers.length > 0 && listEl) {
+      listEl.style.display = 'block';
+      if (loadingEl) loadingEl.style.display = 'none';
+    }
+    
+    // Clear any previous search filter
     const searchInput = document.getElementById('subscription-customer-search');
     if (searchInput) {
+      searchInput.value = '';
+      // Show all customers
+      if (listEl) {
+        listEl.querySelectorAll('.dropdown-list-item').forEach(item => {
+          item.style.display = 'flex';
+        });
+      }
       setTimeout(() => searchInput.focus(), 100);
     }
   }
@@ -136,8 +153,8 @@ function loadEnhancedCustomers() {
   const emptyEl = document.getElementById('subscription-customer-empty');
   const statusText = document.getElementById('customer-status-text');
   
-  // Show loading
-  if (loadingEl) loadingEl.style.display = 'block';
+  // Show loading state
+  if (loadingEl) loadingEl.style.display = 'flex';
   if (listEl) listEl.style.display = 'none';
   if (emptyEl) emptyEl.style.display = 'none';
   if (statusText) statusText.textContent = 'Loading customers...';
@@ -152,9 +169,13 @@ function loadEnhancedCustomers() {
       if (loadingEl) loadingEl.style.display = 'none';
       
       if (customers.length === 0) {
-        if (emptyEl) emptyEl.style.display = 'block';
+        if (emptyEl) {
+          emptyEl.innerHTML = '<div class="empty-icon">👥</div><div>No customers yet</div><div style="font-size: 12px; margin-top: 4px; color: var(--color-text-tertiary);">Create a customer first</div>';
+          emptyEl.style.display = 'block';
+        }
         if (statusText) statusText.textContent = 'No customers available';
       } else {
+        // IMPORTANT: Show list immediately after loading
         if (listEl) listEl.style.display = 'block';
         renderCustomerList(customers);
         
@@ -169,7 +190,7 @@ function loadEnhancedCustomers() {
       
       if (loadingEl) loadingEl.style.display = 'none';
       if (emptyEl) {
-        emptyEl.innerHTML = '<span class="empty-icon">⚠️</span><span>Error loading customers</span>';
+        emptyEl.innerHTML = '<div class="empty-icon">⚠️</div><div>Error loading customers</div><div style="font-size: 12px; margin-top: 4px;">Please try again</div>';
         emptyEl.style.display = 'block';
       }
       if (statusText) {
@@ -449,10 +470,23 @@ window.applySuggestion = function(type, id, value) {
 window.openCategorySelector = function() {
   const dropdown = document.getElementById('subscription-categories-dropdown');
   const display = document.getElementById('subscription-categories-tags');
+  const container = document.getElementById('subscription-categories-wrapper');
   
   if (dropdown) {
+    // Check if there are any category items
+    const items = dropdown.querySelectorAll('.categories-dropdown-item');
+    
+    if (items.length === 0) {
+      // No categories available - show a message
+      const list = dropdown.querySelector('.categories-dropdown-list');
+      if (list && list.children.length === 0) {
+        list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--color-text-tertiary);">No categories available.<br><small>Create a category first.</small></div>';
+      }
+    }
+    
     dropdown.style.display = 'block';
     display?.classList.add('active');
+    container?.classList.add('open');
     
     // Update selected state in dropdown
     updateCategoryDropdownSelection();
@@ -462,10 +496,12 @@ window.openCategorySelector = function() {
 window.closeCategorySelector = function() {
   const dropdown = document.getElementById('subscription-categories-dropdown');
   const display = document.getElementById('subscription-categories-tags');
+  const container = document.getElementById('subscription-categories-wrapper');
   
   if (dropdown) {
     dropdown.style.display = 'none';
     display?.classList.remove('active');
+    container?.classList.remove('open');
   }
 };
 
@@ -645,19 +681,31 @@ window.openSubscriptionModalForCustomer = function(categoryId, customerId, custo
 
 // Close dropdowns when clicking outside (updated for new layout)
 document.addEventListener('click', function(e) {
-  // Close customer selector when clicking outside
-  if (!e.target.closest('.customer-compact-display') && !e.target.closest('#customer-selector')) {
-    const selector = document.getElementById('customer-selector');
-    if (selector) {
-      selector.style.display = 'none';
+  // Close customer dropdown when clicking outside
+  if (!e.target.closest('.customer-selector-wrapper') && !e.target.closest('.customer-dropdown-panel')) {
+    const panel = document.getElementById('customer-dropdown-panel');
+    const wrapper = document.getElementById('customer-selector-wrapper');
+    if (panel) {
+      panel.style.display = 'none';
+    }
+    if (wrapper) {
+      wrapper.classList.remove('open');
     }
   }
   
   // Close categories dropdown when clicking outside
   if (!e.target.closest('.categories-chips-container') && !e.target.closest('.categories-dropdown')) {
     const dropdown = document.getElementById('subscription-categories-dropdown');
+    const display = document.getElementById('subscription-categories-tags');
+    const container = document.getElementById('subscription-categories-wrapper');
     if (dropdown) {
       dropdown.style.display = 'none';
+    }
+    if (display) {
+      display.classList.remove('active');
+    }
+    if (container) {
+      container.classList.remove('open');
     }
   }
   
