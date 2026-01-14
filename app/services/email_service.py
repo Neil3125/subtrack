@@ -22,7 +22,7 @@ class EmailService:
         """Get Resend configuration from environment (fresh read each time)."""
         return {
             "api_key": os.environ.get("RESEND_API_KEY", ""),
-            "from_email": os.environ.get("RESEND_FROM_EMAIL", "onboarding@resend.dev"),
+            "from_email": os.environ.get("RESEND_FROM_EMAIL", "notifications@neil.service.com"),
             "from_name": os.environ.get("RESEND_FROM_NAME", "SubTrack Notifications")
         }
     
