@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
@@ -454,249 +454,245 @@
         </div>
     </div>
 
-    <!-- Subscription Modal - REVAMPED -->
-    <div id="subscriptionModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 700px; max-height: 90vh; display: flex; flex-direction: column;">
-            <div class="modal-header">
-                <h2 class="modal-title">➕ Create Subscription</h2>
-                <button class="modal-close" onclick="closeModal('subscriptionModal')">×</button>
+<!-- Subscription Modal - IMPROVED UI -->
+    <div id="subscriptionModal" class="modal subscription-modal-improved" style="display: none;">
+        <div class="modal-content modal-content-improved" style="max-width: 720px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header modal-header-improved">
+                <h2 class="modal-title modal-title-improved">Create Subscription</h2>
+                <p class="modal-subtitle modal-subtitle-improved">Subscriptions are organized by category</p>
+                <button class="modal-close modal-close-improved" onclick="closeModal('subscriptionModal')">×</button>
             </div>
             <form onsubmit="handleFormSubmit(event, createSubscription)" id="subscription-form">
-                <div class="modal-body" style="overflow-y: auto; flex: 1; max-height: calc(90vh - 140px);">
+                <div class="modal-body modal-body-improved" style="overflow-y: auto; flex: 1; max-height: calc(90vh - 140px);">
                     
-                    <!-- Context Alert - When opened from customer page -->
-                    <div id="customer-context-alert" class="context-alert" style="display: none;">
-                        <div class="context-alert-content">
-                            <span class="context-alert-icon">🔗</span>
-                            <div class="context-alert-text">
-                                <strong>Creating for:</strong> <span id="context-customer-name"></span>
-                            </div>
-                            <button type="button" class="context-alert-change" onclick="clearCustomerContext()">Change Customer</button>
+                    <!-- SECTION 1: CATEGORIES (PRIMARY FOCUS) -->
+                    <div class="modal-section modal-section-primary">
+                        <div class="section-header">
+                            <h3 class="section-title">Categories</h3>
+                            <p class="section-subtitle">Select one or more categories</p>
                         </div>
-                    </div>
-
-                    <!-- Customer Selection -->
-                    <div class="form-group">
-                        <label class="form-label">
-                            <span class="label-icon">👤</span> Customer *
-                        </label>
-                        <input type="hidden" name="customer_id" id="subscription-customer-id" required>
-                        
-                        <!-- Enhanced Customer Dropdown -->
-                        <div class="enhanced-dropdown" id="subscription-customer-dropdown">
-                            <button type="button" class="enhanced-dropdown-trigger" id="subscription-customer-trigger" onclick="toggleEnhancedDropdown('subscription-customer')">
-                                <span class="trigger-content">
-                                    <span class="trigger-icon">👤</span>
-                                    <span class="trigger-text placeholder">Select a customer...</span>
-                                </span>
-                                <span class="trigger-arrow">▼</span>
-                            </button>
+                        <div class="section-content">
+                            <input type="hidden" name="category_ids" id="subscription-category-ids" required>
+                            <input type="hidden" name="category_id" id="subscription-category-id">
                             
-                            <div class="enhanced-dropdown-panel" id="subscription-customer-panel" style="display: none;">
-                                <!-- Search Box -->
-                                <div class="dropdown-search-box">
-                                    <input type="text" 
-                                           class="dropdown-search-input" 
-                                           placeholder="🔍 Search customers..." 
-                                           id="subscription-customer-search"
-                                           oninput="filterEnhancedDropdown('subscription-customer', this.value)">
+                            <div class="categories-chips-container" id="subscription-categories-wrapper">
+                                <!-- Selected Categories Display -->
+                                <div class="categories-chips-display" id="subscription-categories-tags" onclick="openCategorySelector()">
+                                    <span class="categories-placeholder">Click to select categories...</span>
                                 </div>
                                 
-                                <!-- Loading State -->
-                                <div class="dropdown-loading" id="subscription-customer-loading">
-                                    <div class="loading-spinner"></div>
-                                    <span>Loading customers...</span>
-                                </div>
+                                <!-- Add Categories Button -->
+                                <button type="button" class="btn-add-categories" onclick="openCategorySelector()">
+                                    <span class="btn-add-icon">+</span> Add categories
+                                </button>
                                 
-                                <!-- Customer List -->
-                                <div class="dropdown-list" id="subscription-customer-list" style="display: none;">
-                                    <!-- Populated by JS -->
-                                </div>
-                                
-                                <!-- Empty State -->
-                                <div class="dropdown-empty" id="subscription-customer-empty" style="display: none;">
-                                    <span class="empty-icon">😕</span>
-                                    <span>No customers found</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Status Message -->
-                        <small class="form-help" id="customer-status-message">
-                            <span class="help-icon">⏳</span> <span id="customer-status-text">Loading customers...</span>
-                        </small>
-                    </div>
-
-                    <!-- Smart Suggestions Panel -->
-                    <div id="smart-suggestions" class="smart-suggestions-panel" style="display: none;">
-                        <div class="suggestions-header">
-                            <span class="suggestions-icon">✨</span>
-                            <span class="suggestions-title">Smart Suggestions</span>
-                            <span class="suggestions-subtitle">Based on this customer's history</span>
-                        </div>
-                        <div id="suggestions-content" class="suggestions-content">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
-
-                    <!-- Categories - Visual Multi-Select with Tags -->
-                    <div class="form-group">
-                        <label class="form-label">
-                            <span class="label-icon">📁</span> Categories *
-                        </label>
-                        <input type="hidden" name="category_ids" id="subscription-category-ids" required>
-                        <input type="hidden" name="category_id" id="subscription-category-id">
-                        
-                        <div class="tags-input-wrapper" id="subscription-categories-wrapper">
-                            <!-- Selected Tags Area -->
-                            <div class="tags-display" id="subscription-categories-tags" onclick="openCategorySelector()">
-                                <span class="tags-placeholder">Click to select categories...</span>
-                            </div>
-                            
-                            <!-- Dropdown Panel -->
-                            <div class="tags-dropdown" id="subscription-categories-dropdown" style="display: none;">
-                                <div class="tags-dropdown-header">
-                                    <span>Select one or more categories</span>
-                                    <button type="button" class="tags-close" onclick="closeCategorySelector()">✕</button>
-                                </div>
-                                <div class="tags-dropdown-list">
-                                    {% for category in categories|default([]) %}
-                                    <div class="tags-dropdown-item" data-id="{{ category.id }}" data-name="{{ category.name }}" onclick="toggleCategoryTag(this)">
-                                        <span class="item-checkbox"></span>
-                                        <span class="item-label">{{ category.name }}</span>
-                                        <span class="item-checkmark">✓</span>
+                                <!-- Dropdown Panel -->
+                                <div class="categories-dropdown" id="subscription-categories-dropdown" style="display: none;">
+                                    <div class="categories-dropdown-header">
+                                        <span>Select categories</span>
+                                        <button type="button" class="categories-close" onclick="closeCategorySelector()">✕</button>
                                     </div>
-                                    {% endfor %}
+                                    <div class="categories-dropdown-list">
+                                        {% for category in categories|default([]) %}
+                                        <div class="categories-dropdown-item" data-id="{{ category.id }}" data-name="{{ category.name }}" onclick="toggleCategoryTag(this)">
+                                            <span class="categories-item-checkbox"></span>
+                                            <span class="categories-item-label">{{ category.name }}</span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <small class="form-help">
-                            <span class="help-icon">ℹ️</span> Select one or more categories for this subscription
-                        </small>
                     </div>
 
-                    <!-- Vendor Name with Autocomplete -->
-                    <div class="form-group">
-                        <label class="form-label">
-                            <span class="label-icon">🏢</span> Vendor Name *
-                        </label>
-                        <input type="text" 
-                               name="vendor_name" 
-                               id="subscription-vendor-name"
-                               class="form-input vendor-autocomplete" 
-                               required 
-                               placeholder="e.g., AWS, Netflix, Adobe"
-                               autocomplete="off">
-                        <small class="form-help">
-                            <span class="help-icon">💡</span> Start typing to see suggestions
-                        </small>
-                    </div>
-
-                    <!-- Plan Name -->
-                    <div class="form-group">
-                        <label class="form-label">
-                            <span class="label-icon">📦</span> Plan Name
-                        </label>
-                        <input type="text" name="plan_name" class="form-input" placeholder="e.g., Professional, Premium">
-                        <small class="form-help text-secondary">Optional: The specific plan or tier</small>
-                    </div>
-
-                    <!-- Cost and Currency -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label class="form-label">
-                                <span class="label-icon">💰</span> Cost *
-                            </label>
-                            <div class="input-with-icon">
-                                <span class="input-icon">$</span>
-                                <input type="number" step="0.01" name="cost" class="form-input input-with-left-icon" required placeholder="99.99">
+                    <!-- SECTION 2: VENDOR & SUBSCRIPTION DETAILS -->
+                    <div class="modal-section">
+                        <div class="section-header">
+                            <h3 class="section-title">Vendor & Details</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Vendor Name</label>
+                                    <input type="text" 
+                                           name="vendor_name" 
+                                           id="subscription-vendor-name"
+                                           class="form-input" 
+                                           required 
+                                           placeholder="AWS / Adobe / Netflix"
+                                           autocomplete="off">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Plan / Tier</label>
+                                    <input type="text" name="plan_name" class="form-input" placeholder="Professional, Premium">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Billing Cycle</label>
+                                    <select name="billing_cycle" class="form-select" required>
+                                        <option value="monthly">Monthly</option>
+                                        <option value="quarterly">Quarterly</option>
+                                        <option value="yearly">Yearly</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="biannual">Biannual</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Cost</label>
+                                    <div class="input-with-prefix">
+                                        <span class="input-prefix">$</span>
+                                        <input type="number" step="0.01" name="cost" class="form-input" required placeholder="99.99">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Currency</label>
+                                    <select name="currency" class="form-select">
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                        <option value="GBP">GBP</option>
+                                        <option value="CAD">CAD</option>
+                                        <option value="AUD">AUD</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Currency</label>
-                            <select name="currency" class="form-select">
-                                <option value="USD">🇺🇸 USD</option>
-                                <option value="EUR">🇪🇺 EUR</option>
-                                <option value="GBP">🇬🇧 GBP</option>
-                                <option value="CAD">🇨🇦 CAD</option>
-                                <option value="AUD">🇦🇺 AUD</option>
-                            </select>
+                    </div>
+
+                    <!-- SECTION 3: CUSTOMER CONTEXT (SECONDARY) -->
+                    <div class="modal-section modal-section-compact">
+                        <div class="section-header">
+                            <h3 class="section-title">Customer</h3>
+                        </div>
+                        <div class="section-content">
+                            <!-- Compact Customer Display -->
+                            <div class="customer-compact-display" id="customer-compact-display">
+                                <div class="customer-info">
+                                    <span class="customer-name" id="selected-customer-name">No customer selected</span>
+                                    <p class="customer-helper">Subscription will be created for this customer</p>
+                                </div>
+                                <button type="button" class="btn-change-customer" onclick="toggleCustomerSelector()">
+                                    Change customer
+                                </button>
+                            </div>
+                            
+                            <!-- Hidden Customer Selector -->
+                            <div class="customer-selector-hidden" id="customer-selector" style="display: none;">
+                                <input type="hidden" name="customer_id" id="subscription-customer-id" required>
+                                
+                                <div class="enhanced-dropdown" id="subscription-customer-dropdown">
+                                    <button type="button" class="enhanced-dropdown-trigger" id="subscription-customer-trigger" onclick="toggleEnhancedDropdown('subscription-customer')">
+                                        <span class="trigger-content">
+                                            <span class="trigger-text placeholder">Select a customer...</span>
+                                        </span>
+                                        <span class="trigger-arrow">▼</span>
+                                    </button>
+                                    
+                                    <div class="enhanced-dropdown-panel" id="subscription-customer-panel" style="display: none;">
+                                        <div class="dropdown-search-box">
+                                            <input type="text" 
+                                                   class="dropdown-search-input" 
+                                                   placeholder="Search customers..." 
+                                                   id="subscription-customer-search"
+                                                   oninput="filterEnhancedDropdown('subscription-customer', this.value)">
+                                        </div>
+                                        
+                                        <div class="dropdown-loading" id="subscription-customer-loading">
+                                            <div class="loading-spinner"></div>
+                                            <span>Loading customers...</span>
+                                        </div>
+                                        
+                                        <div class="dropdown-list" id="subscription-customer-list" style="display: none;">
+                                            <!-- Populated by JS -->
+                                        </div>
+                                        
+                                        <div class="dropdown-empty" id="subscription-customer-empty" style="display: none;">
+                                            <span>No customers found</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Billing Cycle -->
-                    <div class="form-group">
-                        <label class="form-label">
-                            <span class="label-icon">🔄</span> Billing Cycle *
-                        </label>
-                        <select name="billing_cycle" class="form-select" required>
-                            <option value="monthly">📅 Monthly</option>
-                            <option value="quarterly">📅 Quarterly (3 months)</option>
-                            <option value="yearly">📅 Yearly (12 months)</option>
-                            <option value="weekly">📅 Weekly</option>
-                            <option value="biannual">📅 Biannual (6 months)</option>
-                        </select>
-                    </div>
-
-                    <!-- Dates -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label class="form-label">
-                                <span class="label-icon">📆</span> Start Date *
-                            </label>
-                            <input type="date" name="start_date" class="form-input" required>
+                    <!-- SECTION 4: SMART SUGGESTIONS (COLLAPSIBLE) -->
+                    <div class="modal-section modal-section-collapsible">
+                        <div class="collapsible-header" onclick="toggleSmartSuggestions()">
+                            <div class="collapsible-title">
+                                <span class="collapsible-icon">✨</span>
+                                <span class="collapsible-text">Smart suggestions</span>
+                                <span class="collapsible-subtitle">(based on this customer)</span>
+                            </div>
+                            <button type="button" class="collapsible-toggle" id="smart-suggestions-toggle">
+                                <span class="toggle-icon">▼</span>
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">
-                                <span class="label-icon">🔔</span> Next Renewal *
-                            </label>
-                            <input type="date" name="next_renewal_date" class="form-input" required>
+                        <div class="collapsible-content" id="smart-suggestions-content" style="display: none;">
+                            <div id="suggestions-content" class="suggestions-content">
+                                <!-- Populated by JS -->
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Status -->
-                    <div class="form-group">
-                        <label class="form-label">
-                            <span class="label-icon">⚡</span> Status
-                        </label>
-                        <select name="status" class="form-select">
-                            <option value="active">✅ Active</option>
-                            <option value="paused">⏸️ Paused</option>
-                            <option value="cancelled">❌ Cancelled</option>
-                            <option value="expired">⏱️ Expired</option>
-                        </select>
-                    </div>
-
-                    <!-- Country -->
-                    <div class="form-group">
-                        <label class="form-label">
-                            <span class="label-icon">🌍</span> Country
-                        </label>
-                        <input type="text" 
-                               name="country" 
-                               class="form-input country-autocomplete" 
-                               placeholder="Start typing country..." 
-                               autocomplete="off">
-                        <small class="form-help text-secondary">Type to see suggestions</small>
-                    </div>
-
-                    <!-- Notes -->
-                    <div class="form-group">
-                        <label class="form-label">
-                            <span class="label-icon">📝</span> Notes
-                        </label>
-                        <textarea name="notes" class="form-textarea" rows="3" placeholder="Additional notes about this subscription..."></textarea>
+<!-- SECTION 5: ADDITIONAL DETAILS -->
+                    <div class="modal-section">
+                        <div class="section-header">
+                            <h3 class="section-title">Additional Details</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" name="start_date" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Next Renewal</label>
+                                    <input type="date" name="next_renewal_date" class="form-input" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Status</label>
+                                    <select name="status" class="form-select">
+                                        <option value="active">Active</option>
+                                        <option value="paused">Paused</option>
+                                        <option value="cancelled">Cancelled</option>
+                                        <option value="expired">Expired</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Country</label>
+                                    <input type="text" 
+                                           name="country" 
+                                           class="form-input" 
+                                           placeholder="Country..." 
+                                           autocomplete="off">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Notes</label>
+                                    <textarea name="notes" class="form-textarea" rows="3" placeholder="Additional notes..."></textarea>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
                 
-                <!-- Sticky Footer -->
-                <div class="modal-footer" style="position: sticky; bottom: 0; background: var(--color-bg-card); border-top: 1px solid var(--color-border); z-index: 10;">
+                <!-- Clean Footer -->
+                <div class="modal-footer modal-footer-improved">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('subscriptionModal')">
                         Cancel
                     </button>
                     <button type="submit" class="btn btn-primary" id="subscription-submit-btn">
-                        <span class="btn-icon">✓</span> Create Subscription
+                        Create Subscription
                     </button>
                 </div>
             </form>
