@@ -538,7 +538,9 @@ window.toggleCategoryTag = function(element) {
 };
 
 function selectCategoryTag(categoryId) {
-  const item = document.querySelector(`.tags-dropdown-item[data-id="${categoryId}"]`);
+  // Try both selectors for compatibility
+  const item = document.querySelector(`.categories-dropdown-item[data-id="${categoryId}"]`) ||
+               document.querySelector(`.tags-dropdown-item[data-id="${categoryId}"]`);
   if (item && !item.classList.contains('selected')) {
     toggleCategoryTag(item);
   }
@@ -557,7 +559,9 @@ function removeCategoryFromSelection(categoryId) {
 }
 
 window.removeCategoryChip = function(categoryId) {
-  const item = document.querySelector(`.tags-dropdown-item[data-id="${categoryId}"]`);
+  // Try both selectors for compatibility
+  const item = document.querySelector(`.categories-dropdown-item[data-id="${categoryId}"]`) || 
+               document.querySelector(`.tags-dropdown-item[data-id="${categoryId}"]`);
   if (item) {
     item.classList.remove('selected');
   }
@@ -569,17 +573,34 @@ function updateCategoryDisplay() {
   const idsInput = document.getElementById('subscription-category-ids');
   const idInput = document.getElementById('subscription-category-id');
   
-  if (!display) return;
+  if (!display) {
+    console.warn('Category display element not found');
+    return;
+  }
   
   display.innerHTML = '';
   
+  // Get the category IDs for the hidden inputs
+  const ids = subscriptionModalState.selectedCategories.map(cat => cat.id);
+  
+  // Always update hidden inputs first (even if empty)
+  if (idsInput) {
+    idsInput.value = ids.join(',');
+    console.log('Updated category_ids input:', idsInput.value);
+  } else {
+    console.warn('Hidden input subscription-category-ids not found');
+  }
+  
+  if (idInput) {
+    idInput.value = ids[0] || '';
+    console.log('Updated category_id input:', idInput.value);
+  }
+  
   if (subscriptionModalState.selectedCategories.length === 0) {
     display.innerHTML = '<span class="categories-placeholder">Click to select categories...</span>';
-    idsInput.value = '';
-    idInput.value = '';
   } else {
     // Limit visible chips to prevent overflow
-    const maxVisible = 6;
+    const maxVisible = 3;
     const categoriesToShow = subscriptionModalState.selectedCategories.slice(0, maxVisible);
     const remainingCount = subscriptionModalState.selectedCategories.length - maxVisible;
     
@@ -602,11 +623,6 @@ function updateCategoryDisplay() {
       moreTag.onclick = () => openCategorySelector();
       display.appendChild(moreTag);
     }
-    
-    // Update hidden inputs
-    const ids = subscriptionModalState.selectedCategories.map(cat => cat.id);
-    idsInput.value = ids.join(',');
-    idInput.value = ids[0] || ''; // First category for backward compatibility
   }
 }
 

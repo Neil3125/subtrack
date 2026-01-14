@@ -2017,6 +2017,10 @@ window.createCustomer = function(formData) {
 
 // Create Subscription
 window.createSubscription = function(formData) {
+  console.log('createSubscription called with formData:', formData);
+  console.log('category_ids from form:', formData.category_ids);
+  console.log('category_id from form:', formData.category_id);
+  
   // Validation
   const validationErrors = [];
   
@@ -2028,12 +2032,15 @@ window.createSubscription = function(formData) {
   let categoryId = null;
   if (formData.category_ids && formData.category_ids.trim()) {
     const categoryIds = formData.category_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    console.log('Parsed categoryIds:', categoryIds);
     if (categoryIds.length > 0) {
       categoryId = categoryIds[0]; // Use first category as primary
     }
   } else if (formData.category_id) {
     categoryId = parseInt(formData.category_id);
   }
+  
+  console.log('Final categoryId:', categoryId);
   
   if (!categoryId) {
     validationErrors.push('Please select at least one category');
