@@ -47,7 +47,7 @@
             <button class="btn btn-secondary btn-sm" onclick="loadEditData('customer', {{ customer.id }})">
                 ✏️ Edit Customer
             </button>
-            <button class="btn btn-primary" onclick="openSubscriptionModalForCustomer({{ customer.category_id or customer.primary_category.id if customer.primary_category else 0 }}, {{ customer.id }})">
+            <button class="btn btn-primary" onclick="openSubscriptionModalForCustomer({{ customer.category_id or customer.primary_category.id if customer.primary_category else 0 }}, {{ customer.id }}, '{{ customer.name|replace("'", "\\'") }}')">
                 ➕ New Subscription
             </button>
         </div>

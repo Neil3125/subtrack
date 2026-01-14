@@ -1860,6 +1860,305 @@ select[name="customer_id"] {
   box-shadow: var(--shadow-md);
 }
 
+/* Quick Add Modal Cards */
+.quick-add-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  transition: all var(--transition-fast);
+}
+
+.quick-add-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.quick-add-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-3);
+  line-height: 1;
+}
+
+.quick-add-label {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-2);
+}
+
+.quick-add-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Custom Searchable Customer Dropdown */
+.customer-dropdown-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.customer-dropdown-trigger {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 42px;
+}
+
+.customer-dropdown-trigger:hover {
+  border-color: var(--color-primary);
+}
+
+.customer-dropdown-trigger:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-alpha);
+}
+
+.customer-dropdown-trigger .placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.customer-dropdown-trigger .arrow {
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+.customer-dropdown-trigger.open .arrow {
+  transform: rotate(180deg);
+}
+
+.customer-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  margin-top: var(--space-1);
+  display: none;
+  max-height: 300px;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+.customer-dropdown-menu.show {
+  display: flex;
+}
+
+.customer-dropdown-search {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.customer-dropdown-search input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+.customer-dropdown-search input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.customer-dropdown-list {
+  overflow-y: auto;
+  max-height: 250px;
+  padding: var(--space-2);
+}
+
+.customer-dropdown-group {
+  margin-bottom: var(--space-2);
+}
+
+.customer-dropdown-group-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-1);
+}
+
+.customer-dropdown-item {
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition: background-color 0.1s;
+}
+
+.customer-dropdown-item:hover {
+  background: var(--color-bg-secondary);
+}
+
+.customer-dropdown-item.selected {
+  background: var(--color-primary-alpha);
+  color: var(--color-primary);
+}
+
+.customer-dropdown-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.customer-dropdown-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* Multi-Select Category Dropdown */
+.multi-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.multi-select-trigger {
+  width: 100%;
+  min-height: 42px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+.multi-select-trigger:hover {
+  border-color: var(--color-primary);
+}
+
+.multi-select-trigger:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-alpha);
+}
+
+.multi-select-trigger .placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.multi-select-trigger .arrow {
+  font-size: 0.75rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.multi-select-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px 8px;
+  background: var(--color-primary-alpha);
+  color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+}
+
+.multi-select-tag-remove {
+  cursor: pointer;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-weight: bold;
+}
+
+.multi-select-tag-remove:hover {
+  opacity: 1;
+}
+
+.multi-select-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  margin-top: var(--space-1);
+  display: none;
+  max-height: 250px;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.multi-select-menu.show {
+  display: block;
+}
+
+.multi-select-item {
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  transition: background-color 0.1s;
+}
+
+.multi-select-item:hover {
+  background: var(--color-bg-secondary);
+}
+
+.multi-select-item.selected {
+  background: var(--color-primary-alpha);
+}
+
+.multi-select-item .checkbox {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.multi-select-item.selected .checkbox {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.multi-select-item.selected .checkbox::after {
+  content: "✓";
+  font-size: 10px;
+}
+
 .quick-action-btn:hover {
   background: var(--color-primary);
   color: white;

@@ -295,26 +295,26 @@
             </div>
             <div class="modal-body">
                 <div class="grid grid-cols-2 gap-4">
-                    <button class="card card-hover" onclick="closeModal('quickAddModal'); openModal('categoryModal');" style="cursor: pointer; text-align: center; padding: var(--space-8);">
-                        <div style="font-size: 3rem; margin-bottom: var(--space-3);">📁</div>
-                        <h3>Category</h3>
-                        <p class="text-secondary text-sm">Organize subscriptions</p>
-                    </button>
-                    <button class="card card-hover" onclick="closeModal('quickAddModal'); openModal('groupModal');" style="cursor: pointer; text-align: center; padding: var(--space-8);">
-                        <div style="font-size: 3rem; margin-bottom: var(--space-3);">📦</div>
-                        <h3>Group</h3>
-                        <p class="text-secondary text-sm">Group customers</p>
-                    </button>
-                    <button class="card card-hover" onclick="closeModal('quickAddModal'); openModal('customerModal');" style="cursor: pointer; text-align: center; padding: var(--space-8);">
-                        <div style="font-size: 3rem; margin-bottom: var(--space-3);">👤</div>
-                        <h3>Customer</h3>
-                        <p class="text-secondary text-sm">Add new customer</p>
-                    </button>
-                    <button class="card card-hover" onclick="closeModal('quickAddModal'); openModal('subscriptionModal');" style="cursor: pointer; text-align: center; padding: var(--space-8);">
-                        <div style="font-size: 3rem; margin-bottom: var(--space-3);">📋</div>
-                        <h3>Subscription</h3>
-                        <p class="text-secondary text-sm">Track subscription</p>
-                    </button>
+                    <div class="card card-hover quick-add-card" onclick="closeModal('quickAddModal'); openModal('categoryModal');" style="cursor: pointer; text-align: center; padding: var(--space-6);">
+                        <div class="quick-add-icon">📁</div>
+                        <div class="quick-add-label">Category</div>
+                        <div class="quick-add-desc">Organize subscriptions</div>
+                    </div>
+                    <div class="card card-hover quick-add-card" onclick="closeModal('quickAddModal'); openModal('groupModal');" style="cursor: pointer; text-align: center; padding: var(--space-6);">
+                        <div class="quick-add-icon">📦</div>
+                        <div class="quick-add-label">Group</div>
+                        <div class="quick-add-desc">Group customers</div>
+                    </div>
+                    <div class="card card-hover quick-add-card" onclick="closeModal('quickAddModal'); openModal('customerModal');" style="cursor: pointer; text-align: center; padding: var(--space-6);">
+                        <div class="quick-add-icon">👤</div>
+                        <div class="quick-add-label">Customer</div>
+                        <div class="quick-add-desc">Add new customer</div>
+                    </div>
+                    <div class="card card-hover quick-add-card" onclick="closeModal('quickAddModal'); openModal('subscriptionModal');" style="cursor: pointer; text-align: center; padding: var(--space-6);">
+                        <div class="quick-add-icon">📋</div>
+                        <div class="quick-add-label">Subscription</div>
+                        <div class="quick-add-desc">Track subscription</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -457,13 +457,10 @@
                         <label class="form-label">Category *</label>
                         <select 
                             name="category_id" 
+                            id="subscription-category-select"
                             class="form-select" 
                             required 
-                            hx-get="/partials/customer-options" 
-                            hx-trigger="change" 
-                            hx-target="#subscription-customer-select" 
-                            hx-swap="innerHTML"
-                            hx-include="[name='category_id']">
+                            onchange="loadCustomersForSubscription(this.value)">
                             <option value="">Select a category</option>
                             {% for category in categories|default([]) %}
                             <option value="{{ category.id }}">{{ category.name }}</option>
@@ -472,9 +469,21 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Customer *</label>
-                        <select name="customer_id" id="subscription-customer-select" class="form-select" required>
-                            <option value="">Select a category first</option>
-                        </select>
+                        <input type="hidden" name="customer_id" id="subscription-customer-id" required>
+                        <div class="customer-dropdown-wrapper" id="subscription-customer-dropdown">
+                            <button type="button" class="customer-dropdown-trigger" onclick="toggleCustomerDropdown('subscription')">
+                                <span class="selected-text placeholder">Select a category first</span>
+                                <span class="arrow">▼</span>
+                            </button>
+                            <div class="customer-dropdown-menu" id="subscription-customer-menu">
+                                <div class="customer-dropdown-search">
+                                    <input type="text" placeholder="Search customers..." oninput="filterCustomerDropdown('subscription', this.value)">
+                                </div>
+                                <div class="customer-dropdown-list" id="subscription-customer-list">
+                                    <div class="customer-dropdown-empty">Select a category first</div>
+                                </div>
+                            </div>
+                        </div>
                         <small class="text-secondary" id="customer-count-message"></small>
                     </div>
                     <div class="form-group">

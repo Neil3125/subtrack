@@ -1091,30 +1091,366 @@ window.openSubscriptionModalForCategory = function(categoryId) {
 };
 
 // Open Subscription Modal with pre-selected category and customer (from customer detail page)
-window.openSubscriptionModalForCustomer = function(categoryId, customerId) {
+window.openSubscriptionModalForCustomer = function(categoryId, customerId, customerName) {
   openModal('subscriptionModal');
   setTimeout(() => {
     const categorySelect = document.querySelector('#subscriptionModal select[name="category_id"]');
-    const customerSelect = document.querySelector('#subscriptionModal select[name="customer_id"]');
     
     if (categorySelect) {
       categorySelect.value = categoryId;
     }
     
-    // Load customers and pre-select the current customer
-    if (customerSelect) {
-      fetch(`/partials/customer-options?category_id=${categoryId}&selected_customer_id=${customerId}`)
-        .then(response => response.text())
-        .then(html => {
-          customerSelect.innerHTML = html;
-        })
-        .catch(error => {
-          console.error('Error loading customers:', error);
-          // Fallback: just set the value if options already exist
-          customerSelect.value = customerId;
-        });
-    }
+    // Load customers for the category and pre-select the current customer
+    loadCustomersForSubscription(categoryId, customerId, customerName);
   }, 50);
+};
+
+// ==================== Custom Customer Dropdown for Subscription Modal ====================
+let subscriptionCustomersCache = [];
+
+// Load customers for the subscription modal
+window.loadCustomersForSubscription = function(categoryId, preSelectedId = null, preSelectedName = null) {
+  const wrapper = document.getElementById('subscription-customer-dropdown');
+  const hiddenInput = document.getElementById('subscription-customer-id');
+  const listContainer = document.getElementById('subscription-customer-list');
+  const trigger = wrapper ? wrapper.querySelector('.customer-dropdown-trigger') : null;
+  const selectedText = trigger ? trigger.querySelector('.selected-text') : null;
+  const countMessage = document.getElementById('customer-count-message');
+  
+  if (!categoryId) {
+    if (listContainer) listContainer.innerHTML = '<div class="customer-dropdown-empty">Select a category first</div>';
+    if (selectedText) {
+      selectedText.textContent = 'Select a category first';
+      selectedText.classList.add('placeholder');
+    }
+    if (hiddenInput) hiddenInput.value = '';
+    if (countMessage) countMessage.textContent = '';
+    return;
+  }
+  
+  // If we have a pre-selected customer, set it immediately
+  if (preSelectedId && preSelectedName) {
+    if (hiddenInput) hiddenInput.value = preSelectedId;
+    if (selectedText) {
+      selectedText.textContent = preSelectedName;
+      selectedText.classList.remove('placeholder');
+    }
+  }
+  
+  // Fetch all customers (grouped by category, with current category first)
+  fetch(`/api/customers?limit=1000`)
+    .then(response => response.json())
+    .then(customers => {
+      subscriptionCustomersCache = customers;
+      
+      // Group customers by category
+      const grouped = {};
+      customers.forEach(c => {
+        const catName = c.category ? c.category.name : 'Uncategorized';
+        const catId = c.category ? c.category.id : 0;
+        if (!grouped[catId]) {
+          grouped[catId] = { name: catName, customers: [] };
+        }
+        grouped[catId].customers.push(c);
+      });
+      
+      // Sort groups: current category first, then alphabetically
+      const sortedGroups = Object.entries(grouped).sort((a, b) => {
+        if (a[0] == categoryId) return -1;
+        if (b[0] == categoryId) return 1;
+        return a[1].name.localeCompare(b[1].name);
+      });
+      
+      renderCustomerDropdownList('subscription', sortedGroups, preSelectedId, categoryId);
+      
+      if (countMessage) {
+        countMessage.textContent = `${customers.length} customers available`;
+      }
+    })
+    .catch(error => {
+      console.error('Error loading customers:', error);
+      if (listContainer) listContainer.innerHTML = '<div class="customer-dropdown-empty">Error loading customers</div>';
+    });
+};
+
+// Render the customer dropdown list
+function renderCustomerDropdownList(prefix, groupedCustomers, selectedId, currentCategoryId) {
+  const listContainer = document.getElementById(`${prefix}-customer-list`);
+  if (!listContainer) return;
+  
+  listContainer.innerHTML = '';
+  
+  if (groupedCustomers.length === 0) {
+    listContainer.innerHTML = '<div class="customer-dropdown-empty">No customers found</div>';
+    return;
+  }
+  
+  groupedCustomers.forEach(([catId, group]) => {
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'customer-dropdown-group';
+    groupDiv.dataset.categoryId = catId;
+    
+    const isCurrentCategory = catId == currentCategoryId;
+    const labelDiv = document.createElement('div');
+    labelDiv.className = 'customer-dropdown-group-label';
+    labelDiv.textContent = group.name + (isCurrentCategory ? ' (Current)' : '');
+    groupDiv.appendChild(labelDiv);
+    
+    group.customers.forEach(customer => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'customer-dropdown-item';
+      if (customer.id == selectedId) {
+        itemDiv.classList.add('selected');
+      }
+      itemDiv.dataset.customerId = customer.id;
+      itemDiv.dataset.customerName = customer.name;
+      itemDiv.dataset.searchText = customer.name.toLowerCase();
+      itemDiv.innerHTML = `<span>👤</span> <span>${customer.name}</span>`;
+      
+      itemDiv.addEventListener('click', () => {
+        selectCustomerFromDropdown(prefix, customer.id, customer.name);
+      });
+      
+      groupDiv.appendChild(itemDiv);
+    });
+    
+    listContainer.appendChild(groupDiv);
+  });
+}
+
+// Toggle the customer dropdown
+window.toggleCustomerDropdown = function(prefix) {
+  const menu = document.getElementById(`${prefix}-customer-menu`);
+  const trigger = document.querySelector(`#${prefix}-customer-dropdown .customer-dropdown-trigger`);
+  
+  if (menu && trigger) {
+    const isOpen = menu.classList.contains('show');
+    
+    // Close all other dropdowns first
+    document.querySelectorAll('.customer-dropdown-menu.show').forEach(m => {
+      m.classList.remove('show');
+    });
+    document.querySelectorAll('.customer-dropdown-trigger.open').forEach(t => {
+      t.classList.remove('open');
+    });
+    
+    if (!isOpen) {
+      menu.classList.add('show');
+      trigger.classList.add('open');
+      
+      // Focus the search input
+      const searchInput = menu.querySelector('input');
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.value = '';
+      }
+      
+      // Reset filter
+      filterCustomerDropdown(prefix, '');
+    }
+  }
+};
+
+// Filter customers in the dropdown
+window.filterCustomerDropdown = function(prefix, searchText) {
+  const listContainer = document.getElementById(`${prefix}-customer-list`);
+  if (!listContainer) return;
+  
+  const search = searchText.toLowerCase().trim();
+  const groups = listContainer.querySelectorAll('.customer-dropdown-group');
+  
+  groups.forEach(group => {
+    const items = group.querySelectorAll('.customer-dropdown-item');
+    let visibleCount = 0;
+    
+    items.forEach(item => {
+      const name = item.dataset.searchText || '';
+      if (!search || name.includes(search)) {
+        item.style.display = '';
+        visibleCount++;
+      } else {
+        item.style.display = 'none';
+      }
+    });
+    
+    // Hide group if no visible items
+    group.style.display = visibleCount > 0 ? '' : 'none';
+  });
+};
+
+// Select a customer from the dropdown
+function selectCustomerFromDropdown(prefix, customerId, customerName) {
+  const hiddenInput = document.getElementById(`${prefix}-customer-id`);
+  const wrapper = document.getElementById(`${prefix}-customer-dropdown`);
+  const trigger = wrapper ? wrapper.querySelector('.customer-dropdown-trigger') : null;
+  const selectedText = trigger ? trigger.querySelector('.selected-text') : null;
+  const menu = document.getElementById(`${prefix}-customer-menu`);
+  
+  // Update hidden input
+  if (hiddenInput) hiddenInput.value = customerId;
+  
+  // Update trigger text
+  if (selectedText) {
+    selectedText.textContent = customerName;
+    selectedText.classList.remove('placeholder');
+  }
+  
+  // Update selected state in list
+  const listContainer = document.getElementById(`${prefix}-customer-list`);
+  if (listContainer) {
+    listContainer.querySelectorAll('.customer-dropdown-item').forEach(item => {
+      item.classList.toggle('selected', item.dataset.customerId == customerId);
+    });
+  }
+  
+  // Close dropdown
+  if (menu) menu.classList.remove('show');
+  if (trigger) trigger.classList.remove('open');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.customer-dropdown-wrapper')) {
+    document.querySelectorAll('.customer-dropdown-menu.show').forEach(menu => {
+      menu.classList.remove('show');
+    });
+    document.querySelectorAll('.customer-dropdown-trigger.open').forEach(trigger => {
+      trigger.classList.remove('open');
+    });
+  }
+  if (!e.target.closest('.multi-select-wrapper')) {
+    document.querySelectorAll('.multi-select-menu.show').forEach(menu => {
+      menu.classList.remove('show');
+    });
+  }
+});
+
+// ==================== Multi-Select Category Dropdown ====================
+
+// Initialize multi-select category dropdown
+window.initCategoryMultiSelect = function(wrapperId, categories, preSelectedIds = []) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return;
+  
+  const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+  const trigger = wrapper.querySelector('.multi-select-trigger');
+  const menu = wrapper.querySelector('.multi-select-menu');
+  
+  if (!trigger || !menu) return;
+  
+  // Store selected IDs
+  wrapper.selectedIds = Array.isArray(preSelectedIds) ? [...preSelectedIds] : [preSelectedIds].filter(Boolean);
+  
+  // Render menu items
+  menu.innerHTML = '';
+  categories.forEach(cat => {
+    const item = document.createElement('div');
+    item.className = 'multi-select-item';
+    item.dataset.id = cat.id;
+    item.dataset.name = cat.name;
+    if (wrapper.selectedIds.includes(cat.id)) {
+      item.classList.add('selected');
+    }
+    item.innerHTML = `<span class="checkbox"></span><span>${cat.name}</span>`;
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleCategorySelection(wrapperId, cat.id, cat.name);
+    });
+    menu.appendChild(item);
+  });
+  
+  // Update display
+  updateCategoryMultiSelectDisplay(wrapperId);
+};
+
+// Toggle category selection
+window.toggleCategorySelection = function(wrapperId, categoryId, categoryName) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return;
+  
+  const idx = wrapper.selectedIds.indexOf(categoryId);
+  if (idx > -1) {
+    wrapper.selectedIds.splice(idx, 1);
+  } else {
+    wrapper.selectedIds.push(categoryId);
+  }
+  
+  // Update item state
+  const item = wrapper.querySelector(`.multi-select-item[data-id="${categoryId}"]`);
+  if (item) {
+    item.classList.toggle('selected', wrapper.selectedIds.includes(categoryId));
+  }
+  
+  updateCategoryMultiSelectDisplay(wrapperId);
+};
+
+// Update the display of selected categories
+window.updateCategoryMultiSelectDisplay = function(wrapperId) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return;
+  
+  const trigger = wrapper.querySelector('.multi-select-trigger');
+  const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+  
+  if (!trigger) return;
+  
+  // Clear trigger content except arrow
+  const arrow = trigger.querySelector('.arrow');
+  trigger.innerHTML = '';
+  
+  if (wrapper.selectedIds.length === 0) {
+    const placeholder = document.createElement('span');
+    placeholder.className = 'placeholder';
+    placeholder.textContent = 'Select categories...';
+    trigger.appendChild(placeholder);
+  } else {
+    wrapper.selectedIds.forEach(id => {
+      const item = wrapper.querySelector(`.multi-select-item[data-id="${id}"]`);
+      if (item) {
+        const tag = document.createElement('span');
+        tag.className = 'multi-select-tag';
+        tag.innerHTML = `${item.dataset.name} <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeCategorySelection('${wrapperId}', ${id})">×</span>`;
+        trigger.appendChild(tag);
+      }
+    });
+  }
+  
+  // Re-add arrow
+  const newArrow = document.createElement('span');
+  newArrow.className = 'arrow';
+  newArrow.textContent = '▼';
+  trigger.appendChild(newArrow);
+  
+  // Update hidden input
+  if (hiddenInput) {
+    hiddenInput.value = wrapper.selectedIds.join(',');
+  }
+};
+
+// Remove a category from selection
+window.removeCategorySelection = function(wrapperId, categoryId) {
+  toggleCategorySelection(wrapperId, categoryId);
+};
+
+// Toggle multi-select dropdown
+window.toggleCategoryMultiSelect = function(wrapperId) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return;
+  
+  const menu = wrapper.querySelector('.multi-select-menu');
+  if (menu) {
+    // Close other dropdowns
+    document.querySelectorAll('.multi-select-menu.show').forEach(m => {
+      if (m !== menu) m.classList.remove('show');
+    });
+    menu.classList.toggle('show');
+  }
+};
+
+// Get selected category IDs from a multi-select wrapper
+window.getSelectedCategories = function(wrapperId) {
+  const wrapper = document.getElementById(wrapperId);
+  return wrapper ? (wrapper.selectedIds || []) : [];
 };
 
 // Open Add Existing Customer Modal with category context
