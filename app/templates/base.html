@@ -465,40 +465,87 @@
             <form onsubmit="handleFormSubmit(event, createSubscription)" id="subscription-form">
                 <div class="modal-body modal-body-improved" style="overflow-y: auto; flex: 1; max-height: calc(90vh - 140px);">
                     
-                    <!-- SECTION 1: CATEGORIES (PRIMARY FOCUS) -->
-                    <div class="modal-section modal-section-primary">
-                        <div class="section-header">
-                            <h3 class="section-title">Categories</h3>
-                            <p class="section-subtitle">Select one or more categories</p>
-                        </div>
-                        <div class="section-content">
-                            <input type="hidden" name="category_ids" id="subscription-category-ids" required>
-                            <input type="hidden" name="category_id" id="subscription-category-id">
-                            
-                            <div class="categories-chips-container" id="subscription-categories-wrapper">
-                                <!-- Selected Categories Display -->
-                                <div class="categories-chips-display" id="subscription-categories-tags" onclick="openCategorySelector()">
-                                    <span class="categories-placeholder">Click to select categories...</span>
+                    <!-- PRIMARY SELECTION ROW: Customer & Categories -->
+                    <div class="primary-selection-row">
+                        <!-- CUSTOMER SELECTOR (FIRST) -->
+                        <div class="selection-card selection-card-customer animated-border-card">
+                            <div class="animated-border"></div>
+                            <div class="selection-card-inner">
+                                <div class="selection-card-header">
+                                    <span class="selection-card-icon">👤</span>
+                                    <h3 class="selection-card-title">Customer</h3>
                                 </div>
-                                
-                                <!-- Add Categories Button -->
-                                <button type="button" class="btn-add-categories" onclick="openCategorySelector()">
-                                    <span class="btn-add-icon">+</span> Add categories
-                                </button>
-                                
-                                <!-- Dropdown Panel -->
-                                <div class="categories-dropdown" id="subscription-categories-dropdown" style="display: none;">
-                                    <div class="categories-dropdown-header">
-                                        <span>Select categories</span>
-                                        <button type="button" class="categories-close" onclick="closeCategorySelector()">✕</button>
-                                    </div>
-                                    <div class="categories-dropdown-list">
-                                        {% for category in categories|default([]) %}
-                                        <div class="categories-dropdown-item" data-id="{{ category.id }}" data-name="{{ category.name }}" onclick="toggleCategoryTag(this)">
-                                            <span class="categories-item-checkbox"></span>
-                                            <span class="categories-item-label">{{ category.name }}</span>
+                                <div class="selection-card-content">
+                                    <input type="hidden" name="customer_id" id="subscription-customer-id" required>
+                                    
+                                    <!-- Customer Display/Selector -->
+                                    <div class="customer-selector-wrapper" id="customer-selector-wrapper">
+                                        <div class="customer-selected-display" id="customer-selected-display" onclick="toggleCustomerDropdown()">
+                                            <span class="customer-selected-name" id="selected-customer-name">Select customer...</span>
+                                            <span class="customer-selected-arrow">▼</span>
                                         </div>
-                                        {% endfor %}
+                                        
+                                        <!-- Customer Dropdown -->
+                                        <div class="customer-dropdown-panel" id="customer-dropdown-panel" style="display: none;">
+                                            <div class="dropdown-search-box">
+                                                <input type="text" 
+                                                       class="dropdown-search-input" 
+                                                       placeholder="Search customers..." 
+                                                       id="subscription-customer-search"
+                                                       oninput="filterEnhancedDropdown('subscription-customer', this.value)">
+                                            </div>
+                                            
+                                            <div class="dropdown-loading" id="subscription-customer-loading">
+                                                <div class="loading-spinner"></div>
+                                                <span>Loading...</span>
+                                            </div>
+                                            
+                                            <div class="dropdown-list" id="subscription-customer-list" style="display: none;">
+                                                <!-- Populated by JS -->
+                                            </div>
+                                            
+                                            <div class="dropdown-empty" id="subscription-customer-empty" style="display: none;">
+                                                <span>No customers found</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CATEGORIES SELECTOR (SECOND) -->
+                        <div class="selection-card selection-card-categories animated-border-card">
+                            <div class="animated-border"></div>
+                            <div class="selection-card-inner">
+                                <div class="selection-card-header">
+                                    <span class="selection-card-icon">🏷️</span>
+                                    <h3 class="selection-card-title">Categories</h3>
+                                </div>
+                                <div class="selection-card-content">
+                                    <input type="hidden" name="category_ids" id="subscription-category-ids" required>
+                                    <input type="hidden" name="category_id" id="subscription-category-id">
+                                    
+                                    <div class="categories-chips-container" id="subscription-categories-wrapper">
+                                        <!-- Selected Categories Display -->
+                                        <div class="categories-chips-display" id="subscription-categories-tags" onclick="openCategorySelector()">
+                                            <span class="categories-placeholder">Click to select...</span>
+                                        </div>
+                                        
+                                        <!-- Dropdown Panel -->
+                                        <div class="categories-dropdown" id="subscription-categories-dropdown" style="display: none;">
+                                            <div class="categories-dropdown-header">
+                                                <span>Select categories</span>
+                                                <button type="button" class="categories-close" onclick="closeCategorySelector()">✕</button>
+                                            </div>
+                                            <div class="categories-dropdown-list">
+                                                {% for category in categories|default([]) %}
+                                                <div class="categories-dropdown-item tags-dropdown-item" data-id="{{ category.id }}" data-name="{{ category.name }}" onclick="toggleCategoryTag(this)">
+                                                    <span class="categories-item-checkbox"></span>
+                                                    <span class="categories-item-label">{{ category.name }}</span>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -563,63 +610,7 @@
                         </div>
                     </div>
 
-                    <!-- SECTION 3: CUSTOMER CONTEXT (SECONDARY) -->
-                    <div class="modal-section modal-section-compact">
-                        <div class="section-header">
-                            <h3 class="section-title">Customer</h3>
-                        </div>
-                        <div class="section-content">
-                            <!-- Compact Customer Display -->
-                            <div class="customer-compact-display" id="customer-compact-display">
-                                <div class="customer-info">
-                                    <span class="customer-name" id="selected-customer-name">No customer selected</span>
-                                    <p class="customer-helper">Subscription will be created for this customer</p>
-                                </div>
-                                <button type="button" class="btn-change-customer" onclick="toggleCustomerSelector()">
-                                    Change customer
-                                </button>
-                            </div>
-                            
-                            <!-- Hidden Customer Selector -->
-                            <div class="customer-selector-hidden" id="customer-selector" style="display: none;">
-                                <input type="hidden" name="customer_id" id="subscription-customer-id" required>
-                                
-                                <div class="enhanced-dropdown" id="subscription-customer-dropdown">
-                                    <button type="button" class="enhanced-dropdown-trigger" id="subscription-customer-trigger" onclick="toggleEnhancedDropdown('subscription-customer')">
-                                        <span class="trigger-content">
-                                            <span class="trigger-text placeholder">Select a customer...</span>
-                                        </span>
-                                        <span class="trigger-arrow">▼</span>
-                                    </button>
-                                    
-                                    <div class="enhanced-dropdown-panel" id="subscription-customer-panel" style="display: none;">
-                                        <div class="dropdown-search-box">
-                                            <input type="text" 
-                                                   class="dropdown-search-input" 
-                                                   placeholder="Search customers..." 
-                                                   id="subscription-customer-search"
-                                                   oninput="filterEnhancedDropdown('subscription-customer', this.value)">
-                                        </div>
-                                        
-                                        <div class="dropdown-loading" id="subscription-customer-loading">
-                                            <div class="loading-spinner"></div>
-                                            <span>Loading customers...</span>
-                                        </div>
-                                        
-                                        <div class="dropdown-list" id="subscription-customer-list" style="display: none;">
-                                            <!-- Populated by JS -->
-                                        </div>
-                                        
-                                        <div class="dropdown-empty" id="subscription-customer-empty" style="display: none;">
-                                            <span>No customers found</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SECTION 4: SMART SUGGESTIONS (COLLAPSIBLE) -->
+                    <!-- SECTION 3: SMART SUGGESTIONS (COLLAPSIBLE) -->
                     <div class="modal-section modal-section-collapsible">
                         <div class="collapsible-header" onclick="toggleSmartSuggestions()">
                             <div class="collapsible-title">

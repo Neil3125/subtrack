@@ -3720,14 +3720,176 @@ tr:hover {
   padding-left: 28px;
 }
 
+/* ==================== PRIMARY SELECTION ROW - Customer & Categories ==================== */
+.primary-selection-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* Animated Border Card */
+.animated-border-card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  padding: 3px;
+  background: var(--color-bg-card);
+  overflow: hidden;
+}
+
+.animated-border-card .animated-border {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  padding: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary),
+    #a855f7,
+    #ec4899,
+    #f97316,
+    #eab308,
+    #22c55e,
+    #06b6d4,
+    var(--color-primary)
+  );
+  background-size: 300% 100%;
+  animation: animatedBorder 4s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.animated-border-card:hover .animated-border,
+.animated-border-card:focus-within .animated-border,
+.animated-border-card.active .animated-border {
+  opacity: 1;
+}
+
+@keyframes animatedBorder {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 300% 50%;
+  }
+}
+
+.selection-card-inner {
+  position: relative;
+  background: var(--color-bg-card);
+  border-radius: calc(var(--radius-lg) - 2px);
+  padding: 16px;
+  height: 100%;
+  z-index: 1;
+}
+
+.selection-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.selection-card-icon {
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary-alpha), rgba(168, 85, 247, 0.1));
+  border-radius: var(--radius-md);
+}
+
+.selection-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.selection-card-content {
+  position: relative;
+}
+
+/* Customer Selector Styles */
+.customer-selector-wrapper {
+  position: relative;
+}
+
+.customer-selected-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--color-bg);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.customer-selected-display:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg-secondary);
+}
+
+.customer-selected-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.customer-selected-name.placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.customer-selected-arrow {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.customer-selector-wrapper.open .customer-selected-arrow {
+  transform: rotate(180deg);
+}
+
+.customer-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  z-index: 1000;
+  max-height: 240px;
+  overflow: hidden;
+}
+
+.customer-dropdown-panel .dropdown-search-box {
+  padding: 8px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.customer-dropdown-panel .dropdown-list {
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
 /* Categories Section - Large, Clean Chips */
 .categories-chips-container {
   position: relative;
 }
 
 .categories-chips-display {
-  min-height: 52px;
-  padding: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
   background: var(--color-bg);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -3735,13 +3897,13 @@ tr:hover {
   transition: all 0.2s ease;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
-  margin-bottom: 12px;
 }
 
 .categories-chips-display:hover {
   border-color: var(--color-primary);
+  background: var(--color-bg-secondary);
 }
 
 .categories-placeholder {

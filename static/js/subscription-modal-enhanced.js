@@ -64,45 +64,49 @@ window.initEnhancedSubscriptionModal = function(customerId = null, customerName 
   initCollapsibleSections();
 };
 
-// ==================== COMPACT CUSTOMER DISPLAY ====================
+// ==================== CUSTOMER DISPLAY & DROPDOWN ====================
 
 function updateCompactCustomerDisplay(customerName) {
   const nameEl = document.getElementById('selected-customer-name');
-  const helperEl = document.querySelector('.customer-helper');
   
   if (nameEl) {
     if (customerName) {
       nameEl.textContent = customerName;
-      nameEl.style.color = 'var(--color-text)';
+      nameEl.classList.remove('placeholder');
     } else {
-      nameEl.textContent = 'No customer selected';
-      nameEl.style.color = 'var(--color-text-tertiary)';
+      nameEl.textContent = 'Select customer...';
+      nameEl.classList.add('placeholder');
     }
-  }
-  
-  if (helperEl) {
-    helperEl.textContent = customerName ? 
-      'Subscription will be created for this customer' : 
-      'Select a customer to create subscription';
   }
 }
 
-window.toggleCustomerSelector = function() {
-  const selector = document.getElementById('customer-selector');
-  const isVisible = selector.style.display !== 'none';
+// Toggle the new customer dropdown
+window.toggleCustomerDropdown = function() {
+  const wrapper = document.getElementById('customer-selector-wrapper');
+  const panel = document.getElementById('customer-dropdown-panel');
   
-  if (isVisible) {
-    selector.style.display = 'none';
+  if (!wrapper || !panel) return;
+  
+  const isOpen = panel.style.display === 'block';
+  
+  if (isOpen) {
+    panel.style.display = 'none';
+    wrapper.classList.remove('open');
   } else {
-    selector.style.display = 'block';
-    // Focus the customer dropdown
-    setTimeout(() => {
-      const trigger = document.getElementById('subscription-customer-trigger');
-      if (trigger) {
-        trigger.click();
-      }
-    }, 100);
+    panel.style.display = 'block';
+    wrapper.classList.add('open');
+    
+    // Focus search input
+    const searchInput = document.getElementById('subscription-customer-search');
+    if (searchInput) {
+      setTimeout(() => searchInput.focus(), 100);
+    }
   }
+};
+
+// Legacy function for backward compatibility
+window.toggleCustomerSelector = function() {
+  toggleCustomerDropdown();
 };
 
 window.clearCustomerContext = function() {
@@ -113,23 +117,13 @@ window.clearCustomerContext = function() {
   updateCompactCustomerDisplay(null);
   hideSmartSuggestions();
   
-  // Reset customer dropdown
-  const trigger = document.getElementById('subscription-customer-trigger');
-  if (trigger) {
-    const textEl = trigger.querySelector('.trigger-text');
-    if (textEl) {
-      textEl.textContent = 'Select a customer...';
-      textEl.classList.add('placeholder');
-    }
-  }
-  
   document.getElementById('subscription-customer-id').value = '';
   
-  // Hide customer selector
-  const selector = document.getElementById('customer-selector');
-  if (selector) {
-    selector.style.display = 'none';
-  }
+  // Close customer dropdown
+  const panel = document.getElementById('customer-dropdown-panel');
+  const wrapper = document.getElementById('customer-selector-wrapper');
+  if (panel) panel.style.display = 'none';
+  if (wrapper) wrapper.classList.remove('open');
 };
 
 // ==================== ENHANCED CUSTOMER DROPDOWN ====================
@@ -255,32 +249,26 @@ function selectEnhancedCustomer(customerId, customerName) {
   // Update hidden input
   document.getElementById('subscription-customer-id').value = customerId;
   
-  // Update trigger display
-  const trigger = document.getElementById('subscription-customer-trigger');
-  if (trigger) {
-    const textEl = trigger.querySelector('.trigger-text');
-    if (textEl) {
-      textEl.textContent = customerName;
-      textEl.classList.remove('placeholder');
-    }
-  }
-  
   // Update list selection
   document.querySelectorAll('#subscription-customer-list .dropdown-list-item').forEach(item => {
     item.classList.remove('selected');
   });
-  event.target.closest('.dropdown-list-item')?.classList.add('selected');
+  event?.target?.closest('.dropdown-list-item')?.classList.add('selected');
   
-  // Close dropdown
-  toggleEnhancedDropdown('subscription-customer');
+  // Close new customer dropdown
+  const panel = document.getElementById('customer-dropdown-panel');
+  const wrapper = document.getElementById('customer-selector-wrapper');
+  if (panel) panel.style.display = 'none';
+  if (wrapper) wrapper.classList.remove('open');
   
   // Update compact display
   updateCompactCustomerDisplay(customerName);
   
-  // Hide customer selector
-  const selector = document.getElementById('customer-selector');
-  if (selector) {
-    selector.style.display = 'none';
+  // Activate the card border animation briefly
+  const customerCard = document.querySelector('.selection-card-customer');
+  if (customerCard) {
+    customerCard.classList.add('active');
+    setTimeout(() => customerCard.classList.remove('active'), 2000);
   }
   
   // Load suggestions
