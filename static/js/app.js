@@ -83,18 +83,20 @@ function openModal(modalId) {
     
     // If opening customer modals, load all groups immediately
     if (modalId === 'customerModal') {
-      const categorySelect = modal.querySelector('select[name="category_id"]');
-      const categoryId = categorySelect ? categorySelect.value : null;
-      // Load all groups organized by category (current category first if selected)
-      updateGroupSelectMulti(categoryId, 'customer-groups-container', []);
+      // Load all groups organized by category
+      updateGroupSelectMulti(null, 'customer-groups-container', []);
+      
+      // Set up listener for category changes
+      setTimeout(() => {
+        setupCategoryChangeListener('customer-category-multiselect', 'customer-groups-container');
+      }, 100);
     }
     if (modalId === 'editCustomerModal') {
       // Edit modal groups are loaded by loadEditData function
-      const categorySelect = modal.querySelector('select[name="category_id"]');
-      const categoryId = categorySelect ? categorySelect.value : null;
-      if (categoryId) {
-        updateGroupSelect(categoryId, 'group_id');
-      }
+      // Set up listener for category changes
+      setTimeout(() => {
+        setupCategoryChangeListener('edit-customer-category-multiselect', 'edit-customer-groups-container');
+      }, 100);
     }
     
     // If opening subscription modal, load all customers
@@ -898,10 +900,24 @@ window.loadEditData = function(type, id) {
       // Store ID for update
       form.dataset.itemId = id;
 
-      // Special handling: customer edit needs group dropdown populated based on category
+      // Special handling: customer edit needs category multi-select and group dropdown
       if (type === 'customer') {
-        const categoryField = form.querySelector('select[name="category_id"]');
-        const categoryId = categoryField ? categoryField.value : null;
+        // Get category IDs - support both single category_id and multiple categories array
+        let categoryIds = [];
+        if (data.categories && Array.isArray(data.categories)) {
+          categoryIds = data.categories.map(c => c.id);
+        } else if (data.category_ids && Array.isArray(data.category_ids)) {
+          categoryIds = data.category_ids;
+        } else if (data.category_id) {
+          categoryIds = [data.category_id];
+        }
+        
+        // Pre-select categories in multi-select
+        if (categoryIds.length > 0) {
+          setTimeout(() => {
+            preselectCategories('edit-customer-category-multiselect', categoryIds);
+          }, 50);
+        }
         
         // Get group IDs - support both single group_id and multiple groups array
         let groupIds = [];
@@ -913,39 +929,11 @@ window.loadEditData = function(type, id) {
           groupIds = [data.group_id];
         }
 
-        // Use multi-select component for groups
-        const multiSelectContainer = document.getElementById('edit-customer-groups-container');
-        if (multiSelectContainer) {
-          // Load groups for the category with pre-selected groups
-          updateGroupSelectMulti(categoryId, 'edit-customer-groups-container', groupIds);
-        } else {
-          // Fallback to legacy single-select
-          const groupField = form.querySelector('select[name="group_id"]');
-          const groupId = data.group_id || (groupField ? groupField.value : null);
-          updateGroupSelect(categoryId, 'group_id', groupId);
-          
-          if (groupId) {
-            setTimeout(() => {
-              const groupSelect = form.querySelector('select[name="group_id"]');
-              if (groupSelect) {
-                groupSelect.value = groupId;
-              }
-            }, 300);
-          }
-        }
-
-        // Ensure future category changes keep group list in sync.
-        if (categoryField && !categoryField.dataset.groupHooked) {
-          categoryField.addEventListener('change', function() {
-            const container = document.getElementById('edit-customer-groups-container');
-            if (container) {
-              updateGroupSelectMulti(this.value, 'edit-customer-groups-container', []);
-            } else {
-              updateGroupSelect(this.value, 'group_id');
-            }
-          });
-          categoryField.dataset.groupHooked = 'true';
-        }
+        // Load groups with multi-select, pre-selecting the current groups
+        const firstCategoryId = categoryIds.length > 0 ? categoryIds[0] : null;
+        setTimeout(() => {
+          updateGroupSelectMulti(firstCategoryId, 'edit-customer-groups-container', groupIds);
+        }, 100);
         
         // Load customer subscriptions
         loadCustomerSubscriptions(id);
@@ -1186,7 +1174,9 @@ window.loadCustomersForSubscription = function(categoryId, preSelectedId = null,
       renderCustomerDropdownList('subscription', sortedGroups, preSelectedId, categoryId);
       
       if (countMessage) {
-        countMessage.textContent = `${customers.length} customer${customers.length !== 1 ? 's' : ''} available`;
+        const countText = customers.length === 1 ? '1 customer' : `${customers.length} customers`;
+        countMessage.innerHTML = `✓ ${countText} available`;
+        countMessage.style.color = 'var(--color-success)';
       }
       
       // Update placeholder if no pre-selection
@@ -3292,6 +3282,38 @@ window.checkEmailConfig = function() {
       showToast('Error checking email config', 'error');
     });
 };
+
+// Setup category change listener to reload groups
+function setupCategoryChangeListener(categoryWrapperId, groupContainerId) {
+  const wrapper = document.getElementById(categoryWrapperId);
+  if (!wrapper) return;
+  
+  // Watch for changes to the hidden input
+  const hiddenInput = wrapper.closest('.form-group')?.querySelector('input[name="category_ids"]');
+  if (!hiddenInput) return;
+  
+  // Use MutationObserver to watch for value changes
+  const observer = new MutationObserver(() => {
+    const categoryIds = hiddenInput.value.split(',').filter(id => id).map(id => parseInt(id));
+    const firstCategoryId = categoryIds.length > 0 ? categoryIds[0] : null;
+    
+    // Reload groups for the first selected category
+    updateGroupSelectMulti(firstCategoryId, groupContainerId, []);
+  });
+  
+  observer.observe(hiddenInput, { attributes: true, attributeFilter: ['value'] });
+  
+  // Also trigger on category item clicks
+  wrapper.querySelectorAll('.multi-select-item').forEach(item => {
+    item.addEventListener('click', function() {
+      setTimeout(() => {
+        const categoryIds = hiddenInput.value.split(',').filter(id => id).map(id => parseInt(id));
+        const firstCategoryId = categoryIds.length > 0 ? categoryIds[0] : null;
+        updateGroupSelectMulti(firstCategoryId, groupContainerId, []);
+      }, 100);
+    });
+  });
+}
 
 // ==================== Export Functions ====================
 window.openShortcutsModal = function() {
