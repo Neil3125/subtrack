@@ -97,8 +97,14 @@ function openModal(modalId) {
       }
     }
     
-    // If opening subscription modals, ensure customer dropdown is populated
-    if (modalId === 'subscriptionModal' || modalId === 'editSubscriptionModal') {
+    // If opening subscription modal, load all customers
+    if (modalId === 'subscriptionModal') {
+      // Load all customers immediately when modal opens
+      loadCustomersForSubscription(null, null, null);
+    }
+    
+    // For edit subscription modal, keep existing behavior
+    if (modalId === 'editSubscriptionModal') {
       const categorySelect = modal.querySelector('select[name="category_id"]');
       const customerSelect = modal.querySelector('select[name="customer_id"]');
       const categoryId = categorySelect ? categorySelect.value : null;
@@ -1052,28 +1058,24 @@ window.openGroupModalForCategory = function(categoryId) {
 // Open Customer Modal with pre-selected category
 window.openCustomerModalForCategory = function(categoryId) {
   openModal('customerModal');
-  // Pre-select the category and load groups for that category
+  // Pre-select the category in multi-select and load groups for that category
   setTimeout(() => {
-    const categorySelect = document.querySelector('#customerModal select[name="category_id"]');
-    if (categorySelect) {
-      categorySelect.value = categoryId;
-      // Load groups with multi-select, prioritizing the current category
-      updateGroupSelectMulti(categoryId, 'customer-groups-container', []);
-    }
+    // Use multi-select category
+    preselectCategories('customer-category-multiselect', [categoryId]);
+    // Load groups with multi-select, prioritizing the current category
+    updateGroupSelectMulti(categoryId, 'customer-groups-container', []);
   }, 50);
 };
 
 // Open Customer Modal with pre-selected category AND group (from group detail page)
 window.openCustomerModalForGroup = function(categoryId, groupId) {
   openModal('customerModal');
-  // Pre-select the category and pre-select the group
+  // Pre-select the category in multi-select and pre-select the group
   setTimeout(() => {
-    const categorySelect = document.querySelector('#customerModal select[name="category_id"]');
-    if (categorySelect) {
-      categorySelect.value = categoryId;
-      // Load groups with multi-select, pre-selecting the current group
-      updateGroupSelectMulti(categoryId, 'customer-groups-container', groupId ? [groupId] : []);
-    }
+    // Use multi-select category
+    preselectCategories('customer-category-multiselect', [categoryId]);
+    // Load groups with multi-select, pre-selecting the current group
+    updateGroupSelectMulti(categoryId, 'customer-groups-container', groupId ? [groupId] : []);
   }, 50);
 };
 
@@ -1096,13 +1098,14 @@ window.openSubscriptionModalForCustomer = function(categoryId, customerId, custo
   setTimeout(() => {
     const categorySelect = document.querySelector('#subscriptionModal select[name="category_id"]');
     
-    if (categorySelect) {
+    // Set category
+    if (categorySelect && categoryId) {
       categorySelect.value = categoryId;
     }
     
-    // Load customers for the category and pre-select the current customer
+    // Load all customers and pre-select the current customer
     loadCustomersForSubscription(categoryId, customerId, customerName);
-  }, 50);
+  }, 100);
 };
 
 // ==================== Custom Customer Dropdown for Subscription Modal ====================
@@ -1117,15 +1120,11 @@ window.loadCustomersForSubscription = function(categoryId, preSelectedId = null,
   const selectedText = trigger ? trigger.querySelector('.selected-text') : null;
   const countMessage = document.getElementById('customer-count-message');
   
-  if (!categoryId) {
-    if (listContainer) listContainer.innerHTML = '<div class="customer-dropdown-empty">Select a category first</div>';
-    if (selectedText) {
-      selectedText.textContent = 'Select a category first';
-      selectedText.classList.add('placeholder');
-    }
-    if (hiddenInput) hiddenInput.value = '';
-    if (countMessage) countMessage.textContent = '';
-    return;
+  // Show loading state
+  if (listContainer) listContainer.innerHTML = '<div class="customer-dropdown-empty">Loading customers...</div>';
+  if (selectedText && !preSelectedName) {
+    selectedText.textContent = 'Loading...';
+    selectedText.classList.add('placeholder');
   }
   
   // If we have a pre-selected customer, set it immediately
@@ -1137,17 +1136,40 @@ window.loadCustomersForSubscription = function(categoryId, preSelectedId = null,
     }
   }
   
-  // Fetch all customers (grouped by category, with current category first)
-  fetch(`/api/customers?limit=1000`)
-    .then(response => response.json())
+  // Fetch all customers
+  fetch('/api/customers')
+    .then(response => {
+      if (!response.ok) throw new Error('Failed to fetch customers');
+      return response.json();
+    })
     .then(customers => {
+      console.log('Loaded customers:', customers.length);
       subscriptionCustomersCache = customers;
+      
+      if (!customers || customers.length === 0) {
+        if (listContainer) listContainer.innerHTML = '<div class="customer-dropdown-empty">No customers found. Create a customer first.</div>';
+        if (selectedText && !preSelectedName) {
+          selectedText.textContent = 'No customers available';
+          selectedText.classList.add('placeholder');
+        }
+        if (countMessage) countMessage.textContent = 'No customers found';
+        return;
+      }
       
       // Group customers by category
       const grouped = {};
       customers.forEach(c => {
-        const catName = c.category ? c.category.name : 'Uncategorized';
-        const catId = c.category ? c.category.id : 0;
+        // Handle both 'category' object and 'categories' array from API response
+        let catName = 'Uncategorized';
+        let catId = c.category_id || 0;
+        
+        if (c.categories && c.categories.length > 0) {
+          catName = c.categories[0].name;
+          catId = c.categories[0].id;
+        } else if (c.category_names) {
+          catName = c.category_names;
+        }
+        
         if (!grouped[catId]) {
           grouped[catId] = { name: catName, customers: [] };
         }
@@ -1164,12 +1186,22 @@ window.loadCustomersForSubscription = function(categoryId, preSelectedId = null,
       renderCustomerDropdownList('subscription', sortedGroups, preSelectedId, categoryId);
       
       if (countMessage) {
-        countMessage.textContent = `${customers.length} customers available`;
+        countMessage.textContent = `${customers.length} customer${customers.length !== 1 ? 's' : ''} available`;
+      }
+      
+      // Update placeholder if no pre-selection
+      if (selectedText && !preSelectedId) {
+        selectedText.textContent = 'Select a customer...';
+        selectedText.classList.add('placeholder');
       }
     })
     .catch(error => {
       console.error('Error loading customers:', error);
-      if (listContainer) listContainer.innerHTML = '<div class="customer-dropdown-empty">Error loading customers</div>';
+      if (listContainer) listContainer.innerHTML = '<div class="customer-dropdown-empty">Error loading customers. Please try again.</div>';
+      if (selectedText) {
+        selectedText.textContent = 'Error loading customers';
+        selectedText.classList.add('placeholder');
+      }
     });
 };
 
@@ -1193,7 +1225,7 @@ function renderCustomerDropdownList(prefix, groupedCustomers, selectedId, curren
     const isCurrentCategory = catId == currentCategoryId;
     const labelDiv = document.createElement('div');
     labelDiv.className = 'customer-dropdown-group-label';
-    labelDiv.textContent = group.name + (isCurrentCategory ? ' (Current)' : '');
+    labelDiv.textContent = group.name + (isCurrentCategory ? ' ★' : '');
     groupDiv.appendChild(labelDiv);
     
     group.customers.forEach(customer => {
@@ -1204,11 +1236,12 @@ function renderCustomerDropdownList(prefix, groupedCustomers, selectedId, curren
       }
       itemDiv.dataset.customerId = customer.id;
       itemDiv.dataset.customerName = customer.name;
+      itemDiv.dataset.categoryId = catId;
       itemDiv.dataset.searchText = customer.name.toLowerCase();
       itemDiv.innerHTML = `<span>👤</span> <span>${customer.name}</span>`;
       
       itemDiv.addEventListener('click', () => {
-        selectCustomerFromDropdown(prefix, customer.id, customer.name);
+        selectCustomerFromDropdown(prefix, customer.id, customer.name, catId);
       });
       
       groupDiv.appendChild(itemDiv);
@@ -1279,7 +1312,7 @@ window.filterCustomerDropdown = function(prefix, searchText) {
 };
 
 // Select a customer from the dropdown
-function selectCustomerFromDropdown(prefix, customerId, customerName) {
+function selectCustomerFromDropdown(prefix, customerId, customerName, categoryId) {
   const hiddenInput = document.getElementById(`${prefix}-customer-id`);
   const wrapper = document.getElementById(`${prefix}-customer-dropdown`);
   const trigger = wrapper ? wrapper.querySelector('.customer-dropdown-trigger') : null;
@@ -1303,6 +1336,14 @@ function selectCustomerFromDropdown(prefix, customerId, customerName) {
     });
   }
   
+  // Auto-select category based on customer's category (for subscription modal)
+  if (prefix === 'subscription' && categoryId) {
+    const categorySelect = document.getElementById('subscription-category-select');
+    if (categorySelect && !categorySelect.value) {
+      categorySelect.value = categoryId;
+    }
+  }
+  
   // Close dropdown
   if (menu) menu.classList.remove('show');
   if (trigger) trigger.classList.remove('open');
@@ -1324,6 +1365,127 @@ document.addEventListener('click', function(e) {
     });
   }
 });
+
+// ==================== Multi-Select Category Dropdown ====================
+
+// Toggle multi-select dropdown visibility
+window.toggleCategoryMultiSelect = function(wrapperId) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return;
+  
+  const menu = wrapper.querySelector('.multi-select-menu');
+  if (menu) {
+    // Close other dropdowns first
+    document.querySelectorAll('.multi-select-menu.show').forEach(m => {
+      if (m !== menu) m.classList.remove('show');
+    });
+    menu.classList.toggle('show');
+  }
+};
+
+// Toggle individual category item selection
+window.toggleCategoryItem = function(itemElement, wrapperId) {
+  itemElement.classList.toggle('selected');
+  updateCategoryMultiSelectDisplay(wrapperId);
+};
+
+// Update the display of selected categories in the trigger
+window.updateCategoryMultiSelectDisplay = function(wrapperId) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return;
+  
+  const trigger = wrapper.querySelector('.multi-select-trigger');
+  const hiddenInput = wrapper.closest('.form-group').querySelector('input[type="hidden"]');
+  const selectedItems = wrapper.querySelectorAll('.multi-select-item.selected');
+  
+  // Collect selected IDs and names
+  const selectedIds = [];
+  const selectedNames = [];
+  
+  selectedItems.forEach(item => {
+    selectedIds.push(item.dataset.id);
+    selectedNames.push(item.dataset.name);
+  });
+  
+  // Update hidden input
+  if (hiddenInput) {
+    hiddenInput.value = selectedIds.join(',');
+  }
+  
+  // Update trigger display
+  if (trigger) {
+    // Clear existing content
+    trigger.innerHTML = '';
+    
+    if (selectedNames.length === 0) {
+      const placeholder = document.createElement('span');
+      placeholder.className = 'placeholder';
+      placeholder.textContent = 'Select categories...';
+      trigger.appendChild(placeholder);
+    } else {
+      selectedNames.forEach((name, index) => {
+        const tag = document.createElement('span');
+        tag.className = 'multi-select-tag';
+        tag.innerHTML = `${name} <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeCategoryFromSelect('${wrapperId}', '${selectedIds[index]}')">×</span>`;
+        trigger.appendChild(tag);
+      });
+    }
+    
+    // Add arrow
+    const arrow = document.createElement('span');
+    arrow.className = 'arrow';
+    arrow.textContent = '▼';
+    trigger.appendChild(arrow);
+  }
+  
+  // Update groups if this is the customer modal
+  if (wrapperId === 'customer-category-multiselect' && selectedIds.length > 0) {
+    updateGroupSelectMulti(selectedIds[0], 'customer-groups-container', []);
+  }
+};
+
+// Remove a category from selection
+window.removeCategoryFromSelect = function(wrapperId, categoryId) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return;
+  
+  const item = wrapper.querySelector(`.multi-select-item[data-id="${categoryId}"]`);
+  if (item) {
+    item.classList.remove('selected');
+    updateCategoryMultiSelectDisplay(wrapperId);
+  }
+};
+
+// Pre-select categories in multi-select (for editing or context)
+window.preselectCategories = function(wrapperId, categoryIds) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return;
+  
+  // Clear all selections first
+  wrapper.querySelectorAll('.multi-select-item').forEach(item => {
+    item.classList.remove('selected');
+  });
+  
+  // Select the specified categories
+  const ids = Array.isArray(categoryIds) ? categoryIds : [categoryIds];
+  ids.forEach(id => {
+    const item = wrapper.querySelector(`.multi-select-item[data-id="${id}"]`);
+    if (item) {
+      item.classList.add('selected');
+    }
+  });
+  
+  updateCategoryMultiSelectDisplay(wrapperId);
+};
+
+// Get selected category IDs from a multi-select
+window.getSelectedCategoryIds = function(wrapperId) {
+  const wrapper = document.getElementById(wrapperId);
+  if (!wrapper) return [];
+  
+  const selectedItems = wrapper.querySelectorAll('.multi-select-item.selected');
+  return Array.from(selectedItems).map(item => parseInt(item.dataset.id));
+};
 
 // ==================== Multi-Select Category Dropdown ====================
 
@@ -1494,8 +1656,16 @@ window.createCustomer = function(formData) {
     validationErrors.push('Customer name is required');
   }
   
-  if (!formData.category_id) {
-    validationErrors.push('Category is required');
+  // Handle both category_ids (multi-select) and category_id (single select)
+  let categoryIds = [];
+  if (formData.category_ids && formData.category_ids.trim()) {
+    categoryIds = formData.category_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+  } else if (formData.category_id) {
+    categoryIds = [parseInt(formData.category_id)];
+  }
+  
+  if (categoryIds.length === 0) {
+    validationErrors.push('At least one category is required');
   }
   
   if (!formData.country || !formData.country.trim()) {
@@ -1531,7 +1701,8 @@ window.createCustomer = function(formData) {
   // Prepare request payload
   const payload = {
     name: formData.name.trim(),
-    category_id: parseInt(formData.category_id),
+    category_id: categoryIds[0], // Primary category (first selected)
+    category_ids: categoryIds, // All selected categories
     group_ids: groupIds.length > 0 ? groupIds : null,
     group_id: groupIds.length > 0 ? groupIds[0] : null, // Legacy field for backward compatibility
     email: formData.email ? formData.email.trim() : null,

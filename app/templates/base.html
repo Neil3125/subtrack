@@ -391,13 +391,23 @@
             <form onsubmit="handleFormSubmit(event, createCustomer)">
                 <div class="modal-body">
                     <div class="form-group">
-                        <label class="form-label">Category *</label>
-                        <select name="category_id" class="form-select" required onchange="updateGroupSelectMulti(this.value, 'customer-groups-container')">
-                            <option value="">Select a category</option>
-                            {% for category in categories|default([]) %}
-                            <option value="{{ category.id }}">{{ category.name }}</option>
-                            {% endfor %}
-                        </select>
+                        <label class="form-label">Categories *</label>
+                        <input type="hidden" name="category_ids" id="customer-category-ids" value="">
+                        <div class="multi-select-wrapper" id="customer-category-multiselect">
+                            <div class="multi-select-trigger" onclick="toggleCategoryMultiSelect('customer-category-multiselect')">
+                                <span class="placeholder">Select categories...</span>
+                                <span class="arrow">▼</span>
+                            </div>
+                            <div class="multi-select-menu">
+                                {% for category in categories|default([]) %}
+                                <div class="multi-select-item" data-id="{{ category.id }}" data-name="{{ category.name }}" onclick="toggleCategoryItem(this, 'customer-category-multiselect')">
+                                    <span class="checkbox"></span>
+                                    <span>{{ category.name }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <small class="text-secondary">Select one or more categories</small>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Groups (Optional)</label>
@@ -454,25 +464,11 @@
             <form onsubmit="handleFormSubmit(event, createSubscription)">
                 <div class="modal-body">
                     <div class="form-group">
-                        <label class="form-label">Category *</label>
-                        <select 
-                            name="category_id" 
-                            id="subscription-category-select"
-                            class="form-select" 
-                            required 
-                            onchange="loadCustomersForSubscription(this.value)">
-                            <option value="">Select a category</option>
-                            {% for category in categories|default([]) %}
-                            <option value="{{ category.id }}">{{ category.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label class="form-label">Customer *</label>
                         <input type="hidden" name="customer_id" id="subscription-customer-id" required>
                         <div class="customer-dropdown-wrapper" id="subscription-customer-dropdown">
                             <button type="button" class="customer-dropdown-trigger" onclick="toggleCustomerDropdown('subscription')">
-                                <span class="selected-text placeholder">Select a category first</span>
+                                <span class="selected-text placeholder">Select a customer...</span>
                                 <span class="arrow">▼</span>
                             </button>
                             <div class="customer-dropdown-menu" id="subscription-customer-menu">
@@ -480,11 +476,24 @@
                                     <input type="text" placeholder="Search customers..." oninput="filterCustomerDropdown('subscription', this.value)">
                                 </div>
                                 <div class="customer-dropdown-list" id="subscription-customer-list">
-                                    <div class="customer-dropdown-empty">Select a category first</div>
+                                    <div class="customer-dropdown-empty">Loading customers...</div>
                                 </div>
                             </div>
                         </div>
                         <small class="text-secondary" id="customer-count-message"></small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select 
+                            name="category_id" 
+                            id="subscription-category-select"
+                            class="form-select" 
+                            required>
+                            <option value="">Select a category</option>
+                            {% for category in categories|default([]) %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Vendor Name *</label>
