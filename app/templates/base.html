@@ -410,121 +410,157 @@
         </div>
     </div>
 
-    <!-- Customer Modal - ENHANCED UI -->
+    <!-- Customer Modal - IMPROVED UI (Matches Subscription Modal) -->
     <div id="customerModal" class="modal customer-modal-improved" style="display: none;">
         <div class="modal-content modal-content-improved"
-            style="max-width: 650px; max-height: 90vh; display: flex; flex-direction: column;">
+            style="max-width: 720px; max-height: 90vh; display: flex; flex-direction: column;">
             <div class="modal-header modal-header-improved">
                 <h2 class="modal-title modal-title-improved">Create Customer</h2>
-                <p class="modal-subtitle modal-subtitle-improved">Add or update customer details</p>
+                <p class="modal-subtitle modal-subtitle-improved">Customers are organized by category and group</p>
                 <button class="modal-close modal-close-improved" onclick="closeModal('customerModal')">×</button>
             </div>
             <form onsubmit="handleFormSubmit(event, saveEnhancedCustomer)" id="customer-form">
-                <div class="modal-body modal-body-improved" style="overflow-y: auto; flex: 1;">
+                <div class="modal-body modal-body-improved"
+                    style="overflow-y: auto; flex: 1; max-height: calc(90vh - 140px);">
 
-                    <!-- Section 1: Classification -->
-                    <div class="form-section"
-                        style="background: var(--color-bg-secondary); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--color-border);">
-                        <div class="section-header" style="display: flex; align-items: center; margin-bottom: 12px;">
-                            <span class="section-icon" style="font-size: 18px; margin-right: 8px;">🏷️</span>
-                            <h3 class="section-title"
-                                style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">
-                                Classification</h3>
-                        </div>
+                    <!-- PRIMARY SELECTION ROW: Categories & Groups -->
+                    <div class="primary-selection-row">
+                        <!-- CATEGORIES SELECTOR (FIRST) -->
+                        <div class="selection-card selection-card-categories animated-border-card">
+                            <div class="animated-border"></div>
+                            <div class="selection-card-inner">
+                                <div class="selection-card-header">
+                                    <span class="selection-card-icon">🏷️</span>
+                                    <h3 class="selection-card-title">Categories *</h3>
+                                </div>
+                                <div class="selection-card-content">
+                                    <input type="hidden" name="category_ids" id="customer-category-ids" value="">
 
-                        <!-- Categories Multi-Select -->
-                        <div class="form-group">
-                            <label class="form-label" style="font-size: 12px;">Categories</label>
-                            <input type="hidden" name="category_ids" id="customer-category-ids" value="">
-
-                            <div class="customer-categories-wrapper" style="position: relative;">
-                                <div class="categories-chips-container" id="customer-categories-wrapper">
-                                    <!-- Selected Categories Display -->
-                                    <div class="categories-chips-display" id="customer-categories-tags"
-                                        onclick="openCustomerCategorySelector()">
-                                        <span class="categories-placeholder">Click to select...</span>
-                                    </div>
-
-                                    <!-- Dropdown Panel -->
-                                    <div class="categories-dropdown" id="customer-categories-dropdown"
-                                        style="display: none;">
-                                        <div class="categories-dropdown-header">
-                                            <span>Select categories</span>
-                                            <button type="button" class="categories-close"
-                                                onclick="closeCustomerCategorySelector()">✕</button>
+                                    <div class="categories-chips-container" id="customer-categories-wrapper">
+                                        <!-- Selected Categories Display -->
+                                        <div class="categories-chips-display" id="customer-categories-tags"
+                                            onclick="openCustomerCategorySelector()">
+                                            <span class="categories-placeholder">Click to select...</span>
                                         </div>
-                                        <div class="categories-dropdown-list">
-                                            {% for category in categories|default([]) %}
-                                            <div class="categories-dropdown-item tags-dropdown-item"
-                                                data-id="{{ category.id }}" data-name="{{ category.name }}"
-                                                onclick="toggleCustomerCategoryTag(this)">
-                                                <span class="categories-item-checkbox"></span>
-                                                <span class="categories-item-label">{{ category.name }}</span>
+
+                                        <!-- Dropdown Panel -->
+                                        <div class="categories-dropdown" id="customer-categories-dropdown"
+                                            style="display: none;">
+                                            <div class="categories-dropdown-header">
+                                                <span>Select categories</span>
+                                                <button type="button" class="categories-close"
+                                                    onclick="closeCustomerCategorySelector()">✕</button>
                                             </div>
-                                            {% endfor %}
+                                            <div class="categories-dropdown-list">
+                                                {% for category in categories|default([]) %}
+                                                <div class="categories-dropdown-item tags-dropdown-item"
+                                                    data-id="{{ category.id }}" data-name="{{ category.name }}"
+                                                    onclick="toggleCustomerCategoryTag(this)">
+                                                    <span class="categories-item-checkbox"></span>
+                                                    <span class="categories-item-label">{{ category.name }}</span>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Groups (Standard Multi-Select) -->
-                        <div class="form-group">
-                            <label class="form-label" style="font-size: 12px;">Groups (Optional)</label>
-                            <div id="customer-groups-container" class="multi-select-container"
-                                style="border-radius: 8px;">
-                                <div class="multi-select-placeholder">Loading groups...</div>
-                            </div>
-                            <input type="hidden" name="group_ids" id="customer-group-ids" value="">
-                            <!-- Note: updateGroupSelectMulti targets the container ID -->
-                        </div>
-                    </div>
+                        <!-- GROUPS SELECTOR (SECOND) -->
+                        <div class="selection-card selection-card-groups animated-border-card">
+                            <div class="animated-border"></div>
+                            <div class="selection-card-inner">
+                                <div class="selection-card-header">
+                                    <span class="selection-card-icon">📁</span>
+                                    <h3 class="selection-card-title">Groups</h3>
+                                </div>
+                                <div class="selection-card-content">
+                                    <input type="hidden" name="group_ids" id="customer-group-ids" value="">
 
-                    <!-- Section 2: Identity -->
-                    <div class="form-section"
-                        style="background: var(--color-bg-secondary); padding: 16px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--color-border);">
-                        <div class="section-header" style="display: flex; align-items: center; margin-bottom: 12px;">
-                            <span class="section-icon" style="font-size: 18px; margin-right: 8px;">👤</span>
-                            <h3 class="section-title"
-                                style="margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text-primary);">
-                                Identity</h3>
-                        </div>
+                                    <div class="categories-chips-container" id="customer-groups-wrapper">
+                                        <!-- Selected Groups Display -->
+                                        <div class="categories-chips-display" id="customer-groups-tags"
+                                            onclick="openCustomerGroupSelector()">
+                                            <span class="categories-placeholder">Click to select...</span>
+                                        </div>
 
-                        <div class="form-group">
-                            <label class="form-label">Name *</label>
-                            <input type="text" name="name" class="form-input" required placeholder="Customer Name">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="form-group">
-                                <label class="form-label">Email</label>
-                                <input type="email" name="email" class="form-input" placeholder="email@example.com">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Phone</label>
-                                <input type="tel" name="phone" class="form-input" placeholder="+1-555-0000">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="form-group">
-                                <label class="form-label">Country</label>
-                                <input type="text" name="country" class="form-input country-autocomplete"
-                                    placeholder="Residency" list="country-suggestions" autocomplete="off">
-                                <datalist id="country-suggestions"></datalist>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Tags</label>
-                                <input type="text" name="tags" class="form-input" placeholder="vip, enterprise...">
+                                        <!-- Dropdown Panel -->
+                                        <div class="categories-dropdown" id="customer-groups-dropdown"
+                                            style="display: none;">
+                                            <div class="categories-dropdown-header">
+                                                <span>Select groups</span>
+                                                <button type="button" class="categories-close"
+                                                    onclick="closeCustomerGroupSelector()">✕</button>
+                                            </div>
+                                            <div class="categories-dropdown-list">
+                                                {% for group in groups|default([]) %}
+                                                <div class="categories-dropdown-item tags-dropdown-item"
+                                                    data-id="{{ group.id }}" data-name="{{ group.name }}"
+                                                    onclick="toggleCustomerGroupTag(this)">
+                                                    <span class="categories-item-checkbox"></span>
+                                                    <span class="categories-item-label">{{ group.name }}</span>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Section 3: Details -->
-                    <div class="form-group">
-                        <label class="form-label">Notes</label>
-                        <textarea name="notes" class="form-textarea" style="min-height: 80px;"
-                            placeholder="Additional notes..."></textarea>
+                    <!-- SECTION 2: CUSTOMER DETAILS -->
+                    <div class="modal-section">
+                        <div class="section-header">
+                            <h3 class="section-title">Customer Details</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Name *</label>
+                                    <input type="text" name="name" class="form-input" required
+                                        placeholder="Customer Name">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" name="email" class="form-input" placeholder="email@example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Phone</label>
+                                    <input type="tel" name="phone" class="form-input" placeholder="+1-555-0000">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Country *</label>
+                                    <input type="text" name="country" class="form-input country-autocomplete" required
+                                        placeholder="Residency" list="customer-country-suggestions" autocomplete="off">
+                                    <datalist id="customer-country-suggestions"></datalist>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Tags</label>
+                                    <input type="text" name="tags" class="form-input" placeholder="vip, enterprise...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: NOTES -->
+                    <div class="modal-section">
+                        <div class="section-header">
+                            <h3 class="section-title">Additional Notes</h3>
+                        </div>
+                        <div class="section-content">
+                            <div class="form-group">
+                                <textarea name="notes" class="form-textarea" style="min-height: 80px;"
+                                    placeholder="Additional notes about this customer..."></textarea>
+                            </div>
+                        </div>
                     </div>
 
                 </div>

@@ -21,6 +21,7 @@ window.initEnhancedCustomerModal = function (isEdit = false) {
 
         // Reset display
         updateCustomerCategoryDisplay();
+        updateCustomerGroupDisplay();
 
         // Reset title
         const title = document.querySelector('#customerModal .modal-title');
@@ -30,16 +31,11 @@ window.initEnhancedCustomerModal = function (isEdit = false) {
 
         // Reset form dataset
         if (form) delete form.dataset.itemId;
-
-        // Clear groups
-        const groupContainer = document.getElementById('customer-groups-container');
-        if (groupContainer) {
-            groupContainer.innerHTML = '<div class="multi-select-placeholder">Select a category first, or groups will load automatically</div>';
-        }
     }
 
     // Initialize multi-select displays
     updateCustomerCategoryDisplay();
+    updateCustomerGroupDisplay();
 };
 
 // ==================== CATEGORY TAGS ====================
@@ -51,11 +47,9 @@ window.toggleCustomerCategoryTag = function (element) {
     const existingIndex = customerModalState.selectedCategories.findIndex(c => c.id === id);
 
     if (existingIndex >= 0) {
-        // Remove
         customerModalState.selectedCategories.splice(existingIndex, 1);
         element.classList.remove('selected');
     } else {
-        // Add
         customerModalState.selectedCategories.push({ id, name });
         element.classList.add('selected');
     }
@@ -66,10 +60,9 @@ window.toggleCustomerCategoryTag = function (element) {
 window.removeCustomerCategoryChip = function (id) {
     customerModalState.selectedCategories = customerModalState.selectedCategories.filter(c => c.id !== id);
 
-    // Update dropdown state
     const dropdown = document.getElementById('customer-categories-dropdown');
     if (dropdown) {
-        const item = dropdown.querySelector(`.customer-category-item[data-id="${id}"], .tags-dropdown-item[data-id="${id}"]`);
+        const item = dropdown.querySelector(`.tags-dropdown-item[data-id="${id}"]`);
         if (item) item.classList.remove('selected');
     }
 
@@ -77,18 +70,15 @@ window.removeCustomerCategoryChip = function (id) {
 };
 
 window.preselectCustomerCategories = function (categoryIds) {
-    // Clear current
     customerModalState.selectedCategories = [];
 
-    // Clear selection in UI
     const dropdown = document.getElementById('customer-categories-dropdown');
     if (dropdown) {
-        dropdown.querySelectorAll('.tags-dropdown-item, .customer-category-item').forEach(el => el.classList.remove('selected'));
+        dropdown.querySelectorAll('.tags-dropdown-item').forEach(el => el.classList.remove('selected'));
 
-        // Find names and select
         if (Array.isArray(categoryIds)) {
             categoryIds.forEach(id => {
-                const item = dropdown.querySelector(`.tags-dropdown-item[data-id="${id}"], .customer-category-item[data-id="${id}"]`);
+                const item = dropdown.querySelector(`.tags-dropdown-item[data-id="${id}"]`);
                 if (item) {
                     item.classList.add('selected');
                     customerModalState.selectedCategories.push({
@@ -110,17 +100,16 @@ function updateCustomerCategoryDisplay() {
 
     display.innerHTML = '';
 
-    // Update hidden input
     if (hiddenInput) {
         hiddenInput.value = customerModalState.selectedCategories.map(c => c.id).join(',');
     }
 
     if (customerModalState.selectedCategories.length === 0) {
-        display.innerHTML = '<span class="categories-placeholder" style="color: var(--color-text-tertiary); font-size: 13px;">Click to select...</span>';
+        display.innerHTML = '<span class="categories-placeholder">Click to select...</span>';
     } else {
         customerModalState.selectedCategories.forEach(cat => {
             const tag = document.createElement('div');
-            tag.className = 'multi-select-tag'; // Match Subscription style
+            tag.className = 'multi-select-tag';
             tag.innerHTML = `
               <span>${cat.name}</span>
               <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeCustomerCategoryChip(${cat.id})">×</span>
@@ -140,10 +129,104 @@ window.closeCustomerCategorySelector = function () {
     if (dropdown) dropdown.style.display = 'none';
 };
 
-// Close when clicking outside
+// ==================== GROUP TAGS ====================
+
+window.toggleCustomerGroupTag = function (element) {
+    const id = parseInt(element.dataset.id);
+    const name = element.dataset.name;
+
+    const existingIndex = customerModalState.selectedGroups.findIndex(g => g.id === id);
+
+    if (existingIndex >= 0) {
+        customerModalState.selectedGroups.splice(existingIndex, 1);
+        element.classList.remove('selected');
+    } else {
+        customerModalState.selectedGroups.push({ id, name });
+        element.classList.add('selected');
+    }
+
+    updateCustomerGroupDisplay();
+};
+
+window.removeCustomerGroupChip = function (id) {
+    customerModalState.selectedGroups = customerModalState.selectedGroups.filter(g => g.id !== id);
+
+    const dropdown = document.getElementById('customer-groups-dropdown');
+    if (dropdown) {
+        const item = dropdown.querySelector(`.tags-dropdown-item[data-id="${id}"]`);
+        if (item) item.classList.remove('selected');
+    }
+
+    updateCustomerGroupDisplay();
+};
+
+window.preselectCustomerGroups = function (groupIds) {
+    customerModalState.selectedGroups = [];
+
+    const dropdown = document.getElementById('customer-groups-dropdown');
+    if (dropdown) {
+        dropdown.querySelectorAll('.tags-dropdown-item').forEach(el => el.classList.remove('selected'));
+
+        if (Array.isArray(groupIds)) {
+            groupIds.forEach(id => {
+                const item = dropdown.querySelector(`.tags-dropdown-item[data-id="${id}"]`);
+                if (item) {
+                    item.classList.add('selected');
+                    customerModalState.selectedGroups.push({
+                        id: parseInt(id),
+                        name: item.dataset.name || item.textContent.trim()
+                    });
+                }
+            });
+        }
+    }
+    updateCustomerGroupDisplay();
+};
+
+function updateCustomerGroupDisplay() {
+    const display = document.getElementById('customer-groups-tags');
+    const hiddenInput = document.getElementById('customer-group-ids');
+
+    if (!display) return;
+
+    display.innerHTML = '';
+
+    if (hiddenInput) {
+        hiddenInput.value = customerModalState.selectedGroups.map(g => g.id).join(',');
+    }
+
+    if (customerModalState.selectedGroups.length === 0) {
+        display.innerHTML = '<span class="categories-placeholder">Click to select...</span>';
+    } else {
+        customerModalState.selectedGroups.forEach(grp => {
+            const tag = document.createElement('div');
+            tag.className = 'multi-select-tag';
+            tag.innerHTML = `
+              <span>${grp.name}</span>
+              <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeCustomerGroupChip(${grp.id})">×</span>
+          `;
+            display.appendChild(tag);
+        });
+    }
+}
+
+window.openCustomerGroupSelector = function () {
+    const dropdown = document.getElementById('customer-groups-dropdown');
+    if (dropdown) dropdown.style.display = 'block';
+};
+
+window.closeCustomerGroupSelector = function () {
+    const dropdown = document.getElementById('customer-groups-dropdown');
+    if (dropdown) dropdown.style.display = 'none';
+};
+
+// Close dropdowns when clicking outside
 document.addEventListener('click', function (e) {
-    if (!e.target.closest('#customer-categories-wrapper')) { // Updated ID match
+    if (!e.target.closest('#customer-categories-wrapper')) {
         closeCustomerCategorySelector();
+    }
+    if (!e.target.closest('#customer-groups-wrapper')) {
+        closeCustomerGroupSelector();
     }
 });
 
@@ -155,11 +238,22 @@ window.saveEnhancedCustomer = function (formData, itemId = null) {
     const url = itemId ? `/api/customers/${itemId}` : '/api/customers';
     const action = itemId ? 'updated' : 'created';
 
-    // Ensure category_ids 
-    if (!formData.category_ids && customerModalState.selectedCategories.length > 0) {
+    // Handle category_ids - must be an array
+    if (customerModalState.selectedCategories.length > 0) {
         formData.category_ids = customerModalState.selectedCategories.map(c => c.id);
-    } else if (typeof formData.category_ids === 'string') {
+    } else if (typeof formData.category_ids === 'string' && formData.category_ids) {
         formData.category_ids = formData.category_ids.split(',').filter(x => x).map(Number);
+    } else {
+        formData.category_ids = [];
+    }
+
+    // Handle group_ids - must be an array  
+    if (customerModalState.selectedGroups.length > 0) {
+        formData.group_ids = customerModalState.selectedGroups.map(g => g.id);
+    } else if (typeof formData.group_ids === 'string' && formData.group_ids) {
+        formData.group_ids = formData.group_ids.split(',').filter(x => x).map(Number);
+    } else {
+        formData.group_ids = [];
     }
 
     fetch(url, {
@@ -171,9 +265,8 @@ window.saveEnhancedCustomer = function (formData, itemId = null) {
             if (!response.ok) return response.json().then(e => {
                 let msg = e.detail || 'Error';
                 if (typeof msg === 'object') {
-                    // Handle array of errors (e.g. FastAPI validation) or object
                     msg = Array.isArray(msg)
-                        ? msg.map(err => `${err.loc.join('.')}: ${err.msg}`).join('\n')
+                        ? msg.map(err => `${err.loc ? err.loc.join('.') : 'field'}: ${err.msg}`).join(', ')
                         : JSON.stringify(msg);
                 }
                 throw new Error(msg);
@@ -199,8 +292,6 @@ window.saveEnhancedCustomer = function (formData, itemId = null) {
             const form = document.querySelector('#customerModal form');
             const isEdit = form && form.dataset.itemId && form.dataset.itemId !== '';
 
-            // Should initiate if strictly opening (Create mode mostly)
-            // or ensuring Edit mode state is clean
             setTimeout(() => {
                 initEnhancedCustomerModal(isEdit);
             }, 10);
