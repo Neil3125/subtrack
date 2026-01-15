@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'add_subscription_categories_m2m'
-down_revision = 'add_activity_log_table'
+down_revision = 'add_ai_cache_table'
 branch_labels = None
 depends_on = None
 
