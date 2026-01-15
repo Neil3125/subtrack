@@ -568,6 +568,52 @@ window.removeCategoryChip = function(categoryId) {
   removeCategoryFromSelection(categoryId);
 };
 
+// Pre-select multiple categories (for editing subscriptions)
+window.preselectSubscriptionCategories = function(categoryIds) {
+  if (!categoryIds || categoryIds.length === 0) return;
+  
+  // Reset selected categories
+  subscriptionModalState.selectedCategories = [];
+  
+  // Get all category dropdown items
+  const allCategoryItems = document.querySelectorAll('.categories-dropdown-item');
+  
+  // Build a map of category items
+  const categoryMap = new Map();
+  allCategoryItems.forEach(item => {
+    const id = parseInt(item.dataset.id);
+    const name = item.dataset.name;
+    if (id && name) {
+      categoryMap.set(id, { id, name, element: item });
+    }
+  });
+  
+  // Convert categoryIds to array if needed
+  const ids = Array.isArray(categoryIds) ? categoryIds : [categoryIds];
+  
+  // Pre-select each category
+  ids.forEach(categoryId => {
+    const id = parseInt(categoryId);
+    const category = categoryMap.get(id);
+    
+    if (category) {
+      // Mark as selected in dropdown
+      category.element.classList.add('selected');
+      
+      // Add to selectedCategories state
+      subscriptionModalState.selectedCategories.push({
+        id: category.id,
+        name: category.name
+      });
+    }
+  });
+  
+  // Update the display
+  updateCategoryDisplay();
+  
+  console.log('Pre-selected categories:', subscriptionModalState.selectedCategories);
+};
+
 function updateCategoryDisplay() {
   const display = document.getElementById('subscription-categories-tags');
   const idsInput = document.getElementById('subscription-category-ids');

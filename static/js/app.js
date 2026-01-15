@@ -939,12 +939,29 @@ window.loadEditData = function(type, id) {
         loadCustomerSubscriptions(id);
       }
 
-      // Special handling: subscription edit needs customer dropdown populated
+      // Special handling: subscription edit needs customer dropdown populated AND categories pre-selected
       if (type === 'subscription') {
         const categoryField = form.querySelector('select[name="category_id"]');
         const customerField = form.querySelector('select[name="customer_id"]');
         const customerId = data.customer_id;
         const saveBtn = form.querySelector('button[type="submit"]');
+
+        // Get category IDs from the subscription data (supports both single and multiple)
+        let categoryIds = [];
+        if (data.categories && Array.isArray(data.categories)) {
+          categoryIds = data.categories.map(c => c.id);
+        } else if (data.category_ids && Array.isArray(data.category_ids)) {
+          categoryIds = data.category_ids;
+        } else if (data.category_id) {
+          categoryIds = [data.category_id];
+        }
+
+        // Pre-select categories in the subscription modal UI (subscription-modal-enhanced.js)
+        if (categoryIds.length > 0 && typeof window.preselectSubscriptionCategories === 'function') {
+          setTimeout(() => {
+            window.preselectSubscriptionCategories(categoryIds);
+          }, 100);
+        }
 
         // Function to load customers - show ALL customers grouped by category
         const loadCustomers = (selectedCustId, filterByCategoryId = null) => {
