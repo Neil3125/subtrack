@@ -2046,12 +2046,15 @@ window.createSubscription = function(formData) {
     }
   }
   
-  // Use first category as primary (database only supports single category for subscriptions)
+  // Primary category is first one, but we now send ALL categoryIds
   const categoryId = categoryIds.length > 0 ? categoryIds[0] : null;
   
-  if (!categoryId) {
+  if (!categoryId || categoryIds.length === 0) {
     validationErrors.push('Please select at least one category');
   }
+
+  // Ensure uniqueness
+  categoryIds = [...new Set(categoryIds)];
   
   if (!formData.vendor_name || !formData.vendor_name.trim()) {
     validationErrors.push('Vendor name is required');
@@ -2079,6 +2082,7 @@ window.createSubscription = function(formData) {
       country: formData.country || null,
       customer_id: parseInt(formData.customer_id),
       category_id: categoryId,
+      category_ids: categoryIds,
       notes: formData.notes ? formData.notes.trim() : null
     })
   })

@@ -19,3 +19,12 @@ customer_groups = Table(
     Column('customer_id', Integer, ForeignKey('customers.id', ondelete='CASCADE'), primary_key=True),
     Column('group_id', Integer, ForeignKey('groups.id', ondelete='CASCADE'), primary_key=True)
 )
+
+
+# Association table for subscriptions and categories (many-to-many)
+subscription_categories = Table(
+    'subscription_categories',
+    Base.metadata,
+    Column('subscription_id', Integer, ForeignKey('subscriptions.id', ondelete='CASCADE'), primary_key=True),
+    Column('category_id', Integer, ForeignKey('categories.id', ondelete='CASCADE'), primary_key=True)
+)

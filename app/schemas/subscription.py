@@ -1,6 +1,6 @@
 """Subscription schemas."""
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import date
 from app.models.subscription import SubscriptionStatus, BillingCycle
 
@@ -22,7 +22,10 @@ class SubscriptionBase(BaseModel):
 class SubscriptionCreate(SubscriptionBase):
     """Schema for creating a subscription."""
     customer_id: int
-    category_id: int
+    # Primary category (backward compatibility). Optional if category_ids provided.
+    category_id: Optional[int] = None
+    # Multi-select categories
+    category_ids: Optional[List[int]] = None
 
 
 class SubscriptionUpdate(BaseModel):
@@ -38,7 +41,10 @@ class SubscriptionUpdate(BaseModel):
     country: Optional[str] = None
     notes: Optional[str] = None
     customer_id: Optional[int] = None
+    # Primary category (backward compatibility)
     category_id: Optional[int] = None
+    # Multi-select categories
+    category_ids: Optional[List[int]] = None
 
 
 class SubscriptionResponse(SubscriptionBase):
@@ -46,6 +52,7 @@ class SubscriptionResponse(SubscriptionBase):
     id: int
     customer_id: int
     category_id: int
+    category_ids: List[int] = []
     
     class Config:
         from_attributes = True

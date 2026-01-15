@@ -1,6 +1,9 @@
 """Subscription model."""
 from sqlalchemy import Column, Integer, String, Text, Float, Date, ForeignKey, Enum
 from sqlalchemy.orm import relationship
+
+# Import association table for many-to-many categories
+from app.models.associations import subscription_categories
 from datetime import date
 import enum
 from app.database import Base
@@ -44,7 +47,17 @@ class Subscription(Base):
     
     # Relationships
     customer = relationship("Customer", back_populates="subscriptions")
+
+    # Primary category (legacy / backward compatible)
     category = relationship("Category", back_populates="subscriptions")
+
+    # Many-to-many categories (new)
+    categories = relationship(
+        "Category",
+        secondary=subscription_categories,
+        back_populates="subscriptions_many",
+        lazy="selectin"
+    )
     
     def __repr__(self):
         return f"<Subscription(id={self.id}, vendor='{self.vendor_name}', customer_id={self.customer_id})>"
