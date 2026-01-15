@@ -2163,8 +2163,16 @@ window.updateCustomer = function(formData, id) {
     validationErrors.push('Customer name is required');
   }
   
-  if (!formData.category_id) {
-    validationErrors.push('Category is required');
+  // Handle both category_ids (multi-select) and category_id (single select)
+  let categoryIds = [];
+  if (formData.category_ids && formData.category_ids.trim()) {
+    categoryIds = formData.category_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+  } else if (formData.category_id) {
+    categoryIds = [parseInt(formData.category_id)];
+  }
+  
+  if (categoryIds.length === 0) {
+    validationErrors.push('At least one category is required');
   }
   
   // Validate email format if provided
@@ -2196,7 +2204,8 @@ window.updateCustomer = function(formData, id) {
   // Prepare request payload
   const payload = {
     name: formData.name.trim(),
-    category_id: parseInt(formData.category_id),
+    category_id: categoryIds[0], // Primary category (first selected)
+    category_ids: categoryIds, // All selected categories
     group_ids: groupIds.length > 0 ? groupIds : [],
     group_id: groupIds.length > 0 ? groupIds[0] : null, // Legacy field for backward compatibility
     email: formData.email ? formData.email.trim() : null,

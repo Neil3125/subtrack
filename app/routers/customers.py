@@ -70,10 +70,15 @@ def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks,
     if customer.email and not validate_email_format(customer.email):
         validation_errors.append(f"Invalid email format: {customer.email}")
     
-    # Determine category - prefer single value, fall back to arrays
-    category_id = customer.category_id
-    if not category_id and customer.category_ids:
-        category_id = customer.category_ids[0] if customer.category_ids else None
+    # Determine category IDs (multi-select preferred)
+    category_ids = []
+    if customer.category_ids and len(customer.category_ids) > 0:
+        category_ids = list(customer.category_ids)
+    elif customer.category_id is not None:
+        category_ids = [customer.category_id]
+    
+    # Remove duplicates while preserving order
+    category_ids = list(dict.fromkeys(category_ids))
     
     # Collect all group IDs - support both single and multiple
     group_ids = []
@@ -85,8 +90,8 @@ def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks,
     # Remove duplicates while preserving order
     group_ids = list(dict.fromkeys(group_ids))
     
-    if not category_id:
-        validation_errors.append("Category is required")
+    if not category_ids or len(category_ids) == 0:
+        validation_errors.append("At least one category is required")
     
     # Return all validation errors at once
     if validation_errors:
@@ -94,11 +99,16 @@ def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks,
         logger.warning(f"Validation failed for customer creation: {error_message}")
         raise HTTPException(status_code=400, detail=error_message)
     
-    # Verify category exists
-    category = db.query(Category).filter(Category.id == category_id).first()
-    if not category:
-        logger.warning(f"Category not found: {category_id}")
-        raise HTTPException(status_code=404, detail=f"Category with ID {category_id} not found")
+    # Verify all categories exist
+    categories = db.query(Category).filter(Category.id.in_(category_ids)).all()
+    if len(categories) != len(set(category_ids)):
+        found_ids = {c.id for c in categories}
+        missing_ids = [cid for cid in category_ids if cid not in found_ids]
+        logger.warning(f"Categories not found: {missing_ids}")
+        raise HTTPException(status_code=404, detail=f"Categories with IDs {missing_ids} not found")
+    
+    # Primary category is the first one for backward compatibility
+    primary_category_id = category_ids[0]
     
     # Verify all groups exist if provided
     groups = []
@@ -110,14 +120,14 @@ def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks,
             logger.warning(f"Groups not found: {missing_ids}")
             raise HTTPException(status_code=404, detail=f"Groups with IDs {missing_ids} not found")
     
-    # Check for duplicate customer (same name + email in same category)
+    # Check for duplicate customer (same name + email in same primary category)
     if customer.email:
         existing_customer = db.query(Customer).filter(
             Customer.email == customer.email,
-            Customer.category_id == category_id
+            Customer.category_id == primary_category_id
         ).first()
         if existing_customer:
-            logger.warning(f"Duplicate customer: email {customer.email} already exists in category {category_id}")
+            logger.warning(f"Duplicate customer: email {customer.email} already exists in category {primary_category_id}")
             raise HTTPException(
                 status_code=409, 
                 detail=f"A customer with email '{customer.email}' already exists in this category"
@@ -127,12 +137,15 @@ def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks,
         # Create customer with basic fields
         customer_data = customer.model_dump(exclude={'category_id', 'group_id', 'category_ids', 'group_ids'})
         
-        # Set the category_id
-        customer_data['category_id'] = category_id
+        # Set the primary category_id for backward compatibility
+        customer_data['category_id'] = primary_category_id
         # Set legacy group_id to first group for backward compatibility
         customer_data['group_id'] = group_ids[0] if group_ids else None
         
         db_customer = Customer(**customer_data)
+        
+        # Set many-to-many categories relationship
+        db_customer.set_categories(categories)
         
         # Set many-to-many groups relationship
         if groups:
@@ -266,16 +279,18 @@ def update_customer(customer_id: int, customer: CustomerUpdate, background_tasks
     if category_ids is not None and len(category_ids) > 0:
         # Verify categories exist
         categories = db.query(Category).filter(Category.id.in_(category_ids)).all()
-        if len(categories) != len(category_ids):
-            raise HTTPException(status_code=404, detail="One or more categories not found")
-        # Use first category as primary (legacy field)
-        db_customer.category_id = category_ids[0]
+        if len(categories) != len(set(category_ids)):
+            found_ids = {c.id for c in categories}
+            missing_ids = [cid for cid in category_ids if cid not in found_ids]
+            raise HTTPException(status_code=404, detail=f"Categories with IDs {missing_ids} not found")
+        # Set many-to-many categories (also updates primary category_id)
+        db_customer.set_categories(categories)
     elif legacy_category_id is not None:
         # Handle legacy single category update
         category = db.query(Category).filter(Category.id == legacy_category_id).first()
         if not category:
             raise HTTPException(status_code=404, detail="Category not found")
-        db_customer.category_id = legacy_category_id
+        db_customer.set_categories([category])
     
     # Handle group update - prefer group_ids array, fall back to legacy
     if group_ids is not None:

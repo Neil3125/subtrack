@@ -29,8 +29,15 @@ class Customer(Base):
     tags = Column(Text, nullable=True)  # Comma-separated tags
     notes = Column(Text, nullable=True)
     
-    # Primary category relationship
+    # Primary category relationship (legacy / backward compatible)
     category = relationship("Category", foreign_keys=[category_id], viewonly=True)
+    
+    # Many-to-many categories relationship (new)
+    _categories = relationship(
+        "Category",
+        secondary=customer_categories,
+        lazy="selectin"
+    )
     
     # Legacy single group relationship (for backward compatibility)
     _legacy_group = relationship("Group", foreign_keys=[group_id], viewonly=True)
@@ -51,8 +58,13 @@ class Customer(Base):
     
     @property
     def categories(self):
-        """Get list of categories - returns list with single category for compatibility."""
-        if self.category:
+        """Get list of all categories (many-to-many).
+        
+        Falls back to primary category if no many-to-many categories set.
+        """
+        if self._categories and len(self._categories) > 0:
+            return list(self._categories)
+        elif self.category:
             return [self.category]
         return []
     
@@ -83,9 +95,23 @@ class Customer(Base):
     @property
     def category_names(self):
         """Get comma-separated list of category names."""
-        if self.category:
-            return self.category.name
+        cats = self.categories
+        if cats:
+            return ", ".join([c.name for c in cats])
         return ""
+    
+    def set_categories(self, categories_list):
+        """Set the many-to-many categories relationship.
+        
+        Args:
+            categories_list: List of Category objects to assign to this customer
+        """
+        self._categories = categories_list
+        # Also update primary category_id for backward compatibility
+        if categories_list and len(categories_list) > 0:
+            self.category_id = categories_list[0].id
+        else:
+            self.category_id = None
     
     @property
     def group_names(self):
