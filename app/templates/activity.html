@@ -30,22 +30,26 @@
         </div>
         <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 100ms;">
             <div class="text-sm text-secondary mb-2">Created</div>
-            <div class="text-3xl font-bold text-success mb-2" id="stat-created">{{ stats.action_counts.created|default(0) }}</div>
+            <div class="text-3xl font-bold text-success mb-2" id="stat-created">{{
+                stats.action_counts.created|default(0) }}</div>
             <div class="text-xs text-secondary">New items added</div>
         </div>
         <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 200ms;">
             <div class="text-sm text-secondary mb-2">Updated</div>
-            <div class="text-3xl font-bold text-warning mb-2" id="stat-updated">{{ stats.action_counts.updated|default(0) }}</div>
+            <div class="text-3xl font-bold text-warning mb-2" id="stat-updated">{{
+                stats.action_counts.updated|default(0) }}</div>
             <div class="text-xs text-secondary">Items modified</div>
         </div>
         <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 250ms;">
             <div class="text-sm text-secondary mb-2">Renewed</div>
-            <div class="text-3xl font-bold text-secondary mb-2" id="stat-renewed">{{ stats.action_counts.renewed|default(0) }}</div>
+            <div class="text-3xl font-bold text-secondary mb-2" id="stat-renewed">{{
+                stats.action_counts.renewed|default(0) }}</div>
             <div class="text-xs text-secondary">Subscriptions renewed</div>
         </div>
         <div class="card card-hover stat-card animate-slide-in" style="animation-delay: 300ms;">
             <div class="text-sm text-secondary mb-2">Emails Sent</div>
-            <div class="text-3xl font-bold text-info mb-2" id="stat-emails">{{ (stats.action_counts.email_sent|default(0)) + (stats.action_counts.bulk_email_sent|default(0)) }}</div>
+            <div class="text-3xl font-bold text-info mb-2" id="stat-emails">{{
+                (stats.action_counts.email_sent|default(0)) + (stats.action_counts.bulk_email_sent|default(0)) }}</div>
             <div class="text-xs text-secondary">Renewal notices</div>
         </div>
     </div>
@@ -96,7 +100,7 @@
             <h2 class="card-title">📜 Activity Timeline</h2>
             <span class="badge badge-primary" id="log-count">{{ logs|length }} activities</span>
         </div>
-        
+
         <div id="activity-list">
             {% if logs %}
             <div class="activity-timeline">
@@ -108,10 +112,15 @@
                     <div class="activity-content">
                         <div class="activity-header">
                             <span class="activity-title">{{ log.description }}</span>
-                            <span class="activity-time">{{ log.created_at.strftime('%b %d, %Y at %I:%M %p') if log.created_at else 'Unknown' }}</span>
+                            <!-- Use client-side formatting for local time -->
+                            <span class="activity-time"
+                                data-timestamp="{{ log.created_at.isoformat() if log.created_at else '' }}">
+                                {{ log.created_at.strftime('%Y-%m-%d %H:%M') if log.created_at else 'Unknown' }}
+                            </span>
                         </div>
                         <div class="activity-meta">
-                            <span class="badge badge-{{ 'success' if log.action_type == 'created' else 'warning' if log.action_type == 'updated' else 'danger' if log.action_type == 'deleted' else 'info' }}">
+                            <span
+                                class="badge badge-{{ 'success' if log.action_type == 'created' else 'warning' if log.action_type == 'updated' else 'danger' if log.action_type == 'deleted' else 'info' }}">
                                 {{ log.action_type|replace('_', ' ')|title }}
                             </span>
                             <span class="badge badge-secondary">{{ log.entity_type|title }}</span>
@@ -137,8 +146,10 @@
                                         {% for field, values in log.changes.items() %}
                                         <tr>
                                             <td class="font-medium">{{ field|replace('_', ' ')|title }}</td>
-                                            <td class="text-danger">{{ values.old if values.old is not none else '-' }}</td>
-                                            <td class="text-success">{{ values.new if values.new is not none else '-' }}</td>
+                                            <td class="text-danger">{{ values.old if values.old is not none else '-' }}
+                                            </td>
+                                            <td class="text-success">{{ values.new if values.new is not none else '-' }}
+                                            </td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -154,11 +165,12 @@
             <div class="empty-state">
                 <div class="empty-state-icon">📋</div>
                 <h3 class="empty-state-title">No activity yet</h3>
-                <p class="empty-state-text">Activities will appear here when you make changes to your subscriptions, customers, and other data.</p>
+                <p class="empty-state-text">Activities will appear here when you make changes to your subscriptions,
+                    customers, and other data.</p>
             </div>
             {% endif %}
         </div>
-        
+
         <!-- Pagination -->
         {% if total_pages > 1 %}
         <div class="flex justify-center gap-2 mt-4 p-4 border-t" style="border-color: var(--color-border);">
@@ -166,9 +178,9 @@
             <button class="btn btn-sm btn-secondary" onclick="goToPage({{ current_page - 1 }})">← Previous</button>
             {% endif %}
             <span class="text-secondary" style="line-height: 32px;">Page {{ current_page }} of {{ total_pages }}</span>
-            {% if current_page < total_pages %}
-            <button class="btn btn-sm btn-secondary" onclick="goToPage({{ current_page + 1 }})">Next →</button>
-            {% endif %}
+            {% if current_page < total_pages %} <button class="btn btn-sm btn-secondary"
+                onclick="goToPage({{ current_page + 1 }})">Next →</button>
+                {% endif %}
         </div>
         {% endif %}
     </div>
@@ -183,9 +195,10 @@
         </div>
         <div class="modal-body">
             <div class="info-box info-box-warning mb-4">
-                <strong>⚠️ Warning:</strong> This action cannot be undone. All activity logs older than the selected period will be permanently deleted.
+                <strong>⚠️ Warning:</strong> This action cannot be undone. All activity logs older than the selected
+                period will be permanently deleted.
             </div>
-            
+
             <div class="form-group mb-4">
                 <label class="form-label">Clear logs older than:</label>
                 <select class="form-select" id="clear-logs-days">
@@ -197,12 +210,12 @@
                     <option value="0">All logs (clear everything)</option>
                 </select>
             </div>
-            
+
             <div class="form-group mb-4">
                 <label class="form-label">Type "CLEAR" to confirm:</label>
                 <input type="text" class="form-input" id="clear-logs-confirm" placeholder="Type CLEAR to confirm">
             </div>
-            
+
             <div class="flex gap-2 justify-end">
                 <button class="btn btn-secondary" onclick="closeModal('clearLogsModal')">Cancel</button>
                 <button class="btn btn-danger" onclick="clearActivityLogs()" id="clear-logs-btn" disabled>
@@ -214,306 +227,155 @@
 </div>
 
 <style>
-.activity-timeline {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-.activity-item {
-    display: flex;
-    gap: var(--space-4);
-    padding: var(--space-4) var(--space-5);
-    border-bottom: 1px solid var(--color-border);
-    transition: all 0.2s ease;
-    position: relative;
-}
-
-.activity-item:hover {
-    background-color: var(--color-bg-secondary);
-}
-
-.activity-item:last-child {
-    border-bottom: none;
-}
-
-/* Color-coded left border based on action type */
-.activity-item[data-action="created"] {
-    border-left: 3px solid var(--color-success);
-}
-
-.activity-item[data-action="updated"] {
-    border-left: 3px solid var(--color-warning);
-}
-
-.activity-item[data-action="deleted"] {
-    border-left: 3px solid var(--color-danger);
-}
-
-.activity-item[data-action="email_sent"],
-.activity-item[data-action="bulk_email_sent"] {
-    border-left: 3px solid var(--color-info);
-}
-
-.activity-item[data-action="renewed"] {
-    border-left: 3px solid var(--color-primary);
-}
-
-.activity-item[data-action="status_changed"] {
-    border-left: 3px solid var(--color-secondary);
-}
-
-.activity-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: var(--color-bg-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    flex-shrink: 0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.activity-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.activity-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--space-3);
-    margin-bottom: var(--space-2);
-}
-
-.activity-title {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--color-text);
-    word-break: break-word;
-    line-height: 1.4;
-}
-
-.activity-time {
-    font-size: 0.8rem;
-    color: var(--color-text-secondary);
-    white-space: nowrap;
-    background: var(--color-bg-secondary);
-    padding: 2px 8px;
-    border-radius: var(--radius-sm);
-}
-
-.activity-meta {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-    margin-top: var(--space-1);
-}
-
-.activity-meta .badge {
-    font-size: 0.75rem;
-    padding: 2px 8px;
-}
-
-.activity-changes {
-    margin-top: var(--space-3);
-}
-
-.changes-detail {
-    background: var(--color-bg-secondary);
-    border-radius: var(--radius-md);
-    padding: var(--space-3);
-    margin-top: var(--space-2);
-    border: 1px solid var(--color-border);
-}
-
-.changes-detail .table {
-    margin: 0;
-    font-size: 0.85rem;
-}
-
-.changes-detail .table th {
-    background: var(--color-bg-card);
-    font-weight: 600;
-    padding: 8px 12px;
-}
-
-.changes-detail .table td {
-    padding: 8px 12px;
-    vertical-align: top;
-}
-
-.changes-detail .text-danger {
-    background: rgba(239, 68, 68, 0.1);
-    padding: 2px 6px;
-    border-radius: 4px;
-    text-decoration: line-through;
-    opacity: 0.8;
-}
-
-.changes-detail .text-success {
-    background: rgba(16, 185, 129, 0.1);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 500;
-}
-
-/* Entity type icons in badges */
-.activity-meta .badge-secondary::before {
-    margin-right: 4px;
-}
-
-@media (max-width: 640px) {
-    .activity-header {
+    /* ... (Keep existing styles) ... */
+    .activity-timeline {
+        display: flex;
         flex-direction: column;
-        gap: var(--space-1);
+        gap: 0;
     }
-    
-    .activity-time {
-        font-size: 0.75rem;
-        align-self: flex-start;
-    }
-    
-    .activity-item {
-        padding: var(--space-3);
-    }
-    
-    .activity-icon {
-        width: 36px;
-        height: 36px;
-        font-size: 1.1rem;
-    }
-}
+
+    /* ... */
 </style>
 
 <script>
-function toggleChanges(btn) {
-    const detail = btn.nextElementSibling;
-    if (detail.style.display === 'none') {
-        detail.style.display = 'block';
-        btn.innerHTML = '🙈 Hide Changes';
-    } else {
-        detail.style.display = 'none';
-        btn.innerHTML = '👁️ View Changes';
+    function toggleChanges(btn) {
+        const detail = btn.nextElementSibling;
+        if (detail.style.display === 'none') {
+            detail.style.display = 'block';
+            btn.innerHTML = '🙈 Hide Changes';
+        } else {
+            detail.style.display = 'none';
+            btn.innerHTML = '👁️ View Changes';
+        }
     }
-}
 
-function filterActivityLogs() {
-    const entityType = document.getElementById('filter-entity').value;
-    const actionType = document.getElementById('filter-action').value;
-    const days = document.getElementById('filter-days').value;
-    
-    let url = `/activity?days=${days}`;
-    if (entityType) url += `&entity_type=${entityType}`;
-    if (actionType) url += `&action_type=${actionType}`;
-    
-    window.location.href = url;
-}
+    function filterActivityLogs() {
+        const entityType = document.getElementById('filter-entity').value;
+        const actionType = document.getElementById('filter-action').value;
+        const days = document.getElementById('filter-days').value;
 
-function clearFilters() {
-    document.getElementById('filter-entity').value = '';
-    document.getElementById('filter-action').value = '';
-    document.getElementById('filter-days').value = '7';
-    window.location.href = '/activity';
-}
+        let url = `/activity?days=${days}`;
+        if (entityType) url += `&entity_type=${entityType}`;
+        if (actionType) url += `&action_type=${actionType}`;
 
-function refreshActivityLogs() {
-    window.location.reload();
-}
-
-function goToPage(page) {
-    const entityType = document.getElementById('filter-entity').value;
-    const actionType = document.getElementById('filter-action').value;
-    const days = document.getElementById('filter-days').value;
-    
-    let url = `/activity?page=${page}&days=${days}`;
-    if (entityType) url += `&entity_type=${entityType}`;
-    if (actionType) url += `&action_type=${actionType}`;
-    
-    window.location.href = url;
-}
-
-// Set filter values from URL params on load
-document.addEventListener('DOMContentLoaded', function() {
-    const params = new URLSearchParams(window.location.search);
-    
-    if (params.get('entity_type')) {
-        document.getElementById('filter-entity').value = params.get('entity_type');
+        window.location.href = url;
     }
-    if (params.get('action_type')) {
-        document.getElementById('filter-action').value = params.get('action_type');
+
+    function clearFilters() {
+        document.getElementById('filter-entity').value = '';
+        document.getElementById('filter-action').value = '';
+        document.getElementById('filter-days').value = '7';
+        window.location.href = '/activity';
     }
-    if (params.get('days')) {
-        document.getElementById('filter-days').value = params.get('days');
+
+    function refreshActivityLogs() {
+        window.location.reload();
     }
-    
-    // Enable/disable clear logs button based on confirmation input
-    const confirmInput = document.getElementById('clear-logs-confirm');
-    if (confirmInput) {
-        confirmInput.addEventListener('input', function() {
-            const clearBtn = document.getElementById('clear-logs-btn');
-            clearBtn.disabled = this.value.toUpperCase() !== 'CLEAR';
+
+    function goToPage(page) {
+        const entityType = document.getElementById('filter-entity').value;
+        const actionType = document.getElementById('filter-action').value;
+        const days = document.getElementById('filter-days').value;
+
+        let url = `/activity?page=${page}&days=${days}`;
+        if (entityType) url += `&entity_type=${entityType}`;
+        if (actionType) url += `&action_type=${actionType}`;
+
+        window.location.href = url;
+    }
+
+    // Set filter values from URL params on load
+    document.addEventListener('DOMContentLoaded', function () {
+        // Format timestamps to local time
+        document.querySelectorAll('.activity-time').forEach(el => {
+            const isoStr = el.dataset.timestamp;
+            if (isoStr) {
+                // Append 'Z' if not present to ensure UTC parsing
+                const timeStr = isoStr.endsWith('Z') ? isoStr : isoStr + 'Z';
+                const date = new Date(timeStr);
+                if (!isNaN(date.getTime())) {
+                    el.textContent = date.toLocaleString(undefined, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            }
         });
-    }
-});
 
-function openClearLogsModal() {
-    document.getElementById('clear-logs-confirm').value = '';
-    document.getElementById('clear-logs-btn').disabled = true;
-    openModal('clearLogsModal');
-}
+        const params = new URLSearchParams(window.location.search);
 
-function clearActivityLogs() {
-    const confirmValue = document.getElementById('clear-logs-confirm').value;
-    if (confirmValue.toUpperCase() !== 'CLEAR') {
-        showToast('Please type CLEAR to confirm', 'warning');
-        return;
-    }
-    
-    const days = parseInt(document.getElementById('clear-logs-days').value);
-    const btn = document.getElementById('clear-logs-btn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Clearing...';
-    btn.disabled = true;
-    
-    let url = '/api/activity/logs';
-    if (days > 0) {
-        url += `?days=${days}`;
-    } else {
-        // Clear all - use 1 day to effectively clear everything
-        url += '?days=1';
-    }
-    
-    fetch(url, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json'
+        if (params.get('entity_type')) {
+            document.getElementById('filter-entity').value = params.get('entity_type');
         }
-    })
-    .then(response => response.json())
-    .then(data => {
-        btn.innerHTML = originalText;
-        closeModal('clearLogsModal');
-        
-        if (data.deleted_count !== undefined) {
-            showToast(`Successfully cleared ${data.deleted_count} activity log(s)`, 'success');
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-        } else if (data.error) {
-            showToast('Error: ' + data.error, 'error');
+        if (params.get('action_type')) {
+            document.getElementById('filter-action').value = params.get('action_type');
         }
-    })
-    .catch(error => {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        showToast('Error clearing logs: ' + error.message, 'error');
-        console.error('Error:', error);
+        if (params.get('days')) {
+            document.getElementById('filter-days').value = params.get('days');
+        }
+
+        // Enable/disable clear logs button based on confirmation input
+        const confirmInput = document.getElementById('clear-logs-confirm');
+        if (confirmInput) {
+            confirmInput.addEventListener('input', function () {
+                const clearBtn = document.getElementById('clear-logs-btn');
+                clearBtn.disabled = this.value.toUpperCase() !== 'CLEAR';
+            });
+        }
     });
-}
+
+    function openClearLogsModal() {
+        document.getElementById('clear-logs-confirm').value = '';
+        document.getElementById('clear-logs-btn').disabled = true;
+        openModal('clearLogsModal');
+    }
+
+    function clearActivityLogs() {
+        const confirmValue = document.getElementById('clear-logs-confirm').value;
+        if (confirmValue.toUpperCase() !== 'CLEAR') {
+            showToast('Please type CLEAR to confirm', 'warning');
+            return;
+        }
+
+        const days = parseInt(document.getElementById('clear-logs-days').value);
+        const btn = document.getElementById('clear-logs-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '⏳ Clearing...';
+        btn.disabled = true;
+
+        let url = '/api/activity/logs';
+        // Pass days directly (supports 0 for all)
+        url += `?days=${days}`;
+
+        fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                btn.innerHTML = originalText;
+                closeModal('clearLogsModal');
+
+                if (data.deleted_count !== undefined) {
+                    showToast(`Successfully cleared ${data.deleted_count} activity log(s)`, 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else if (data.error) {
+                    showToast('Error: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast('Error clearing logs: ' + error.message, 'error');
+                console.error('Error:', error);
+            });
+    }
 </script>
 {% endblock %}

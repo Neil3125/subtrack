@@ -508,7 +508,10 @@ window.closeCategorySelector = function () {
 };
 
 function updateCategoryDropdownSelection() {
-  const items = document.querySelectorAll('.categories-dropdown-item');
+  const dropdown = document.getElementById('subscription-categories-dropdown');
+  if (!dropdown) return;
+
+  const items = dropdown.querySelectorAll('.categories-dropdown-item, .tags-dropdown-item');
   const selectedIds = subscriptionModalState.selectedCategories.map(cat => cat.id);
 
   items.forEach(item => {
@@ -540,9 +543,12 @@ window.toggleCategoryTag = function (element) {
 };
 
 function selectCategoryTag(categoryId) {
-  // Try both selectors for compatibility
-  const item = document.querySelector(`.categories-dropdown-item[data-id="${categoryId}"]`) ||
-    document.querySelector(`.tags-dropdown-item[data-id="${categoryId}"]`);
+  // Try both selectors for compatibility, scoped to subscription dropdown
+  const dropdown = document.getElementById('subscription-categories-dropdown');
+  if (!dropdown) return;
+
+  const item = dropdown.querySelector(`.categories-dropdown-item[data-id="${categoryId}"]`) ||
+    dropdown.querySelector(`.tags-dropdown-item[data-id="${categoryId}"]`);
   if (item && !item.classList.contains('selected')) {
     toggleCategoryTag(item);
   }

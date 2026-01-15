@@ -67,8 +67,11 @@ window.removeCustomerCategoryChip = function (id) {
     customerModalState.selectedCategories = customerModalState.selectedCategories.filter(c => c.id !== id);
 
     // Update dropdown state
-    const item = document.querySelector(`.customer-category-item[data-id="${id}"]`);
-    if (item) item.classList.remove('selected');
+    const dropdown = document.getElementById('customer-categories-dropdown');
+    if (dropdown) {
+        const item = dropdown.querySelector(`.customer-category-item[data-id="${id}"], .tags-dropdown-item[data-id="${id}"]`);
+        if (item) item.classList.remove('selected');
+    }
 
     updateCustomerCategoryDisplay();
 };
@@ -77,23 +80,26 @@ window.preselectCustomerCategories = function (categoryIds) {
     // Clear current
     customerModalState.selectedCategories = [];
 
-    // First clear all selections
-    document.querySelectorAll('.customer-category-item').forEach(el => el.classList.remove('selected'));
+    // Clear selection in UI
+    const dropdown = document.getElementById('customer-categories-dropdown');
+    if (dropdown) {
+        dropdown.querySelectorAll('.tags-dropdown-item, .customer-category-item').forEach(el => el.classList.remove('selected'));
 
-    // Find names from DOM (assuming dropdown items exist)
-    if (Array.isArray(categoryIds)) {
-        categoryIds.forEach(id => {
-            const item = document.querySelector(`.customer-category-item[data-id="${id}"]`);
-            if (item) {
-                item.classList.add('selected');
-                customerModalState.selectedCategories.push({
-                    id: parseInt(id),
-                    name: item.dataset.name
-                });
-            }
-        });
-        updateCustomerCategoryDisplay();
+        // Find names and select
+        if (Array.isArray(categoryIds)) {
+            categoryIds.forEach(id => {
+                const item = dropdown.querySelector(`.tags-dropdown-item[data-id="${id}"], .customer-category-item[data-id="${id}"]`);
+                if (item) {
+                    item.classList.add('selected');
+                    customerModalState.selectedCategories.push({
+                        id: parseInt(id),
+                        name: item.dataset.name || item.textContent.trim()
+                    });
+                }
+            });
+        }
     }
+    updateCustomerCategoryDisplay();
 };
 
 function updateCustomerCategoryDisplay() {
@@ -110,14 +116,14 @@ function updateCustomerCategoryDisplay() {
     }
 
     if (customerModalState.selectedCategories.length === 0) {
-        display.innerHTML = '<span class="categories-placeholder">Select categories...</span>';
+        display.innerHTML = '<span class="categories-placeholder" style="color: var(--color-text-tertiary); font-size: 13px;">Click to select...</span>';
     } else {
         customerModalState.selectedCategories.forEach(cat => {
             const tag = document.createElement('div');
-            tag.className = 'category-tag';
+            tag.className = 'multi-select-tag'; // Match Subscription style
             tag.innerHTML = `
               <span>${cat.name}</span>
-              <span class="category-tag-remove" onclick="event.stopPropagation(); removeCustomerCategoryChip(${cat.id})">×</span>
+              <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeCustomerCategoryChip(${cat.id})">×</span>
           `;
             display.appendChild(tag);
         });
@@ -129,11 +135,15 @@ window.openCustomerCategorySelector = function () {
     if (dropdown) dropdown.style.display = 'block';
 };
 
+window.closeCustomerCategorySelector = function () {
+    const dropdown = document.getElementById('customer-categories-dropdown');
+    if (dropdown) dropdown.style.display = 'none';
+};
+
 // Close when clicking outside
 document.addEventListener('click', function (e) {
-    if (!e.target.closest('.customer-categories-wrapper')) {
-        const dropdown = document.getElementById('customer-categories-dropdown');
-        if (dropdown) dropdown.style.display = 'none';
+    if (!e.target.closest('#customer-categories-wrapper')) { // Updated ID match
+        closeCustomerCategorySelector();
     }
 });
 
