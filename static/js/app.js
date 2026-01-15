@@ -129,6 +129,29 @@ function closeModal(modalId) {
       modal.style.display = 'none';
       document.body.classList.remove('modal-open');
       document.body.style.paddingRight = '';
+
+      // Reset form state on close to prevent stale Edit mode
+      const form = modal.querySelector('form');
+      if (form) {
+        delete form.dataset.itemId;
+        form.reset(); // Also reset values for cleanliness
+
+        // Reset Titles if standardized
+        const titleEl = modal.querySelector('.modal-title');
+        const submitBtn = modal.querySelector('button[type="submit"]');
+
+        if (modalId === 'customerModal') {
+          if (titleEl) titleEl.textContent = 'Create Customer';
+          if (submitBtn) submitBtn.textContent = 'Create Customer';
+          // categories reset handled by initEnhancedCustomerModal usually
+        } else if (modalId === 'groupModal') {
+          if (titleEl) titleEl.textContent = 'Create Group';
+          if (submitBtn) submitBtn.textContent = 'Create Group';
+        } else if (modalId === 'categoryModal') {
+          if (titleEl) titleEl.textContent = 'Create Category';
+          if (submitBtn) submitBtn.textContent = 'Create Category';
+        }
+      }
     }, 300);
 
     // Remove from tracking
@@ -887,8 +910,21 @@ window.loadEditData = function (type, id) {
   fetch(`/api/${pluralType}/${id}`)
     .then(response => response.json())
     .then(data => {
-      // Determine modal ID - special case for subscription which reuses "subscriptionModal"
-      const modalId = type === 'subscription' ? 'subscriptionModal' : `edit${type.charAt(0).toUpperCase() + type.slice(1)}Modal`;
+      // Determine modal ID
+      // Determine modal ID
+      // Unified modals for all entities
+      let modalId;
+      if (type === 'subscription') {
+        modalId = 'subscriptionModal';
+      } else if (type === 'customer') {
+        modalId = 'customerModal';
+      } else if (type === 'group') {
+        modalId = 'groupModal';
+      } else if (type === 'category') {
+        modalId = 'categoryModal';
+      } else {
+        modalId = `edit${type.charAt(0).toUpperCase() + type.slice(1)}Modal`;
+      }
 
       const form = document.querySelector(`#${modalId} form`);
       if (!form) {
@@ -896,12 +932,28 @@ window.loadEditData = function (type, id) {
         return;
       }
 
-      // Update Modal Title if it's the subscription modal
+      // Update Modal Title & Button Text for Unified Modals
+      // Update Modal Title & Button Text for Unified Modals
       if (type === 'subscription') {
         const titleEl = document.querySelector(`#${modalId} .modal-title`);
         const submitBtn = document.querySelector(`#${modalId} button[type="submit"]`);
         if (titleEl) titleEl.textContent = 'Edit Subscription';
         if (submitBtn) submitBtn.textContent = 'Update Subscription';
+      } else if (type === 'customer') {
+        const titleEl = document.querySelector(`#${modalId} .modal-title`);
+        const submitBtn = document.querySelector(`#${modalId} button[type="submit"]`);
+        if (titleEl) titleEl.textContent = 'Edit Customer';
+        if (submitBtn) submitBtn.textContent = 'Update Customer';
+      } else if (type === 'group') {
+        const titleEl = document.querySelector(`#${modalId} .modal-title`);
+        const submitBtn = document.querySelector(`#${modalId} button[type="submit"]`);
+        if (titleEl) titleEl.textContent = 'Edit Group';
+        if (submitBtn) submitBtn.textContent = 'Update Group';
+      } else if (type === 'category') {
+        const titleEl = document.querySelector(`#${modalId} .modal-title`);
+        const submitBtn = document.querySelector(`#${modalId} button[type="submit"]`);
+        if (titleEl) titleEl.textContent = 'Edit Category';
+        if (submitBtn) submitBtn.textContent = 'Update Category';
       }
 
       // Populate form fields
@@ -922,7 +974,6 @@ window.loadEditData = function (type, id) {
 
       // Special handling: CUSTOMER edit
       if (type === 'customer') {
-        // ... (Keep existing customer edit logic) ...
         // Get category IDs
         let categoryIds = [];
         if (data.categories && Array.isArray(data.categories)) {
@@ -933,12 +984,15 @@ window.loadEditData = function (type, id) {
           categoryIds = [data.category_id];
         }
 
-        if (categoryIds.length > 0) {
-          setTimeout(() => {
-            preselectCategories('edit-customer-category-multiselect', categoryIds);
-          }, 50);
-        }
+        // Initialize Enhanced Modal for Customer
+        setTimeout(() => {
+          if (typeof initEnhancedCustomerModal === 'function') {
+            initEnhancedCustomerModal(true); // isEdit = true
+            preselectCustomerCategories(categoryIds);
+          }
+        }, 50);
 
+        // Handle Groups
         let groupIds = [];
         if (data.groups && Array.isArray(data.groups)) {
           groupIds = data.groups.map(g => g.id);
@@ -950,10 +1004,14 @@ window.loadEditData = function (type, id) {
 
         const firstCategoryId = categoryIds.length > 0 ? categoryIds[0] : null;
         setTimeout(() => {
-          updateGroupSelectMulti(firstCategoryId, 'edit-customer-groups-container', groupIds);
+          // Note: using 'customer-groups-container' (the new ID) instead of 'edit-customer-...'
+          updateGroupSelectMulti(firstCategoryId, 'customer-groups-container', groupIds);
         }, 100);
 
-        loadCustomerSubscriptions(id);
+        // Load subscriptions list (if table exists)
+        if (typeof loadCustomerSubscriptions === 'function') {
+          loadCustomerSubscriptions(id);
+        }
       }
 
       // Special handling: SUBSCRIPTION edit using Enhanced Modal
@@ -972,11 +1030,6 @@ window.loadEditData = function (type, id) {
         }
 
         // Initialize Enhanced Modal in Edit Mode
-        // This handles:
-        // 1. Setting context (customer name/id)
-        // 2. Pre-selecting categories in the visual tag cloud
-        // 3. Loading vendors/suggestions
-        // 4. NOT resetting the form
         setTimeout(() => {
           if (typeof initEnhancedSubscriptionModal === 'function') {
             initEnhancedSubscriptionModal(customerId, customerName, null, true);
@@ -3655,4 +3708,50 @@ window.SubTrack = {
   sendRenewalNoticeWithEmail,
   viewNoticeHistory,
   checkEmailConfig
+};
+
+// ==================== ENHANCED HANDLERS FOR OTHER ENTITIES ====================
+
+window.saveEnhancedCategory = function (formData, itemId = null) {
+  const method = itemId ? 'PUT' : 'POST';
+  const url = itemId ? `/api/categories/${itemId}` : '/api/categories';
+  const action = itemId ? 'updated' : 'created';
+
+  fetch(url, {
+    method: method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(formData)
+  })
+    .then(resp => {
+      if (!resp.ok) return resp.json().then(e => { throw new Error(e.detail || 'Error'); });
+      return resp.json();
+    })
+    .then(() => {
+      showToast(`Category ${action} successfully`, 'success');
+      closeModal('categoryModal');
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(err => showToast(err.message, 'error'));
+};
+
+window.saveEnhancedGroup = function (formData, itemId = null) {
+  const method = itemId ? 'PUT' : 'POST';
+  const url = itemId ? `/api/groups/${itemId}` : '/api/groups';
+  const action = itemId ? 'updated' : 'created';
+
+  fetch(url, {
+    method: method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(formData)
+  })
+    .then(resp => {
+      if (!resp.ok) return resp.json().then(e => { throw new Error(e.detail || 'Error'); });
+      return resp.json();
+    })
+    .then(() => {
+      showToast(`Group ${action} successfully`, 'success');
+      closeModal('groupModal');
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(err => showToast(err.message, 'error'));
 };
