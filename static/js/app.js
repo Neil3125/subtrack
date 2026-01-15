@@ -83,20 +83,11 @@ function openModal(modalId) {
 
     // If opening customer modals, load all groups immediately
     if (modalId === 'customerModal') {
-      // Load all groups organized by category
-      updateGroupSelectMulti(null, 'customer-groups-container', []);
-
-      // Set up listener for category changes
-      setTimeout(() => {
-        setupCategoryChangeListener('customer-category-multiselect', 'customer-groups-container');
-      }, 100);
+      // Handled by customer-modal-enhanced.js initEnhancedCustomerModal
+      // which is called via the override at the end of that file.
     }
     if (modalId === 'editCustomerModal') {
-      // Edit modal groups are loaded by loadEditData function
-      // Set up listener for category changes
-      setTimeout(() => {
-        setupCategoryChangeListener('edit-customer-category-multiselect', 'edit-customer-groups-container');
-      }, 100);
+      // Handled by loadEditData and enhanced modal
     }
 
     // If opening subscription modal, load all customers
@@ -1009,6 +1000,9 @@ window.loadEditData = function (type, id) {
           if (groupHidden) groupHidden.value = groupIds.join(',');
 
           // Trigger update of group options using the new multi-select logic
+          if (typeof preselectCustomerGroups === 'function') {
+            preselectCustomerGroups(groupIds);
+          }
           if (typeof updateCustomerGroupOptions === 'function') {
             updateCustomerGroupOptions(categoryIds);
           } else {
@@ -1103,10 +1097,9 @@ window.openCustomerModalForCategory = function (categoryId) {
   openModal('customerModal');
   // Pre-select the category in multi-select and load groups for that category
   setTimeout(() => {
-    // Use multi-select category
-    preselectCategories('customer-category-multiselect', [categoryId]);
-    // Load groups with multi-select, prioritizing the current category
-    updateGroupSelectMulti(categoryId, 'customer-groups-container', []);
+    if (typeof preselectCustomerCategories === 'function') {
+      preselectCustomerCategories([parseInt(categoryId)]);
+    }
   }, 50);
 };
 
@@ -1115,10 +1108,13 @@ window.openCustomerModalForGroup = function (categoryId, groupId) {
   openModal('customerModal');
   // Pre-select the category in multi-select and pre-select the group
   setTimeout(() => {
-    // Use multi-select category
-    preselectCategories('customer-category-multiselect', [categoryId]);
-    // Load groups with multi-select, pre-selecting the current group
-    updateGroupSelectMulti(categoryId, 'customer-groups-container', groupId ? [groupId] : []);
+    if (typeof preselectCustomerCategories === 'function') {
+      preselectCustomerCategories([parseInt(categoryId)]);
+    }
+    if (typeof preselectCustomerGroups === 'function' && groupId) {
+      // Wait slightly for groups to load
+      setTimeout(() => preselectCustomerGroups([parseInt(groupId)]), 200);
+    }
   }, 50);
 };
 
