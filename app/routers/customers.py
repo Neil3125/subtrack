@@ -159,6 +159,8 @@ def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks,
         logger.info(f"Customer created successfully: id={db_customer.id}, name={db_customer.name}, groups=[{group_names}]")
         
         # Log activity
+        # Use first category name or "Uncategorized" if list is empty
+        cat_name = categories[0].name if categories else "Uncategorized"
         log_activity(
             db=db,
             action_type="created",
@@ -166,7 +168,7 @@ def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks,
             description=f"Created customer '{db_customer.name}'",
             entity_id=db_customer.id,
             entity_name=db_customer.name,
-            extra_data={"email": db_customer.email, "country": db_customer.country, "category": category.name, "groups": group_names}
+            extra_data={"email": db_customer.email, "country": db_customer.country, "category": cat_name, "groups": group_names}
         )
         
         # Auto-save data to file

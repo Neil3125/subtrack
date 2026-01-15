@@ -1004,8 +1004,17 @@ window.loadEditData = function (type, id) {
 
         const firstCategoryId = categoryIds.length > 0 ? categoryIds[0] : null;
         setTimeout(() => {
-          // Note: using 'customer-groups-container' (the new ID) instead of 'edit-customer-...'
-          updateGroupSelectMulti(firstCategoryId, 'customer-groups-container', groupIds);
+          // Update hidden input for groups so the fetch callback can preselect them
+          const groupHidden = document.getElementById('customer-group-ids');
+          if (groupHidden) groupHidden.value = groupIds.join(',');
+
+          // Trigger update of group options using the new multi-select logic
+          if (typeof updateCustomerGroupOptions === 'function') {
+            updateCustomerGroupOptions(categoryIds);
+          } else {
+            // Fallback
+            updateGroupSelectMulti(firstCategoryId, 'customer-groups-container', groupIds);
+          }
         }, 100);
 
         // Load subscriptions list (if table exists)
@@ -3754,4 +3763,292 @@ window.saveEnhancedGroup = function (formData, itemId = null) {
       setTimeout(() => window.location.reload(), 500);
     })
     .catch(err => showToast(err.message, 'error'));
+};
+
+// ==================== ENHANCED CUSTOMER MODAL LOGIC ====================
+
+window.saveEnhancedCustomer = function (data, itemId) {
+  // Ensure category_ids is populated if using the new UI
+  const hiddenCatIds = document.getElementById('customer-category-ids');
+  if (hiddenCatIds && !data.category_ids) {
+    data.category_ids = hiddenCatIds.value;
+  }
+
+  // Ensure group_ids is populated
+  const hiddenGroupIds = document.getElementById('customer-group-ids');
+  if (hiddenGroupIds && !data.group_ids) {
+    data.group_ids = hiddenGroupIds.value;
+  }
+
+  if (itemId) {
+    window.updateCustomer(data, itemId);
+  } else {
+    window.createCustomer(data);
+  }
+};
+
+window.initEnhancedCustomerModal = function (isEdit = false) {
+  // Initialize state if needed
+  if (!isEdit) {
+    // Reset selections for create mode
+    preselectCustomerCategories([]);
+    updateCustomerGroupDisplay([]);
+    updateCustomerGroupOptions([]); // Clear groups
+  }
+
+  // Setup listener for category changes to update groups
+  const hiddenCatInput = document.getElementById('customer-category-ids');
+  if (hiddenCatInput) {
+    if (!hiddenCatInput.dataset.listenerAttached) {
+      hiddenCatInput.addEventListener('change', function () {
+        const ids = this.value ? this.value.split(',') : [];
+        updateCustomerGroupOptions(ids);
+      });
+      hiddenCatInput.dataset.listenerAttached = 'true';
+    }
+  }
+};
+
+// --- Customer Categories Multi-Select ---
+
+window.openCustomerCategorySelector = function () {
+  const dropdown = document.getElementById('customer-categories-dropdown');
+  if (dropdown) dropdown.style.display = 'block';
+};
+
+window.closeCustomerCategorySelector = function () {
+  const dropdown = document.getElementById('customer-categories-dropdown');
+  if (dropdown) dropdown.style.display = 'none';
+};
+
+window.toggleCustomerCategoryTag = function (element) {
+  element.classList.toggle('selected');
+  const checkbox = element.querySelector('.categories-item-checkbox');
+  if (checkbox) {
+    checkbox.classList.toggle('checked', element.classList.contains('selected'));
+  }
+  updateCustomerCategoryDisplay();
+};
+
+window.updateCustomerCategoryDisplay = function () {
+  const wrapper = document.getElementById('customer-categories-wrapper');
+  if (!wrapper) return;
+
+  const selectedItems = wrapper.querySelectorAll('.categories-dropdown-item.selected');
+  const displayContainer = document.getElementById('customer-categories-tags');
+  const hiddenInput = document.getElementById('customer-category-ids');
+
+  const selectedIds = [];
+  const selectedNames = [];
+
+  selectedItems.forEach(item => {
+    selectedIds.push(item.dataset.id);
+    selectedNames.push(item.dataset.name);
+  });
+
+  // Update hidden input
+  if (hiddenInput) {
+    hiddenInput.value = selectedIds.join(',');
+    // Trigger change event for listeners (to update groups)
+    hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  // Update Display
+  if (displayContainer) {
+    displayContainer.innerHTML = '';
+
+    if (selectedNames.length === 0) {
+      displayContainer.innerHTML = '<span class="categories-placeholder">Click to select...</span>';
+    } else {
+      selectedNames.forEach((name, index) => {
+        const tag = document.createElement('span');
+        tag.className = 'categories-tag';
+        tag.style.cssText = 'display: inline-flex; align-items: center; background: var(--color-primary-light); color: var(--color-primary); padding: 4px 8px; border-radius: 4px; font-size: 13px; margin: 2px;';
+        tag.innerHTML = `${name} <span class="categories-tag-remove" style="margin-left: 6px; cursor: pointer; opacity: 0.7;" onclick="event.stopPropagation(); removeCustomerCategory('${selectedIds[index]}')">&times;</span>`;
+        displayContainer.appendChild(tag);
+      });
+    }
+  }
+};
+
+window.removeCustomerCategory = function (id) {
+  const wrapper = document.getElementById('customer-categories-wrapper');
+  if (!wrapper) return;
+
+  const item = wrapper.querySelector(`.categories-dropdown-item[data-id="${id}"]`);
+  if (item) {
+    item.classList.remove('selected');
+    const checkbox = item.querySelector('.categories-item-checkbox');
+    if (checkbox) checkbox.classList.remove('checked');
+    updateCustomerCategoryDisplay();
+  }
+};
+
+window.preselectCustomerCategories = function (ids) {
+  const wrapper = document.getElementById('customer-categories-wrapper');
+  if (!wrapper) return;
+
+  // Clear current
+  wrapper.querySelectorAll('.categories-dropdown-item').forEach(item => {
+    item.classList.remove('selected');
+    const checkbox = item.querySelector('.categories-item-checkbox');
+    if (checkbox) checkbox.classList.remove('checked');
+  });
+
+  // Select new
+  const idArray = Array.isArray(ids) ? ids : [ids];
+  const strIds = idArray.map(String);
+
+  wrapper.querySelectorAll('.categories-dropdown-item').forEach(item => {
+    if (strIds.includes(String(item.dataset.id))) {
+      item.classList.add('selected');
+      const checkbox = item.querySelector('.categories-item-checkbox');
+      if (checkbox) checkbox.classList.add('checked');
+    }
+  });
+
+  updateCustomerCategoryDisplay();
+};
+
+// --- Customer Groups Multi-Select ---
+
+window.openCustomerGroupSelector = function () {
+  const dropdown = document.getElementById('customer-groups-dropdown');
+  if (dropdown) dropdown.style.display = 'block';
+};
+
+window.closeCustomerGroupSelector = function () {
+  const dropdown = document.getElementById('customer-groups-dropdown');
+  if (dropdown) dropdown.style.display = 'none';
+};
+
+window.toggleCustomerGroupTag = function (element) {
+  element.classList.toggle('selected');
+  const checkbox = element.querySelector('.categories-item-checkbox');
+  if (checkbox) {
+    checkbox.classList.toggle('checked', element.classList.contains('selected'));
+  }
+  updateCustomerGroupDisplay();
+};
+
+window.updateCustomerGroupDisplay = function () {
+  const wrapper = document.getElementById('customer-groups-dropdown');
+  if (!wrapper) return;
+
+  const selectedItems = wrapper.querySelectorAll('.categories-dropdown-item.selected');
+  const displayContainer = document.getElementById('customer-groups-tags');
+  const hiddenInput = document.getElementById('customer-group-ids');
+
+  const selectedIds = [];
+  const selectedNames = [];
+
+  selectedItems.forEach(item => {
+    selectedIds.push(item.dataset.id);
+    selectedNames.push(item.dataset.name);
+  });
+
+  // Update hidden input
+  if (hiddenInput) {
+    hiddenInput.value = selectedIds.join(',');
+  }
+
+  // Update Display
+  if (displayContainer) {
+    displayContainer.innerHTML = '';
+
+    if (selectedNames.length === 0) {
+      displayContainer.innerHTML = '<span class="categories-placeholder">Click to select...</span>';
+    } else {
+      selectedNames.forEach((name, index) => {
+        const tag = document.createElement('span');
+        tag.className = 'categories-tag';
+        tag.style.cssText = 'display: inline-flex; align-items: center; background: var(--color-bg-secondary); color: var(--color-text-primary); padding: 4px 8px; border-radius: 4px; font-size: 13px; margin: 2px; border: 1px solid var(--color-border);';
+        tag.innerHTML = `${name} <span class="categories-tag-remove" style="margin-left: 6px; cursor: pointer; opacity: 0.7;" onclick="event.stopPropagation(); removeCustomerGroup('${selectedIds[index]}')">&times;</span>`;
+        displayContainer.appendChild(tag);
+      });
+    }
+  }
+};
+
+window.removeCustomerGroup = function (id) {
+  const wrapper = document.getElementById('customer-groups-dropdown');
+  if (!wrapper) return;
+
+  const item = wrapper.querySelector(`.categories-dropdown-item[data-id="${id}"]`);
+  if (item) {
+    item.classList.remove('selected');
+    const checkbox = item.querySelector('.categories-item-checkbox');
+    if (checkbox) checkbox.classList.remove('checked');
+    updateCustomerGroupDisplay();
+  }
+};
+
+window.updateCustomerGroupOptions = function (categoryIds) {
+  const container = document.querySelector('#customer-groups-dropdown .categories-dropdown-list');
+  const wrapper = document.getElementById('customer-groups-dropdown');
+  if (!container || !wrapper) return;
+
+  container.innerHTML = '<div class="categories-dropdown-item"><span class="categories-item-label" style="opacity: 0.5;">Loading...</span></div>';
+
+  let url = '/api/groups';
+  if (categoryIds && categoryIds.length > 0) {
+    const params = new URLSearchParams();
+    // Using generic logic for array params in query string
+    // Assuming FastApi receives ?category_ids=1&category_ids=2 correctly
+    const ids = Array.isArray(categoryIds) ? categoryIds : [categoryIds];
+    ids.forEach(id => params.append('category_ids', id));
+    url += '?' + params.toString();
+  }
+
+  fetch(url)
+    .then(r => r.json())
+    .then(groups => {
+      container.innerHTML = '';
+      if (!groups || groups.length === 0) {
+        container.innerHTML = '<div class="categories-dropdown-item"><span class="categories-item-label" style="opacity: 0.5;">No groups found</span></div>';
+        return;
+      }
+
+      groups.forEach(group => {
+        const div = document.createElement('div');
+        div.className = 'categories-dropdown-item tags-dropdown-item';
+        div.dataset.id = group.id;
+        div.dataset.name = group.name;
+        div.onclick = function () { toggleCustomerGroupTag(this); };
+        div.innerHTML = `
+                <span class="categories-item-checkbox"></span>
+                <span class="categories-item-label">${group.name}</span>
+            `;
+        container.appendChild(div);
+      });
+
+      // Re-apply selections
+      const hiddenInput = document.getElementById('customer-group-ids');
+      if (hiddenInput && hiddenInput.value) {
+        const selectedIds = hiddenInput.value.split(',');
+        preselectCustomerGroups(selectedIds);
+      }
+    })
+    .catch(e => {
+      console.error(e);
+      container.innerHTML = '<div class="categories-dropdown-item"><span class="categories-item-label" style="color: var(--color-danger);">Error loading groups</span></div>';
+    });
+};
+
+window.preselectCustomerGroups = function (ids) {
+  const wrapper = document.getElementById('customer-groups-dropdown');
+  if (!wrapper) return;
+
+  const idArray = Array.isArray(ids) ? ids : [ids];
+  const strIds = idArray.map(String);
+
+  wrapper.querySelectorAll('.categories-dropdown-item').forEach(item => {
+    if (strIds.includes(String(item.dataset.id))) {
+      item.classList.add('selected');
+      const checkbox = item.querySelector('.categories-item-checkbox');
+      if (checkbox) checkbox.classList.add('checked');
+    }
+  });
+
+  updateCustomerGroupDisplay();
 };

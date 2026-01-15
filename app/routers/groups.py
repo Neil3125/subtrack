@@ -1,7 +1,6 @@
-"""Group API routes."""
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from app.database import get_db
 from app.models import Group, Category
 from app.models.activity_log import ActivityLog
@@ -62,11 +61,19 @@ def create_group(group: GroupCreate, background_tasks: BackgroundTasks, db: Sess
 
 
 @router.get("", response_model=List[GroupResponse])
-def list_groups(category_id: int = None, db: Session = Depends(get_db)):
-    """List all groups, optionally filtered by category."""
+def list_groups(
+    category_id: Optional[int] = None,
+    category_ids: Optional[List[int]] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """List all groups, optionally filtered by category (single or multiple)."""
     query = db.query(Group)
-    if category_id:
+    
+    if category_ids:
+        query = query.filter(Group.category_id.in_(category_ids))
+    elif category_id:
         query = query.filter(Group.category_id == category_id)
+        
     return query.all()
 
 

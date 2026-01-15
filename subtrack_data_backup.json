@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-01-14T13:01:10.890294",
+  "exported_at": "2026-01-15T16:55:27.040635",
   "categories": [
     {
       "id": 1,
@@ -30,6 +30,11 @@
       "id": 6,
       "name": "Marketing & Analytics",
       "description": "Marketing automation and analytics platforms"
+    },
+    {
+      "id": 8,
+      "name": "Cat B Verify",
+      "description": null
     }
   ],
   "groups": [
@@ -67,7 +72,8 @@
       "email": "security@techcorp.com",
       "phone": "+1-555-0100",
       "tags": "enterprise,security-focused",
-      "notes": "Large enterprise with 200+ employees requiring comprehensive security"
+      "notes": "Large enterprise with 200+ employees requiring comprehensive security",
+      "country": null
     },
     {
       "id": 2,
@@ -77,7 +83,8 @@
       "email": "admin@greenvalley.com",
       "phone": "+1-555-0101",
       "tags": "consulting,small-business",
-      "notes": "15-person consulting firm specializing in business strategy"
+      "notes": "15-person consulting firm specializing in business strategy",
+      "country": null
     },
     {
       "id": 3,
@@ -87,7 +94,8 @@
       "email": "info@digitalmarketingpro.com",
       "phone": "+1-555-0102",
       "tags": "marketing,agency",
-      "notes": "Marketing agency with 30 employees"
+      "notes": "Marketing agency with 30 employees",
+      "country": null
     },
     {
       "id": 4,
@@ -97,7 +105,8 @@
       "email": "devops@clouddev.io",
       "phone": "+1-555-0103",
       "tags": "software,development",
-      "notes": "Software development company with 50 developers"
+      "notes": "Software development company with 50 developers",
+      "country": null
     },
     {
       "id": 5,
@@ -107,7 +116,8 @@
       "email": "corporate@retailplus.com",
       "phone": "+1-555-0104",
       "tags": "retail,multi-location",
-      "notes": "Retail chain with 8 locations"
+      "notes": "Retail chain with 8 locations",
+      "country": null
     },
     {
       "id": 6,
@@ -117,7 +127,8 @@
       "email": "it@securefinance.com",
       "phone": "+1-555-0105",
       "tags": "finance,high-security",
-      "notes": "Financial services firm with strict compliance requirements"
+      "notes": "Financial services firm with strict compliance requirements",
+      "country": null
     }
   ],
   "subscriptions": [
