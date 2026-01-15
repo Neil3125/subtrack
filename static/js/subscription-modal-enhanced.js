@@ -14,30 +14,32 @@ const subscriptionModalState = {
 // ==================== INITIALIZATION ====================
 
 // Initialize when modal opens
-window.initEnhancedSubscriptionModal = function(customerId = null, customerName = null, categoryId = null) {
-  console.log('Initializing improved subscription modal', { customerId, customerName, categoryId });
-  
-  // Reset form
-  document.getElementById('subscription-form').reset();
-  
-  // Reset state
-  subscriptionModalState.selectedCategories = [];
-  subscriptionModalState.contextMode = false;
-  subscriptionModalState.selectedCustomerId = null;
-  subscriptionModalState.selectedCustomerName = null;
-  
+window.initEnhancedSubscriptionModal = function (customerId = null, customerName = null, categoryId = null, isEdit = false) {
+  console.log('Initializing improved subscription modal', { customerId, customerName, categoryId, isEdit });
+
+  // Reset form ONLY if not in edit mode
+  if (!isEdit) {
+    document.getElementById('subscription-form').reset();
+
+    // Reset state
+    subscriptionModalState.selectedCategories = [];
+    subscriptionModalState.contextMode = false;
+    subscriptionModalState.selectedCustomerId = null;
+    subscriptionModalState.selectedCustomerName = null;
+  }
+
   // Set context mode if customer provided
   if (customerId && customerName) {
     subscriptionModalState.contextMode = true;
     subscriptionModalState.selectedCustomerId = customerId;
     subscriptionModalState.selectedCustomerName = customerName;
-    
+
     // Update compact customer display
     updateCompactCustomerDisplay(customerName);
-    
+
     // Load suggestions
     loadSmartSuggestions(customerId);
-    
+
     // Pre-select category if provided
     if (categoryId) {
       setTimeout(() => {
@@ -47,19 +49,19 @@ window.initEnhancedSubscriptionModal = function(customerId = null, customerName 
   } else {
     updateCompactCustomerDisplay(null);
   }
-  
+
   // Initialize categories display
   updateCategoryDisplay();
-  
+
   // Load customers
   loadEnhancedCustomers();
-  
+
   // Load vendors for autocomplete
   loadVendors();
-  
+
   // Initialize vendor autocomplete
   initVendorAutocomplete();
-  
+
   // Initialize collapsible sections
   initCollapsibleSections();
 };
@@ -68,7 +70,7 @@ window.initEnhancedSubscriptionModal = function(customerId = null, customerName 
 
 function updateCompactCustomerDisplay(customerName) {
   const nameEl = document.getElementById('selected-customer-name');
-  
+
   if (nameEl) {
     if (customerName) {
       nameEl.textContent = customerName;
@@ -81,31 +83,31 @@ function updateCompactCustomerDisplay(customerName) {
 }
 
 // Toggle the new customer dropdown
-window.toggleCustomerDropdown = function() {
+window.toggleCustomerDropdown = function () {
   const wrapper = document.getElementById('customer-selector-wrapper');
   const panel = document.getElementById('customer-dropdown-panel');
-  
+
   if (!wrapper || !panel) return;
-  
+
   const isOpen = panel.style.display === 'block';
-  
+
   if (isOpen) {
     panel.style.display = 'none';
     wrapper.classList.remove('open');
   } else {
     panel.style.display = 'block';
     wrapper.classList.add('open');
-    
+
     // Ensure customer list is visible immediately
     const listEl = document.getElementById('subscription-customer-list');
     const loadingEl = document.getElementById('subscription-customer-loading');
-    
+
     // If customers already loaded, show list immediately
     if (subscriptionModalState.customers.length > 0 && listEl) {
       listEl.style.display = 'block';
       if (loadingEl) loadingEl.style.display = 'none';
     }
-    
+
     // Clear any previous search filter
     const searchInput = document.getElementById('subscription-customer-search');
     if (searchInput) {
@@ -122,20 +124,20 @@ window.toggleCustomerDropdown = function() {
 };
 
 // Legacy function for backward compatibility
-window.toggleCustomerSelector = function() {
+window.toggleCustomerSelector = function () {
   toggleCustomerDropdown();
 };
 
-window.clearCustomerContext = function() {
+window.clearCustomerContext = function () {
   subscriptionModalState.contextMode = false;
   subscriptionModalState.selectedCustomerId = null;
   subscriptionModalState.selectedCustomerName = null;
-  
+
   updateCompactCustomerDisplay(null);
   hideSmartSuggestions();
-  
+
   document.getElementById('subscription-customer-id').value = '';
-  
+
   // Close customer dropdown
   const panel = document.getElementById('customer-dropdown-panel');
   const wrapper = document.getElementById('customer-selector-wrapper');
@@ -147,27 +149,27 @@ window.clearCustomerContext = function() {
 
 function loadEnhancedCustomers() {
   subscriptionModalState.loading = true;
-  
+
   const loadingEl = document.getElementById('subscription-customer-loading');
   const listEl = document.getElementById('subscription-customer-list');
   const emptyEl = document.getElementById('subscription-customer-empty');
   const statusText = document.getElementById('customer-status-text');
-  
+
   // Show loading state
   if (loadingEl) loadingEl.style.display = 'flex';
   if (listEl) listEl.style.display = 'none';
   if (emptyEl) emptyEl.style.display = 'none';
   if (statusText) statusText.textContent = 'Loading customers...';
-  
+
   fetch('/api/customers')
     .then(response => response.json())
     .then(customers => {
       subscriptionModalState.customers = customers;
       subscriptionModalState.loading = false;
-      
+
       // Hide loading
       if (loadingEl) loadingEl.style.display = 'none';
-      
+
       if (customers.length === 0) {
         if (emptyEl) {
           emptyEl.innerHTML = '<div class="empty-icon">👥</div><div>No customers yet</div><div style="font-size: 12px; margin-top: 4px; color: var(--color-text-tertiary);">Create a customer first</div>';
@@ -178,7 +180,7 @@ function loadEnhancedCustomers() {
         // IMPORTANT: Show list immediately after loading
         if (listEl) listEl.style.display = 'block';
         renderCustomerList(customers);
-        
+
         if (statusText) {
           statusText.innerHTML = `<span class="help-icon">✓</span> ${customers.length} customer${customers.length !== 1 ? 's' : ''} available`;
         }
@@ -187,7 +189,7 @@ function loadEnhancedCustomers() {
     .catch(error => {
       console.error('Error loading customers:', error);
       subscriptionModalState.loading = false;
-      
+
       if (loadingEl) loadingEl.style.display = 'none';
       if (emptyEl) {
         emptyEl.innerHTML = '<div class="empty-icon">⚠️</div><div>Error loading customers</div><div style="font-size: 12px; margin-top: 4px;">Please try again</div>';
@@ -202,9 +204,9 @@ function loadEnhancedCustomers() {
 function renderCustomerList(customers) {
   const listEl = document.getElementById('subscription-customer-list');
   if (!listEl) return;
-  
+
   listEl.innerHTML = '';
-  
+
   customers.forEach(customer => {
     const item = document.createElement('div');
     item.className = 'dropdown-list-item';
@@ -212,11 +214,11 @@ function renderCustomerList(customers) {
       <span class="trigger-icon">👤</span>
       <span>${customer.name}</span>
     `;
-    
+
     if (customer.id === subscriptionModalState.selectedCustomerId) {
       item.classList.add('selected');
     }
-    
+
     item.onclick = () => selectEnhancedCustomer(customer.id, customer.name);
     listEl.appendChild(item);
   });
@@ -225,10 +227,10 @@ function renderCustomerList(customers) {
 function preselectCustomer(customerId, customerName) {
   subscriptionModalState.selectedCustomerId = customerId;
   subscriptionModalState.selectedCustomerName = customerName;
-  
+
   // Update hidden input
   document.getElementById('subscription-customer-id').value = customerId;
-  
+
   // Update trigger display
   const trigger = document.getElementById('subscription-customer-trigger');
   if (trigger) {
@@ -240,21 +242,21 @@ function preselectCustomer(customerId, customerName) {
   }
 }
 
-window.toggleEnhancedDropdown = function(prefix) {
+window.toggleEnhancedDropdown = function (prefix) {
   const trigger = document.getElementById(`${prefix}-trigger`);
   const panel = document.getElementById(`${prefix}-panel`);
-  
+
   if (!trigger || !panel) return;
-  
+
   const isOpen = panel.style.display === 'block';
-  
+
   if (isOpen) {
     panel.style.display = 'none';
     trigger.classList.remove('open');
   } else {
     panel.style.display = 'block';
     trigger.classList.add('open');
-    
+
     // Focus search input
     const searchInput = panel.querySelector('.dropdown-search-input');
     if (searchInput) {
@@ -266,43 +268,43 @@ window.toggleEnhancedDropdown = function(prefix) {
 function selectEnhancedCustomer(customerId, customerName) {
   subscriptionModalState.selectedCustomerId = customerId;
   subscriptionModalState.selectedCustomerName = customerName;
-  
+
   // Update hidden input
   document.getElementById('subscription-customer-id').value = customerId;
-  
+
   // Update list selection
   document.querySelectorAll('#subscription-customer-list .dropdown-list-item').forEach(item => {
     item.classList.remove('selected');
   });
   event?.target?.closest('.dropdown-list-item')?.classList.add('selected');
-  
+
   // Close new customer dropdown
   const panel = document.getElementById('customer-dropdown-panel');
   const wrapper = document.getElementById('customer-selector-wrapper');
   if (panel) panel.style.display = 'none';
   if (wrapper) wrapper.classList.remove('open');
-  
+
   // Update compact display
   updateCompactCustomerDisplay(customerName);
-  
+
   // Activate the card border animation briefly
   const customerCard = document.querySelector('.selection-card-customer');
   if (customerCard) {
     customerCard.classList.add('active');
     setTimeout(() => customerCard.classList.remove('active'), 2000);
   }
-  
+
   // Load suggestions
   loadSmartSuggestions(customerId);
 }
 
-window.filterEnhancedDropdown = function(prefix, searchText) {
+window.filterEnhancedDropdown = function (prefix, searchText) {
   const listEl = document.getElementById(`${prefix}-list`);
   if (!listEl) return;
-  
+
   const items = listEl.querySelectorAll('.dropdown-list-item');
   const searchLower = searchText.toLowerCase();
-  
+
   let visibleCount = 0;
   items.forEach(item => {
     const text = item.textContent.toLowerCase();
@@ -313,7 +315,7 @@ window.filterEnhancedDropdown = function(prefix, searchText) {
       item.style.display = 'none';
     }
   });
-  
+
   // Show/hide empty state
   const emptyEl = document.getElementById(`${prefix}-empty`);
   if (emptyEl) {
@@ -322,7 +324,7 @@ window.filterEnhancedDropdown = function(prefix, searchText) {
 };
 
 // Close dropdown when clicking outside
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   if (!e.target.closest('.enhanced-dropdown')) {
     document.querySelectorAll('.enhanced-dropdown-panel').forEach(panel => {
       panel.style.display = 'none';
@@ -340,32 +342,32 @@ function initCollapsibleSections() {
   const suggestionsContent = document.getElementById('smart-suggestions-content');
   const suggestionsToggle = document.getElementById('smart-suggestions-toggle');
   const collapsibleHeader = document.querySelector('.modal-section-collapsible .collapsible-header');
-  
+
   if (suggestionsContent) {
     suggestionsContent.style.display = 'none';
   }
-  
+
   if (collapsibleHeader) {
     collapsibleHeader.classList.remove('open');
   }
 }
 
-window.toggleSmartSuggestions = function() {
+window.toggleSmartSuggestions = function () {
   const content = document.getElementById('smart-suggestions-content');
   const toggle = document.getElementById('smart-suggestions-toggle');
   const header = document.querySelector('.modal-section-collapsible .collapsible-header');
-  
+
   if (!content || !toggle || !header) return;
-  
+
   const isOpen = content.style.display !== 'none';
-  
+
   if (isOpen) {
     content.style.display = 'none';
     header.classList.remove('open');
   } else {
     content.style.display = 'block';
     header.classList.add('open');
-    
+
     // Load suggestions if not already loaded
     if (subscriptionModalState.selectedCustomerId && !content.dataset.loaded) {
       loadSmartSuggestions(subscriptionModalState.selectedCustomerId);
@@ -378,9 +380,9 @@ window.toggleSmartSuggestions = function() {
 
 function loadSmartSuggestions(customerId) {
   const content = document.getElementById('suggestions-content');
-  
+
   if (!content) return;
-  
+
   fetch(`/api/subscriptions?customer_id=${customerId}`)
     .then(response => response.json())
     .then(subscriptions => {
@@ -388,11 +390,11 @@ function loadSmartSuggestions(customerId) {
         content.innerHTML = '<p style="color: var(--color-text-secondary); font-size: 13px;">No suggestions available for this customer</p>';
         return;
       }
-      
+
       // Extract unique categories and vendors
       const categories = {};
       const vendors = {};
-      
+
       subscriptions.forEach(sub => {
         if (sub.category_id && sub.category_name) {
           categories[sub.category_id] = sub.category_name;
@@ -401,9 +403,9 @@ function loadSmartSuggestions(customerId) {
           vendors[sub.vendor_name] = (vendors[sub.vendor_name] || 0) + 1;
         }
       });
-      
+
       let html = '';
-      
+
       // Category suggestions
       const categoryIds = Object.keys(categories);
       if (categoryIds.length > 0) {
@@ -417,7 +419,7 @@ function loadSmartSuggestions(customerId) {
         });
         html += '</div>';
       }
-      
+
       // Vendor suggestions
       const sortedVendors = Object.entries(vendors).sort((a, b) => b[1] - a[1]).slice(0, 5);
       if (sortedVendors.length > 0) {
@@ -432,7 +434,7 @@ function loadSmartSuggestions(customerId) {
         });
         html += '</div>';
       }
-      
+
       if (html) {
         content.innerHTML = html;
       } else {
@@ -453,7 +455,7 @@ function hideSmartSuggestions() {
   }
 }
 
-window.applySuggestion = function(type, id, value) {
+window.applySuggestion = function (type, id, value) {
   if (type === 'category') {
     selectCategoryTag(id);
   } else if (type === 'vendor') {
@@ -467,15 +469,15 @@ window.applySuggestion = function(type, id, value) {
 
 // ==================== VISUAL CATEGORY TAGS ====================
 
-window.openCategorySelector = function() {
+window.openCategorySelector = function () {
   const dropdown = document.getElementById('subscription-categories-dropdown');
   const display = document.getElementById('subscription-categories-tags');
   const container = document.getElementById('subscription-categories-wrapper');
-  
+
   if (dropdown) {
     // Check if there are any category items
     const items = dropdown.querySelectorAll('.categories-dropdown-item');
-    
+
     if (items.length === 0) {
       // No categories available - show a message
       const list = dropdown.querySelector('.categories-dropdown-list');
@@ -483,21 +485,21 @@ window.openCategorySelector = function() {
         list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--color-text-tertiary);">No categories available.<br><small>Create a category first.</small></div>';
       }
     }
-    
+
     dropdown.style.display = 'block';
     display?.classList.add('active');
     container?.classList.add('open');
-    
+
     // Update selected state in dropdown
     updateCategoryDropdownSelection();
   }
 };
 
-window.closeCategorySelector = function() {
+window.closeCategorySelector = function () {
   const dropdown = document.getElementById('subscription-categories-dropdown');
   const display = document.getElementById('subscription-categories-tags');
   const container = document.getElementById('subscription-categories-wrapper');
-  
+
   if (dropdown) {
     dropdown.style.display = 'none';
     display?.classList.remove('active');
@@ -508,7 +510,7 @@ window.closeCategorySelector = function() {
 function updateCategoryDropdownSelection() {
   const items = document.querySelectorAll('.categories-dropdown-item');
   const selectedIds = subscriptionModalState.selectedCategories.map(cat => cat.id);
-  
+
   items.forEach(item => {
     const itemId = parseInt(item.dataset.id);
     if (selectedIds.includes(itemId)) {
@@ -519,10 +521,10 @@ function updateCategoryDropdownSelection() {
   });
 }
 
-window.toggleCategoryTag = function(element) {
+window.toggleCategoryTag = function (element) {
   const categoryId = parseInt(element.dataset.id);
   const categoryName = element.dataset.name;
-  
+
   if (element.classList.contains('selected')) {
     // Deselect
     element.classList.remove('selected');
@@ -532,7 +534,7 @@ window.toggleCategoryTag = function(element) {
     element.classList.add('selected');
     addCategoryToSelection(categoryId, categoryName);
   }
-  
+
   // Update display immediately
   updateCategoryDisplay();
 };
@@ -540,7 +542,7 @@ window.toggleCategoryTag = function(element) {
 function selectCategoryTag(categoryId) {
   // Try both selectors for compatibility
   const item = document.querySelector(`.categories-dropdown-item[data-id="${categoryId}"]`) ||
-               document.querySelector(`.tags-dropdown-item[data-id="${categoryId}"]`);
+    document.querySelector(`.tags-dropdown-item[data-id="${categoryId}"]`);
   if (item && !item.classList.contains('selected')) {
     toggleCategoryTag(item);
   }
@@ -558,10 +560,10 @@ function removeCategoryFromSelection(categoryId) {
   updateCategoryDisplay();
 }
 
-window.removeCategoryChip = function(categoryId) {
+window.removeCategoryChip = function (categoryId) {
   // Try both selectors for compatibility
-  const item = document.querySelector(`.categories-dropdown-item[data-id="${categoryId}"]`) || 
-               document.querySelector(`.tags-dropdown-item[data-id="${categoryId}"]`);
+  const item = document.querySelector(`.categories-dropdown-item[data-id="${categoryId}"]`) ||
+    document.querySelector(`.tags-dropdown-item[data-id="${categoryId}"]`);
   if (item) {
     item.classList.remove('selected');
   }
@@ -569,15 +571,15 @@ window.removeCategoryChip = function(categoryId) {
 };
 
 // Pre-select multiple categories (for editing subscriptions)
-window.preselectSubscriptionCategories = function(categoryIds) {
+window.preselectSubscriptionCategories = function (categoryIds) {
   if (!categoryIds || categoryIds.length === 0) return;
-  
+
   // Reset selected categories
   subscriptionModalState.selectedCategories = [];
-  
+
   // Get all category dropdown items
   const allCategoryItems = document.querySelectorAll('.categories-dropdown-item');
-  
+
   // Build a map of category items
   const categoryMap = new Map();
   allCategoryItems.forEach(item => {
@@ -587,19 +589,19 @@ window.preselectSubscriptionCategories = function(categoryIds) {
       categoryMap.set(id, { id, name, element: item });
     }
   });
-  
+
   // Convert categoryIds to array if needed
   const ids = Array.isArray(categoryIds) ? categoryIds : [categoryIds];
-  
+
   // Pre-select each category
   ids.forEach(categoryId => {
     const id = parseInt(categoryId);
     const category = categoryMap.get(id);
-    
+
     if (category) {
       // Mark as selected in dropdown
       category.element.classList.add('selected');
-      
+
       // Add to selectedCategories state
       subscriptionModalState.selectedCategories.push({
         id: category.id,
@@ -607,10 +609,10 @@ window.preselectSubscriptionCategories = function(categoryIds) {
       });
     }
   });
-  
+
   // Update the display
   updateCategoryDisplay();
-  
+
   console.log('Pre-selected categories:', subscriptionModalState.selectedCategories);
 };
 
@@ -618,26 +620,26 @@ function updateCategoryDisplay() {
   const display = document.getElementById('subscription-categories-tags');
   const idsInput = document.getElementById('subscription-category-ids');
   const idInput = document.getElementById('subscription-category-id');
-  
+
   if (!display) {
     return;
   }
-  
+
   display.innerHTML = '';
-  
+
   // SINGLE SOURCE OF TRUTH: subscriptionModalState.selectedCategories
   // Get the category IDs for the hidden inputs (backup for form serialization)
   const ids = subscriptionModalState.selectedCategories.map(cat => cat.id);
-  
+
   // Always update hidden inputs to stay in sync (backup for form serialization)
   if (idsInput) {
     idsInput.value = ids.join(',');
   }
-  
+
   if (idInput) {
     idInput.value = ids[0] || '';
   }
-  
+
   if (subscriptionModalState.selectedCategories.length === 0) {
     display.innerHTML = '<span class="categories-placeholder">Click to select categories...</span>';
   } else {
@@ -645,7 +647,7 @@ function updateCategoryDisplay() {
     const maxVisible = 3;
     const categoriesToShow = subscriptionModalState.selectedCategories.slice(0, maxVisible);
     const remainingCount = subscriptionModalState.selectedCategories.length - maxVisible;
-    
+
     categoriesToShow.forEach(cat => {
       const tag = document.createElement('div');
       tag.className = 'category-tag';
@@ -655,7 +657,7 @@ function updateCategoryDisplay() {
       `;
       display.appendChild(tag);
     });
-    
+
     // Show "+X more" if there are more categories
     if (remainingCount > 0) {
       const moreTag = document.createElement('div');
@@ -692,7 +694,7 @@ function loadVendors() {
 function initVendorAutocomplete() {
   const vendorInput = document.getElementById('subscription-vendor-name');
   if (!vendorInput || vendorInput._vendorAutocomplete) return;
-  
+
   // Use the existing SmartAutocomplete class
   const autocomplete = new SmartAutocomplete(vendorInput, {
     dataSource: subscriptionModalState.vendors,
@@ -703,9 +705,9 @@ function initVendorAutocomplete() {
     highlightMatches: true,
     showRecentFirst: true
   });
-  
+
   vendorInput._vendorAutocomplete = autocomplete;
-  
+
   // Update data source when vendors are loaded
   const checkVendors = setInterval(() => {
     if (subscriptionModalState.vendors.length > 0) {
@@ -719,18 +721,21 @@ function initVendorAutocomplete() {
 
 // Override the old openModal function for subscription modal
 const originalOpenModal = window.openModal;
-window.openModal = function(modalId) {
+window.openModal = function (modalId) {
   if (modalId === 'subscriptionModal') {
-    initEnhancedSubscriptionModal();
+    const form = document.querySelector('#subscriptionModal form');
+    // Check if we are in edit mode (form has an item ID)
+    const isEdit = form && form.dataset.itemId && form.dataset.itemId !== '';
+    initEnhancedSubscriptionModal(null, null, null, isEdit);
   }
   originalOpenModal(modalId);
 };
 
 // Update the openSubscriptionModalForCustomer function
-window.openSubscriptionModalForCustomer = function(categoryId, customerId, customerName) {
+window.openSubscriptionModalForCustomer = function (categoryId, customerId, customerName) {
   // Open modal first
   originalOpenModal('subscriptionModal');
-  
+
   // Then initialize with customer context
   setTimeout(() => {
     initEnhancedSubscriptionModal(customerId, customerName, categoryId);
@@ -738,7 +743,7 @@ window.openSubscriptionModalForCustomer = function(categoryId, customerId, custo
 };
 
 // Close dropdowns when clicking outside (updated for new layout)
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   // Close customer dropdown when clicking outside
   if (!e.target.closest('.customer-selector-wrapper') && !e.target.closest('.customer-dropdown-panel')) {
     const panel = document.getElementById('customer-dropdown-panel');
@@ -750,7 +755,7 @@ document.addEventListener('click', function(e) {
       wrapper.classList.remove('open');
     }
   }
-  
+
   // Close categories dropdown when clicking outside
   if (!e.target.closest('.categories-chips-container') && !e.target.closest('.categories-dropdown')) {
     const dropdown = document.getElementById('subscription-categories-dropdown');
@@ -766,7 +771,7 @@ document.addEventListener('click', function(e) {
       container.classList.remove('open');
     }
   }
-  
+
   // Close enhanced dropdowns when clicking outside
   if (!e.target.closest('.enhanced-dropdown')) {
     document.querySelectorAll('.enhanced-dropdown-panel').forEach(panel => {

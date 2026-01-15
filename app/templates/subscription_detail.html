@@ -92,9 +92,17 @@
                 <div>
                     <div class="text-sm text-secondary mb-1">Category</div>
                     <div>
-                        <a href="/categories/{{ subscription.category.id }}" class="text-primary">
-                            {{ subscription.category.name }}
-                        </a>
+                        {% if subscription.categories %}
+                            {% for cat in subscription.categories %}
+                            <a href="/categories/{{ cat.id }}" class="badge badge-primary mr-1">
+                                {{ cat.name }}
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            <a href="/categories/{{ subscription.category.id }}" class="text-primary">
+                                {{ subscription.category.name }}
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
                 <div>
