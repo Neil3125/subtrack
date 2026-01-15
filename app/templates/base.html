@@ -1,34 +1,44 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SubTrack Web{% endblock %}</title>
-    
+
     <!-- Prevent FOUC (Flash of Unstyled Content) and dark mode flash -->
     <script>
         // Load theme IMMEDIATELY before any rendering
-        (function() {
+        (function () {
             const savedTheme = localStorage.getItem('theme') || 'light';
             const savedVisualTheme = localStorage.getItem('visual-theme') || 'default';
             document.documentElement.setAttribute('data-theme', savedVisualTheme !== 'default' ? savedVisualTheme : savedTheme);
         })();
     </script>
-    
+
     <!-- Preload critical resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        as="style">
     <link rel="preload" href="/static/css/style.css" as="style">
-    
+
     <!-- Critical CSS inline for instant load -->
     <style>
         /* Prevent flash */
-        html { background: var(--color-bg, #ffffff); }
-        [data-theme="dark"] { background: var(--color-bg, #0d0d0d); }
-        body { margin: 0; }
+        html {
+            background: var(--color-bg, #ffffff);
+        }
+
+        [data-theme="dark"] {
+            background: var(--color-bg, #0d0d0d);
+        }
+
+        body {
+            margin: 0;
+        }
     </style>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/enhancements.css">
@@ -37,6 +47,7 @@
     <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
     {% block extra_head %}{% endblock %}
 </head>
+
 <body>
     <!-- Floating Particles Background -->
     <div class="particles">
@@ -46,51 +57,39 @@
         <div class="particle"></div>
         <div class="particle"></div>
     </div>
-    
+
     <!-- Morphing Background Blobs -->
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
     <div class="blob blob-3"></div>
     <div class="blob blob-4"></div>
-    
+
     <!-- Navbar -->
     <nav class="navbar">
         <a href="/" class="navbar-brand">
             <span>📊</span> SubTrack
         </a>
-        
+
         <div class="navbar-search">
             <div class="search-wrapper">
                 <!-- Hidden fields to trap browser autofill -->
-                <input type="text" name="trap_username" style="display:none !important; position:absolute; left:-9999px;" tabindex="-1" autocomplete="username">
-                <input type="password" name="trap_password" style="display:none !important; position:absolute; left:-9999px;" tabindex="-1" autocomplete="current-password">
-                <input 
-                    type="text" 
-                    class="search-input" 
-                    id="global-search-input"
-                    placeholder="Search subscriptions, customers, vendors..."
-                    hx-get="/search"
-                    hx-trigger="keyup changed delay:300ms"
-                    hx-target="#search-results"
-                    hx-swap="innerHTML"
-                    name="search_query_field"
-                    autocomplete="off"
-                    autocorrect="off"
-                    autocapitalize="off"
-                    spellcheck="false"
-                    data-form-type="other"
-                    data-lpignore="true"
-                    data-1p-ignore="true"
-                    aria-label="Search"
-                    role="searchbox"
-                    readonly
-                    onfocus="this.removeAttribute('readonly');"
-                >
+                <input type="text" name="trap_username"
+                    style="display:none !important; position:absolute; left:-9999px;" tabindex="-1"
+                    autocomplete="username">
+                <input type="password" name="trap_password"
+                    style="display:none !important; position:absolute; left:-9999px;" tabindex="-1"
+                    autocomplete="current-password">
+                <input type="text" class="search-input" id="global-search-input"
+                    placeholder="Search subscriptions, customers, vendors..." hx-get="/search"
+                    hx-trigger="keyup changed delay:300ms" hx-target="#search-results" hx-swap="innerHTML"
+                    name="search_query_field" autocomplete="off" autocorrect="off" autocapitalize="off"
+                    spellcheck="false" data-form-type="other" data-lpignore="true" data-1p-ignore="true"
+                    aria-label="Search" role="searchbox" readonly onfocus="this.removeAttribute('readonly');">
                 <span class="search-icon">🔍</span>
             </div>
             <div id="search-results" class="search-results"></div>
         </div>
-        
+
         <div class="navbar-actions">
             <button class="btn btn-secondary btn-sm" onclick="toggleTheme()">
                 <span id="theme-icon">🌙</span>
@@ -128,7 +127,7 @@
                     <a href="/settings" class="dropdown-item">
                         <span>⚙️</span> Settings
                     </a>
-                    
+
                     <a href="/reports" class="dropdown-item">
                         <span>📤</span> Reports & Exports
                     </a>
@@ -166,27 +165,32 @@
                         </a>
                     </li>
                     <li class="sidebar-nav-item">
-                        <a href="/categories" class="sidebar-nav-link {% if '/categories' in request.path and '/customers' not in request.path %}active{% endif %}">
+                        <a href="/categories"
+                            class="sidebar-nav-link {% if '/categories' in request.path and '/customers' not in request.path %}active{% endif %}">
                             📁 Categories
                         </a>
                     </li>
                     <li class="sidebar-nav-item">
-                        <a href="/customers" class="sidebar-nav-link {% if request.path == '/customers' %}active{% endif %}">
+                        <a href="/customers"
+                            class="sidebar-nav-link {% if request.path == '/customers' %}active{% endif %}">
                             👥 Customers
                         </a>
                     </li>
                     <li class="sidebar-nav-item">
-                        <a href="/subscriptions" class="sidebar-nav-link {% if request.path == '/subscriptions' %}active{% endif %}">
+                        <a href="/subscriptions"
+                            class="sidebar-nav-link {% if request.path == '/subscriptions' %}active{% endif %}">
                             📋 Subscriptions
                         </a>
                     </li>
                     <li class="sidebar-nav-item">
-                        <a href="/analytics" class="sidebar-nav-link {% if '/analytics' in request.path %}active{% endif %}">
+                        <a href="/analytics"
+                            class="sidebar-nav-link {% if '/analytics' in request.path %}active{% endif %}">
                             📈 Analytics
                         </a>
                     </li>
                     <li class="sidebar-nav-item">
-                        <a href="/reports" class="sidebar-nav-link {% if '/reports' in request.path %}active{% endif %}">
+                        <a href="/reports"
+                            class="sidebar-nav-link {% if '/reports' in request.path %}active{% endif %}">
                             📄 Reports
                         </a>
                     </li>
@@ -196,7 +200,8 @@
                         </a>
                     </li>
                     <li class="sidebar-nav-item">
-                        <a href="/settings" class="sidebar-nav-link {% if '/settings' in request.path %}active{% endif %}">
+                        <a href="/settings"
+                            class="sidebar-nav-link {% if '/settings' in request.path %}active{% endif %}">
                             ⚙️ Settings
                         </a>
                     </li>
@@ -206,7 +211,8 @@
                         </a>
                     </li>
                     <li class="sidebar-nav-item">
-                        <a href="/activity" class="sidebar-nav-link {% if '/activity' in request.path %}active{% endif %}">
+                        <a href="/activity"
+                            class="sidebar-nav-link {% if '/activity' in request.path %}active{% endif %}">
                             📋 Activity Log
                         </a>
                     </li>
@@ -250,8 +256,10 @@
                     SubTrack helps you track subscriptions, renewals, and costs across categories and customers.
                 </p>
                 <div class="list-group">
-                    <div class="list-group-item"><strong>Quick Add</strong> — Use the + button to create items fast</div>
-                    <div class="list-group-item"><strong>Search</strong> — Search vendors/customers from the top bar</div>
+                    <div class="list-group-item"><strong>Quick Add</strong> — Use the + button to create items fast
+                    </div>
+                    <div class="list-group-item"><strong>Search</strong> — Search vendors/customers from the top bar
+                    </div>
                     <div class="list-group-item"><strong>Reports</strong> — Export your data anytime</div>
                 </div>
             </div>
@@ -295,22 +303,30 @@
             </div>
             <div class="modal-body">
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="card card-hover quick-add-card" onclick="closeModal('quickAddModal'); openModal('categoryModal');" style="cursor: pointer; text-align: center; padding: var(--space-6);">
+                    <div class="card card-hover quick-add-card"
+                        onclick="closeModal('quickAddModal'); openModal('categoryModal');"
+                        style="cursor: pointer; text-align: center; padding: var(--space-6);">
                         <div class="quick-add-icon">📁</div>
                         <div class="quick-add-label">Category</div>
                         <div class="quick-add-desc">Organize subscriptions</div>
                     </div>
-                    <div class="card card-hover quick-add-card" onclick="closeModal('quickAddModal'); openModal('groupModal');" style="cursor: pointer; text-align: center; padding: var(--space-6);">
+                    <div class="card card-hover quick-add-card"
+                        onclick="closeModal('quickAddModal'); openModal('groupModal');"
+                        style="cursor: pointer; text-align: center; padding: var(--space-6);">
                         <div class="quick-add-icon">📦</div>
                         <div class="quick-add-label">Group</div>
                         <div class="quick-add-desc">Group customers</div>
                     </div>
-                    <div class="card card-hover quick-add-card" onclick="closeModal('quickAddModal'); openModal('customerModal');" style="cursor: pointer; text-align: center; padding: var(--space-6);">
+                    <div class="card card-hover quick-add-card"
+                        onclick="closeModal('quickAddModal'); openModal('customerModal');"
+                        style="cursor: pointer; text-align: center; padding: var(--space-6);">
                         <div class="quick-add-icon">👤</div>
                         <div class="quick-add-label">Customer</div>
                         <div class="quick-add-desc">Add new customer</div>
                     </div>
-                    <div class="card card-hover quick-add-card" onclick="closeModal('quickAddModal'); openModal('subscriptionModal');" style="cursor: pointer; text-align: center; padding: var(--space-6);">
+                    <div class="card card-hover quick-add-card"
+                        onclick="closeModal('quickAddModal'); openModal('subscriptionModal');"
+                        style="cursor: pointer; text-align: center; padding: var(--space-6);">
                         <div class="quick-add-icon">📋</div>
                         <div class="quick-add-label">Subscription</div>
                         <div class="quick-add-desc">Track subscription</div>
@@ -335,11 +351,13 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Description</label>
-                        <textarea name="description" class="form-textarea" placeholder="Brief description of this category"></textarea>
+                        <textarea name="description" class="form-textarea"
+                            placeholder="Brief description of this category"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('categoryModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary"
+                        onclick="closeModal('categoryModal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create Category</button>
                 </div>
             </form>
@@ -394,13 +412,16 @@
                         <label class="form-label">Categories *</label>
                         <input type="hidden" name="category_ids" id="customer-category-ids" value="">
                         <div class="multi-select-wrapper" id="customer-category-multiselect">
-                            <div class="multi-select-trigger" onclick="toggleCategoryMultiSelect('customer-category-multiselect')">
+                            <div class="multi-select-trigger"
+                                onclick="toggleCategoryMultiSelect('customer-category-multiselect')">
                                 <span class="placeholder">Select categories...</span>
                                 <span class="arrow">▼</span>
                             </div>
                             <div class="multi-select-menu">
                                 {% for category in categories|default([]) %}
-                                <div class="multi-select-item" data-id="{{ category.id }}" data-name="{{ category.name }}" onclick="toggleCategoryItem(this, 'customer-category-multiselect')">
+                                <div class="multi-select-item" data-id="{{ category.id }}"
+                                    data-name="{{ category.name }}"
+                                    onclick="toggleCategoryItem(this, 'customer-category-multiselect')">
                                     <span class="checkbox"></span>
                                     <span>{{ category.name }}</span>
                                 </div>
@@ -412,7 +433,8 @@
                     <div class="form-group">
                         <label class="form-label">Groups (Optional)</label>
                         <div id="customer-groups-container" class="multi-select-container">
-                            <div class="multi-select-placeholder">Select a category first, or groups will load automatically</div>
+                            <div class="multi-select-placeholder">Select a category first, or groups will load
+                                automatically</div>
                         </div>
                         <input type="hidden" name="group_ids" id="customer-group-ids" value="">
                         <small class="text-secondary">Select one or more groups - organized by category</small>
@@ -433,7 +455,9 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Country *</label>
-                        <input type="text" name="country" class="form-input country-autocomplete" placeholder="Start typing country..." list="country-suggestions" autocomplete="off" required>
+                        <input type="text" name="country" class="form-input country-autocomplete"
+                            placeholder="Start typing country..." list="country-suggestions" autocomplete="off"
+                            required>
                         <datalist id="country-suggestions"></datalist>
                         <small class="text-secondary">Type to see suggestions from existing customers</small>
                     </div>
@@ -447,24 +471,27 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('customerModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary"
+                        onclick="closeModal('customerModal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create Customer</button>
                 </div>
             </form>
         </div>
     </div>
 
-<!-- Subscription Modal - IMPROVED UI -->
+    <!-- Subscription Modal - IMPROVED UI -->
     <div id="subscriptionModal" class="modal subscription-modal-improved" style="display: none;">
-        <div class="modal-content modal-content-improved" style="max-width: 720px; max-height: 90vh; display: flex; flex-direction: column;">
+        <div class="modal-content modal-content-improved"
+            style="max-width: 720px; max-height: 90vh; display: flex; flex-direction: column;">
             <div class="modal-header modal-header-improved">
                 <h2 class="modal-title modal-title-improved">Create Subscription</h2>
                 <p class="modal-subtitle modal-subtitle-improved">Subscriptions are organized by category</p>
                 <button class="modal-close modal-close-improved" onclick="closeModal('subscriptionModal')">×</button>
             </div>
-            <form onsubmit="handleFormSubmit(event, createSubscription)" id="subscription-form">
-                <div class="modal-body modal-body-improved" style="overflow-y: auto; flex: 1; max-height: calc(90vh - 140px);">
-                    
+            <form onsubmit="handleFormSubmit(event, saveEnhancedSubscription)" id="subscription-form">
+                <div class="modal-body modal-body-improved"
+                    style="overflow-y: auto; flex: 1; max-height: calc(90vh - 140px);">
+
                     <!-- PRIMARY SELECTION ROW: Customer & Categories -->
                     <div class="primary-selection-row">
                         <!-- CUSTOMER SELECTOR (FIRST) -->
@@ -477,34 +504,37 @@
                                 </div>
                                 <div class="selection-card-content">
                                     <input type="hidden" name="customer_id" id="subscription-customer-id" required>
-                                    
+
                                     <!-- Customer Display/Selector -->
                                     <div class="customer-selector-wrapper" id="customer-selector-wrapper">
-                                        <div class="customer-selected-display" id="customer-selected-display" onclick="toggleCustomerDropdown()">
-                                            <span class="customer-selected-name" id="selected-customer-name">Select customer...</span>
+                                        <div class="customer-selected-display" id="customer-selected-display"
+                                            onclick="toggleCustomerDropdown()">
+                                            <span class="customer-selected-name" id="selected-customer-name">Select
+                                                customer...</span>
                                             <span class="customer-selected-arrow">▼</span>
                                         </div>
-                                        
+
                                         <!-- Customer Dropdown -->
-                                        <div class="customer-dropdown-panel" id="customer-dropdown-panel" style="display: none;">
+                                        <div class="customer-dropdown-panel" id="customer-dropdown-panel"
+                                            style="display: none;">
                                             <div class="dropdown-search-box">
-                                                <input type="text" 
-                                                       class="dropdown-search-input" 
-                                                       placeholder="Search customers..." 
-                                                       id="subscription-customer-search"
-                                                       oninput="filterEnhancedDropdown('subscription-customer', this.value)">
+                                                <input type="text" class="dropdown-search-input"
+                                                    placeholder="Search customers..." id="subscription-customer-search"
+                                                    oninput="filterEnhancedDropdown('subscription-customer', this.value)">
                                             </div>
-                                            
+
                                             <div class="dropdown-loading" id="subscription-customer-loading">
                                                 <div class="loading-spinner"></div>
                                                 <span>Loading...</span>
                                             </div>
-                                            
-                                            <div class="dropdown-list" id="subscription-customer-list" style="display: none;">
+
+                                            <div class="dropdown-list" id="subscription-customer-list"
+                                                style="display: none;">
                                                 <!-- Populated by JS -->
                                             </div>
-                                            
-                                            <div class="dropdown-empty" id="subscription-customer-empty" style="display: none;">
+
+                                            <div class="dropdown-empty" id="subscription-customer-empty"
+                                                style="display: none;">
                                                 <span>No customers found</span>
                                             </div>
                                         </div>
@@ -524,22 +554,27 @@
                                 <div class="selection-card-content">
                                     <input type="hidden" name="category_ids" id="subscription-category-ids" value="">
                                     <input type="hidden" name="category_id" id="subscription-category-id" value="">
-                                    
+
                                     <div class="categories-chips-container" id="subscription-categories-wrapper">
                                         <!-- Selected Categories Display -->
-                                        <div class="categories-chips-display" id="subscription-categories-tags" onclick="openCategorySelector()">
+                                        <div class="categories-chips-display" id="subscription-categories-tags"
+                                            onclick="openCategorySelector()">
                                             <span class="categories-placeholder">Click to select...</span>
                                         </div>
-                                        
+
                                         <!-- Dropdown Panel -->
-                                        <div class="categories-dropdown" id="subscription-categories-dropdown" style="display: none;">
+                                        <div class="categories-dropdown" id="subscription-categories-dropdown"
+                                            style="display: none;">
                                             <div class="categories-dropdown-header">
                                                 <span>Select categories</span>
-                                                <button type="button" class="categories-close" onclick="closeCategorySelector()">✕</button>
+                                                <button type="button" class="categories-close"
+                                                    onclick="closeCategorySelector()">✕</button>
                                             </div>
                                             <div class="categories-dropdown-list">
                                                 {% for category in categories|default([]) %}
-                                                <div class="categories-dropdown-item tags-dropdown-item" data-id="{{ category.id }}" data-name="{{ category.name }}" onclick="toggleCategoryTag(this)">
+                                                <div class="categories-dropdown-item tags-dropdown-item"
+                                                    data-id="{{ category.id }}" data-name="{{ category.name }}"
+                                                    onclick="toggleCategoryTag(this)">
                                                     <span class="categories-item-checkbox"></span>
                                                     <span class="categories-item-label">{{ category.name }}</span>
                                                 </div>
@@ -561,20 +596,17 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Vendor Name</label>
-                                    <input type="text" 
-                                           name="vendor_name" 
-                                           id="subscription-vendor-name"
-                                           class="form-input" 
-                                           required 
-                                           placeholder="AWS / Adobe / Netflix"
-                                           autocomplete="off">
+                                    <input type="text" name="vendor_name" id="subscription-vendor-name"
+                                        class="form-input" required placeholder="AWS / Adobe / Netflix"
+                                        autocomplete="off">
                                 </div>
                             </div>
-                            
+
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Plan / Tier</label>
-                                    <input type="text" name="plan_name" class="form-input" placeholder="Professional, Premium">
+                                    <input type="text" name="plan_name" class="form-input"
+                                        placeholder="Professional, Premium">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Billing Cycle</label>
@@ -587,13 +619,14 @@
                                     </select>
                                 </div>
                             </div>
-                            
+
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Cost</label>
                                     <div class="input-with-prefix">
                                         <span class="input-prefix">$</span>
-                                        <input type="number" step="0.01" name="cost" class="form-input" required placeholder="99.99">
+                                        <input type="number" step="0.01" name="cost" class="form-input" required
+                                            placeholder="99.99">
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -639,7 +672,7 @@
                         </div>
                     </div>
 
-<!-- SECTION 5: ADDITIONAL DETAILS -->
+                    <!-- SECTION 5: ADDITIONAL DETAILS -->
                     <div class="modal-section">
                         <div class="section-header">
                             <h3 class="section-title">Additional Details</h3>
@@ -655,7 +688,7 @@
                                     <input type="date" name="next_renewal_date" class="form-input" required>
                                 </div>
                             </div>
-                            
+
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Status</label>
@@ -668,25 +701,23 @@
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Country</label>
-                                    <input type="text" 
-                                           name="country" 
-                                           class="form-input" 
-                                           placeholder="Country..." 
-                                           autocomplete="off">
+                                    <input type="text" name="country" class="form-input" placeholder="Country..."
+                                        autocomplete="off">
                                 </div>
                             </div>
-                            
+
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Notes</label>
-                                    <textarea name="notes" class="form-textarea" rows="3" placeholder="Additional notes..."></textarea>
+                                    <textarea name="notes" class="form-textarea" rows="3"
+                                        placeholder="Additional notes..."></textarea>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                 </div>
-                
+
                 <!-- Clean Footer -->
                 <div class="modal-footer modal-footer-improved">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('subscriptionModal')">
@@ -719,7 +750,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editCategoryModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary"
+                        onclick="closeModal('editCategoryModal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Category</button>
                 </div>
             </form>
@@ -753,7 +785,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editGroupModal')">Cancel</button>
+                    <button type="button" class="btn btn-secondary"
+                        onclick="closeModal('editGroupModal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Group</button>
                 </div>
             </form>
@@ -773,13 +806,16 @@
                         <label class="form-label">Categories *</label>
                         <input type="hidden" name="category_ids" id="edit-customer-category-ids" value="">
                         <div class="multi-select-wrapper" id="edit-customer-category-multiselect">
-                            <div class="multi-select-trigger" onclick="toggleCategoryMultiSelect('edit-customer-category-multiselect')">
+                            <div class="multi-select-trigger"
+                                onclick="toggleCategoryMultiSelect('edit-customer-category-multiselect')">
                                 <span class="placeholder">Select categories...</span>
                                 <span class="arrow">▼</span>
                             </div>
                             <div class="multi-select-menu">
                                 {% for category in categories|default([]) %}
-                                <div class="multi-select-item" data-id="{{ category.id }}" data-name="{{ category.name }}" onclick="toggleCategoryItem(this, 'edit-customer-category-multiselect')">
+                                <div class="multi-select-item" data-id="{{ category.id }}"
+                                    data-name="{{ category.name }}"
+                                    onclick="toggleCategoryItem(this, 'edit-customer-category-multiselect')">
                                     <span class="checkbox"></span>
                                     <span>{{ category.name }}</span>
                                 </div>
@@ -811,182 +847,6 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Country *</label>
-                        <input type="text" name="country" class="form-input country-autocomplete" placeholder="Start typing country..." list="country-suggestions-edit" autocomplete="off" required>
-                        <datalist id="country-suggestions-edit"></datalist>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label class="form-label">Tags</label>
-                            <input type="text" name="tags" class="form-input" placeholder="vip, enterprise">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Notes</label>
-                            <input type="text" name="notes" class="form-input" placeholder="Additional notes">
-                        </div>
-                    </div>
-                    
-                    <!-- Subscriptions Section -->
-                    <div class="form-group" style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
-                        <div class="flex items-center justify-between mb-3">
-                            <label class="form-label" style="margin-bottom: 0;">📋 Subscriptions</label>
-                            <button type="button" class="btn btn-sm btn-primary" onclick="addSubscriptionForCustomer()">+ Add Subscription</button>
-                        </div>
-                        <div id="customer-subscriptions-list" class="space-y-2">
-                            <p class="text-secondary text-sm">Loading subscriptions...</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editCustomerModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Customer</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-
-    <!-- Edit Subscription Modal -->
-    <div id="editSubscriptionModal" class="modal" style="display: none;">
-        <div class="modal-content" style="width: min(800px, 95vw);">
-            <div class="modal-header">
-                <h2 class="modal-title">Edit Subscription</h2>
-                <button class="modal-close" onclick="closeModal('editSubscriptionModal')">×</button>
-            </div>
-            <form onsubmit="handleFormSubmit(event, updateSubscription)" style="display: flex; flex-direction: column; min-height: 0; flex: 1;">
-                <div class="modal-body">
-                    <!-- Customer Selection Section -->
-                    <div class="form-section" style="background: var(--color-bg-secondary); padding: 1rem; border-radius: var(--radius-lg); margin-bottom: 1rem;">
-                        <h4 style="margin: 0 0 0.75rem 0; font-size: 0.875rem; color: var(--color-text-secondary);">👤 Customer Assignment</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label">Category *</label>
-                                <select 
-                                    name="category_id" 
-                                    id="edit-subscription-category" 
-                                    class="form-select" 
-                                    required 
-                                    hx-get="/partials/customer-options" 
-                                    hx-trigger="change" 
-                                    hx-target="#edit-subscription-customer-select" 
-                                    hx-swap="innerHTML"
-                                    hx-include="[name='category_id']">
-                                    {% for category in categories|default([]) %}
-                                    <option value="{{ category.id }}">{{ category.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label">Customer *</label>
-                                <select name="customer_id" id="edit-subscription-customer-select" class="form-select" required>
-                                    <option value="">Loading customers...</option>
-                                </select>
-                                <small class="text-secondary">Change customer to reassign this subscription</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Vendor & Plan Section -->
-                    <div class="form-section" style="background: var(--color-bg-secondary); padding: 1rem; border-radius: var(--radius-lg); margin-bottom: 1rem;">
-                        <h4 style="margin: 0 0 0.75rem 0; font-size: 0.875rem; color: var(--color-text-secondary);">📋 Service & Plan Details</h4>
-                        <div class="form-group">
-                            <label class="form-label">Vendor Name *</label>
-                            <input type="text" name="vendor_name" class="form-input" required>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label">Plan Name</label>
-                                <input type="text" name="plan_name" class="form-input" placeholder="e.g., Basic, Pro, Enterprise">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label">Quick Plan Select</label>
-                                <select class="form-select" onchange="applyPlanPreset(this.value)">
-                                    <option value="">-- Select a preset --</option>
-                                    <option value="basic">Basic Plan</option>
-                                    <option value="standard">Standard Plan</option>
-                                    <option value="professional">Professional Plan</option>
-                                    <option value="enterprise">Enterprise Plan</option>
-                                    <option value="custom">Custom Plan</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Pricing Section -->
-                    <div class="form-section" style="background: var(--color-bg-secondary); padding: 1rem; border-radius: var(--radius-lg); margin-bottom: 1rem;">
-                        <h4 style="margin: 0 0 0.75rem 0; font-size: 0.875rem; color: var(--color-text-secondary);">💰 Pricing & Billing</h4>
-                        <div class="grid grid-cols-3 gap-4">
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label">Cost *</label>
-                                <input type="number" step="0.01" name="cost" class="form-input" required>
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label">Currency</label>
-                                <select name="currency" class="form-select">
-                                    <option value="USD">USD</option>
-                                    <option value="EUR">EUR</option>
-                                    <option value="GBP">GBP</option>
-                                    <option value="CAD">CAD</option>
-                                    <option value="AUD">AUD</option>
-                                </select>
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label">Billing Cycle *</label>
-                                <select name="billing_cycle" class="form-select" required onchange="updateRenewalDateFromCycle(this.value)">
-                                    <option value="monthly">Monthly</option>
-                                    <option value="quarterly">Quarterly</option>
-                                    <option value="yearly">Yearly</option>
-                                    <option value="weekly">Weekly</option>
-                                    <option value="biannual">Biannual</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dates Section -->
-                    <div class="form-section" style="background: var(--color-bg-secondary); padding: 1rem; border-radius: var(--radius-lg); margin-bottom: 1rem;">
-                        <h4 style="margin: 0 0 0.75rem 0; font-size: 0.875rem; color: var(--color-text-secondary);">📅 Dates & Renewal</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label">Start Date *</label>
-                                <input type="date" name="start_date" class="form-input" required>
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label">Next Renewal Date *</label>
-                                <input type="date" name="next_renewal_date" class="form-input" required>
-                                <small class="text-secondary">Auto-calculated when changing billing cycle</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Status & Location Section -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-select">
-                                <option value="active">✅ Active</option>
-                                <option value="paused">⏸️ Paused</option>
-                                <option value="cancelled">❌ Cancelled</option>
-                                <option value="expired">⏰ Expired</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Country</label>
-                            <input type="text" name="country" class="form-input country-autocomplete" placeholder="Start typing country..." autocomplete="off">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Notes</label>
-                        <textarea name="notes" class="form-textarea" placeholder="Additional notes about this subscription..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('editSubscriptionModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Subscription</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
 
     <!-- Add Existing Customer Modal -->
@@ -1015,128 +875,133 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('addExistingCustomerModal')">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="assignExistingCustomerToCategory()">Add to Category</button>
+                <button type="button" class="btn btn-secondary"
+                    onclick="closeModal('addExistingCustomerModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="assignExistingCustomerToCategory()">Add to
+                    Category</button>
             </div>
         </div>
     </div>
 
     <script src="/static/js/app.js"></script>
     <script src="/static/js/subscription-modal-enhanced.js"></script>
-    
+
     <script>
-    // Helper functions for modals
-    function openShortcutsModal() {
-        openModal('shortcutsModal');
-    }
-    
-    function openAboutModal() {
-        openModal('aboutModal');
-    }
-    
-    // Add existing customer to category
-    function openAddExistingCustomerModal(categoryId) {
-        document.getElementById('existing-customer-category-id').value = categoryId;
-        
-        // Load all customers
-        fetch('/api/customers')
-            .then(response => response.json())
-            .then(customers => {
-                const select = document.getElementById('existing-customer-select');
-                select.innerHTML = '<option value="">Select a customer</option>';
-                
-                if (customers.length === 0) {
-                    select.innerHTML = '<option value="" disabled>No customers available</option>';
-                } else {
-                    customers.forEach(customer => {
-                        const categoryInfo = customer.category_names || 'No category';
+        // Helper functions for modals
+        function openShortcutsModal() {
+            openModal('shortcutsModal');
+        }
+
+        function openAboutModal() {
+            openModal('aboutModal');
+        }
+
+        // Add existing customer to category
+        function openAddExistingCustomerModal(categoryId) {
+            document.getElementById('existing-customer-category-id').value = categoryId;
+
+            // Load all customers
+            fetch('/api/customers')
+                .then(response => response.json())
+                .then(customers => {
+                    const select = document.getElementById('existing-customer-select');
+                    select.innerHTML = '<option value="">Select a customer</option>';
+
+                    if (customers.length === 0) {
+                        select.innerHTML = '<option value="" disabled>No customers available</option>';
+                    } else {
+                        customers.forEach(customer => {
+                            const categoryInfo = customer.category_names || 'No category';
+                            const option = document.createElement('option');
+                            option.value = customer.id;
+                            option.textContent = `${customer.name} (${categoryInfo})`;
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading customers:', error);
+                    document.getElementById('existing-customer-select').innerHTML = '<option value="">Error loading customers</option>';
+                });
+
+            // Load groups for this category
+            fetch(`/api/groups?category_id=${categoryId}`)
+                .then(response => response.json())
+                .then(groups => {
+                    const select = document.getElementById('existing-customer-group-select');
+                    select.innerHTML = '<option value="">No group</option>';
+                    groups.forEach(group => {
                         const option = document.createElement('option');
-                        option.value = customer.id;
-                        option.textContent = `${customer.name} (${categoryInfo})`;
+                        option.value = group.id;
+                        option.textContent = group.name;
                         select.appendChild(option);
                     });
-                }
-            })
-            .catch(error => {
-                console.error('Error loading customers:', error);
-                document.getElementById('existing-customer-select').innerHTML = '<option value="">Error loading customers</option>';
-            });
-        
-        // Load groups for this category
-        fetch(`/api/groups?category_id=${categoryId}`)
-            .then(response => response.json())
-            .then(groups => {
-                const select = document.getElementById('existing-customer-group-select');
-                select.innerHTML = '<option value="">No group</option>';
-                groups.forEach(group => {
-                    const option = document.createElement('option');
-                    option.value = group.id;
-                    option.textContent = group.name;
-                    select.appendChild(option);
-                });
-            })
-            .catch(error => console.error('Error loading groups:', error));
-        
-        openModal('addExistingCustomerModal');
-    }
-    
-    function assignExistingCustomerToCategory() {
-        const customerId = document.getElementById('existing-customer-select').value;
-        const categoryId = document.getElementById('existing-customer-category-id').value;
-        const groupId = document.getElementById('existing-customer-group-select').value;
-        
-        if (!customerId) {
-            showToast('Please select a customer', 'error');
-            return;
+                })
+                .catch(error => console.error('Error loading groups:', error));
+
+            openModal('addExistingCustomerModal');
         }
-        
-        const data = {
-            category_id: parseInt(categoryId)
-        };
-        
-        if (groupId) {
-            data.group_id = parseInt(groupId);
-        }
-        
-        fetch(`/api/customers/${customerId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            if (response.ok) {
-                showToast('Customer added to category successfully', 'success');
-                closeModal('addExistingCustomerModal');
-                setTimeout(() => window.location.reload(), 500);
-            } else {
-                return response.json().then(err => {
-                    throw new Error(err.detail || 'Failed to add customer');
-                });
+
+        function assignExistingCustomerToCategory() {
+            const customerId = document.getElementById('existing-customer-select').value;
+            const categoryId = document.getElementById('existing-customer-category-id').value;
+            const groupId = document.getElementById('existing-customer-group-select').value;
+
+            if (!customerId) {
+                showToast('Please select a customer', 'error');
+                return;
             }
-        })
-        .catch(error => {
-            showToast(error.message, 'error');
-        });
-    }
+
+            const data = {
+                category_id: parseInt(categoryId)
+            };
+
+            if (groupId) {
+                data.group_id = parseInt(groupId);
+            }
+
+            fetch(`/api/customers/${customerId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        showToast('Customer added to category successfully', 'success');
+                        closeModal('addExistingCustomerModal');
+                        setTimeout(() => window.location.reload(), 500);
+                    } else {
+                        return response.json().then(err => {
+                            throw new Error(err.detail || 'Failed to add customer');
+                        });
+                    }
+                })
+                .catch(error => {
+                    showToast(error.message, 'error');
+                });
+        }
     </script>
-    
+
     {% block extra_scripts %}{% endblock %}
-    
+
     <!-- Floating Action Button (FAB) for Quick Add -->
     <div id="fab-container" class="fab-container">
         <button id="fab-main" class="fab-main" onclick="toggleFabMenu()" aria-label="Quick Add Menu">
             <span class="fab-icon">+</span>
         </button>
         <div id="fab-menu" class="fab-menu">
-            <button class="fab-action" onclick="closeFabMenu(); openModal('customerModal');" data-tooltip="Add Customer">
+            <button class="fab-action" onclick="closeFabMenu(); openModal('customerModal');"
+                data-tooltip="Add Customer">
                 <span class="fab-action-icon">👤</span>
                 <span class="fab-action-label">Customer</span>
             </button>
-            <button class="fab-action" onclick="closeFabMenu(); openModal('subscriptionModal');" data-tooltip="Add Subscription">
+            <button class="fab-action" onclick="closeFabMenu(); openModal('subscriptionModal');"
+                data-tooltip="Add Subscription">
                 <span class="fab-action-icon">📋</span>
                 <span class="fab-action-label">Subscription</span>
             </button>
-            <button class="fab-action" onclick="closeFabMenu(); openModal('categoryModal');" data-tooltip="Add Category">
+            <button class="fab-action" onclick="closeFabMenu(); openModal('categoryModal');"
+                data-tooltip="Add Category">
                 <span class="fab-action-icon">📁</span>
                 <span class="fab-action-label">Category</span>
             </button>
@@ -1146,246 +1011,259 @@
             </button>
         </div>
     </div>
-    
+
     <style>
-    /* Floating Action Button Styles */
-    .fab-container {
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        z-index: 1000;
-        display: flex;
-        flex-direction: column-reverse;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    /* Safe area for mobile devices */
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+        /* Floating Action Button Styles */
         .fab-container {
-            bottom: calc(24px + env(safe-area-inset-bottom));
-            right: calc(24px + env(safe-area-inset-right));
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            gap: 12px;
         }
-    }
-    
-    .fab-main {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%);
-        border: none;
-        color: white;
-        font-size: 28px;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        outline: none;
-    }
-    
-    .fab-main:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5), 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-    
-    .fab-main:active {
-        transform: scale(0.95);
-    }
-    
-    .fab-main.open {
-        transform: rotate(45deg);
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    }
-    
-    .fab-main.open:hover {
-        transform: rotate(45deg) scale(1.1);
-    }
-    
-    .fab-icon {
-        line-height: 1;
-        transition: transform 0.3s ease;
-    }
-    
-    .fab-menu {
-        display: flex;
-        flex-direction: column-reverse;
-        gap: 10px;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(20px) scale(0.8);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        pointer-events: none;
-    }
-    
-    .fab-menu.open {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0) scale(1);
-        pointer-events: auto;
-    }
-    
-    .fab-action {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 16px;
-        background: var(--color-bg-card, white);
-        border: 1px solid var(--color-border, #e2e8f0);
-        border-radius: 24px;
-        cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        transition: all 0.2s ease;
-        white-space: nowrap;
-        font-size: 14px;
-        color: var(--color-text, #1e293b);
-    }
-    
-    .fab-action:hover {
-        transform: translateX(-4px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        background: var(--color-bg-hover, #f8fafc);
-    }
-    
-    .fab-action:active {
-        transform: scale(0.95);
-    }
-    
-    .fab-action-icon {
-        font-size: 18px;
-    }
-    
-    .fab-action-label {
-        font-weight: 500;
-    }
-    
-    /* Animation for menu items appearing */
-    .fab-menu.open .fab-action {
-        animation: fabItemAppear 0.3s ease forwards;
-    }
-    
-    .fab-menu.open .fab-action:nth-child(1) { animation-delay: 0ms; }
-    .fab-menu.open .fab-action:nth-child(2) { animation-delay: 50ms; }
-    .fab-menu.open .fab-action:nth-child(3) { animation-delay: 100ms; }
-    .fab-menu.open .fab-action:nth-child(4) { animation-delay: 150ms; }
-    
-    @keyframes fabItemAppear {
-        from {
-            opacity: 0;
-            transform: translateY(10px) scale(0.8);
+
+        /* Safe area for mobile devices */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .fab-container {
+                bottom: calc(24px + env(safe-area-inset-bottom));
+                right: calc(24px + env(safe-area-inset-right));
+            }
         }
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-    
-    /* Backdrop when menu is open */
-    .fab-backdrop {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.3);
-        z-index: 999;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s ease;
-    }
-    
-    .fab-backdrop.open {
-        opacity: 1;
-        visibility: visible;
-    }
-    
-    /* Mobile adjustments */
-    @media (max-width: 640px) {
-        .fab-container {
-            bottom: 16px;
-            right: 16px;
-        }
-        
+
         .fab-main {
-            width: 52px;
-            height: 52px;
-            font-size: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%);
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            outline: none;
         }
-        
+
+        .fab-main:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5), 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .fab-main:active {
+            transform: scale(0.95);
+        }
+
+        .fab-main.open {
+            transform: rotate(45deg);
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .fab-main.open:hover {
+            transform: rotate(45deg) scale(1.1);
+        }
+
+        .fab-icon {
+            line-height: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .fab-menu {
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 10px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px) scale(0.8);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .fab-menu.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
         .fab-action {
-            padding: 8px 14px;
-            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            background: var(--color-bg-card, white);
+            border: 1px solid var(--color-border, #e2e8f0);
+            border-radius: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            font-size: 14px;
+            color: var(--color-text, #1e293b);
         }
-        
+
+        .fab-action:hover {
+            transform: translateX(-4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: var(--color-bg-hover, #f8fafc);
+        }
+
+        .fab-action:active {
+            transform: scale(0.95);
+        }
+
         .fab-action-icon {
-            font-size: 16px;
+            font-size: 18px;
         }
-    }
-    
-    /* Hide FAB on login/auth pages */
-    body.auth-page .fab-container {
-        display: none;
-    }
+
+        .fab-action-label {
+            font-weight: 500;
+        }
+
+        /* Animation for menu items appearing */
+        .fab-menu.open .fab-action {
+            animation: fabItemAppear 0.3s ease forwards;
+        }
+
+        .fab-menu.open .fab-action:nth-child(1) {
+            animation-delay: 0ms;
+        }
+
+        .fab-menu.open .fab-action:nth-child(2) {
+            animation-delay: 50ms;
+        }
+
+        .fab-menu.open .fab-action:nth-child(3) {
+            animation-delay: 100ms;
+        }
+
+        .fab-menu.open .fab-action:nth-child(4) {
+            animation-delay: 150ms;
+        }
+
+        @keyframes fabItemAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Backdrop when menu is open */
+        .fab-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .fab-backdrop.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 640px) {
+            .fab-container {
+                bottom: 16px;
+                right: 16px;
+            }
+
+            .fab-main {
+                width: 52px;
+                height: 52px;
+                font-size: 24px;
+            }
+
+            .fab-action {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+
+            .fab-action-icon {
+                font-size: 16px;
+            }
+        }
+
+        /* Hide FAB on login/auth pages */
+        body.auth-page .fab-container {
+            display: none;
+        }
     </style>
-    
+
     <script>
-    // FAB Menu Toggle Functions
-    let fabBackdrop = null;
-    
-    function toggleFabMenu() {
-        const fabMain = document.getElementById('fab-main');
-        const fabMenu = document.getElementById('fab-menu');
-        
-        if (fabMenu.classList.contains('open')) {
+        // FAB Menu Toggle Functions
+        let fabBackdrop = null;
+
+        function toggleFabMenu() {
+            const fabMain = document.getElementById('fab-main');
+            const fabMenu = document.getElementById('fab-menu');
+
+            if (fabMenu.classList.contains('open')) {
+                closeFabMenu();
+            } else {
+                openFabMenu();
+            }
+        }
+
+        function openFabMenu() {
+            const fabMain = document.getElementById('fab-main');
+            const fabMenu = document.getElementById('fab-menu');
+
+            fabMain.classList.add('open');
+            fabMenu.classList.add('open');
+
+            // Create backdrop
+            if (!fabBackdrop) {
+                fabBackdrop = document.createElement('div');
+                fabBackdrop.className = 'fab-backdrop';
+                fabBackdrop.onclick = closeFabMenu;
+                document.body.appendChild(fabBackdrop);
+            }
+            fabBackdrop.classList.add('open');
+        }
+
+        function closeFabMenu() {
+            const fabMain = document.getElementById('fab-main');
+            const fabMenu = document.getElementById('fab-menu');
+
+            fabMain.classList.remove('open');
+            fabMenu.classList.remove('open');
+
+            if (fabBackdrop) {
+                fabBackdrop.classList.remove('open');
+            }
+        }
+
+        // Close FAB menu on escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeFabMenu();
+            }
+        });
+
+        // Close FAB when a modal opens
+        const originalOpenModal = window.openModal;
+        window.openModal = function (modalId) {
             closeFabMenu();
-        } else {
-            openFabMenu();
-        }
-    }
-    
-    function openFabMenu() {
-        const fabMain = document.getElementById('fab-main');
-        const fabMenu = document.getElementById('fab-menu');
-        
-        fabMain.classList.add('open');
-        fabMenu.classList.add('open');
-        
-        // Create backdrop
-        if (!fabBackdrop) {
-            fabBackdrop = document.createElement('div');
-            fabBackdrop.className = 'fab-backdrop';
-            fabBackdrop.onclick = closeFabMenu;
-            document.body.appendChild(fabBackdrop);
-        }
-        fabBackdrop.classList.add('open');
-    }
-    
-    function closeFabMenu() {
-        const fabMain = document.getElementById('fab-main');
-        const fabMenu = document.getElementById('fab-menu');
-        
-        fabMain.classList.remove('open');
-        fabMenu.classList.remove('open');
-        
-        if (fabBackdrop) {
-            fabBackdrop.classList.remove('open');
-        }
-    }
-    
-    // Close FAB menu on escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeFabMenu();
-        }
-    });
-    
-    // Close FAB when a modal opens
-    const originalOpenModal = window.openModal;
-    window.openModal = function(modalId) {
-        closeFabMenu();
-        return originalOpenModal(modalId);
-    };
+            return originalOpenModal(modalId);
+        };
     </script>
 </body>
+
 </html>

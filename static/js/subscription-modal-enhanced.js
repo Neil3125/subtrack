@@ -784,3 +784,48 @@ document.addEventListener('click', function (e) {
 });
 
 console.log('✅ Enhanced Subscription Modal loaded successfully');
+
+// ==================== UNIFIED SUBMISSION HANDLER ====================
+
+// Save subscription (Create or Update)
+window.saveEnhancedSubscription = function (formData, itemId = null) {
+  const method = itemId ? 'PUT' : 'POST';
+  const url = itemId ? `/api/subscriptions/${itemId}` : '/api/subscriptions';
+  const action = itemId ? 'updated' : 'created';
+
+  // Ensure category_ids are included if not present in formData
+  if (!formData.category_ids && subscriptionModalState.selectedCategories.length > 0) {
+    formData.category_ids = subscriptionModalState.selectedCategories.map(c => c.id);
+  } else if (typeof formData.category_ids === 'string') {
+    // Convert comma-separated string to array of numbers
+    formData.category_ids = formData.category_ids.split(',').filter(id => id).map(Number);
+  }
+
+  // Handle cost
+  if (formData.cost) formData.cost = parseFloat(formData.cost);
+
+  // Make the API request
+  fetch(url, {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(formData)
+  })
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => { throw new Error(err.detail || 'Failed to save subscription'); });
+      }
+      return response.json();
+    })
+    .then(data => {
+      showToast(`Subscription ${action} successfully`, 'success');
+      closeModal('subscriptionModal');
+      // Reload page or update UI
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+      showToast(`Error: ${error.message}`, 'error');
+      console.error('Error saving subscription:', error);
+    });
+};

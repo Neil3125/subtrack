@@ -4,7 +4,7 @@
 function initTheme() {
   const savedTheme = localStorage.getItem('theme') || 'light';
   const savedVisualTheme = localStorage.getItem('visual-theme');
-  
+
   // If visual theme is set, use that, otherwise use light/dark theme
   if (savedVisualTheme && savedVisualTheme !== 'default') {
     document.documentElement.setAttribute('data-theme', savedVisualTheme);
@@ -16,23 +16,23 @@ function initTheme() {
 
 function toggleTheme() {
   const currentTheme = document.documentElement.getAttribute('data-theme');
-  
+
   // Check if currently on a visual theme
   const visualThemes = ['sunset', 'midnight', 'forest', 'candy', 'aurora'];
   const isVisualTheme = visualThemes.includes(currentTheme);
-  
+
   let newTheme;
   if (isVisualTheme || currentTheme === 'light' || currentTheme === 'default') {
     newTheme = 'dark';
   } else {
     newTheme = 'light';
   }
-  
+
   document.documentElement.setAttribute('data-theme', newTheme);
   localStorage.setItem('theme', newTheme);
   localStorage.removeItem('visual-theme'); // Clear visual theme when toggling
   updateThemeIcon(newTheme);
-  
+
   showToast(`Switched to ${newTheme} mode`, 'success');
 }
 
@@ -59,13 +59,13 @@ function openModal(modalId) {
     showToast('Please close the current window first', 'warning');
     return;
   }
-  
+
   // Clear search input to prevent autofill issues
   const searchInput = document.getElementById('global-search-input');
   if (searchInput && searchInput.value === 'admin') {
     searchInput.value = '';
   }
-  
+
   const modal = document.getElementById(modalId);
   if (modal) {
     // Prevent page layout shift when locking scroll (scrollbar disappears)
@@ -80,12 +80,12 @@ function openModal(modalId) {
 
     // Track this modal
     window.openModals.push(modalId);
-    
+
     // If opening customer modals, load all groups immediately
     if (modalId === 'customerModal') {
       // Load all groups organized by category
       updateGroupSelectMulti(null, 'customer-groups-container', []);
-      
+
       // Set up listener for category changes
       setTimeout(() => {
         setupCategoryChangeListener('customer-category-multiselect', 'customer-groups-container');
@@ -98,13 +98,13 @@ function openModal(modalId) {
         setupCategoryChangeListener('edit-customer-category-multiselect', 'edit-customer-groups-container');
       }, 100);
     }
-    
+
     // If opening subscription modal, load all customers
     if (modalId === 'subscriptionModal') {
       // Load all customers immediately when modal opens
       loadCustomersForSubscription(null, null, null);
     }
-    
+
     // For edit subscription modal, keep existing behavior
     if (modalId === 'editSubscriptionModal') {
       const categorySelect = modal.querySelector('select[name="category_id"]');
@@ -130,7 +130,7 @@ function closeModal(modalId) {
       document.body.classList.remove('modal-open');
       document.body.style.paddingRight = '';
     }, 300);
-    
+
     // Remove from tracking
     window.openModals = window.openModals.filter(id => id !== modalId);
   }
@@ -152,7 +152,7 @@ function closeAllModals() {
 }
 
 // Close modal on backdrop click
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   if (e.target.classList.contains('modal')) {
     const rect = e.target.getBoundingClientRect();
     const clickedInside = (
@@ -161,7 +161,7 @@ document.addEventListener('click', function(e) {
       e.clientY >= rect.top &&
       e.clientY <= rect.bottom
     );
-    
+
     // Check if clicked on backdrop (outside modal content)
     const modalContent = e.target.querySelector('.modal-content');
     if (modalContent && !modalContent.contains(e.target)) {
@@ -171,7 +171,7 @@ document.addEventListener('click', function(e) {
 });
 
 // ==================== Keyboard Shortcuts ====================
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
   // Escape - Close modals
   if (e.key === 'Escape') {
     closeAllModals();
@@ -181,12 +181,12 @@ document.addEventListener('keydown', function(e) {
     }
     return;
   }
-  
+
   // Ignore if user is typing in an input
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
     return;
   }
-  
+
   // / - Focus search
   if (e.key === '/') {
     e.preventDefault();
@@ -195,19 +195,19 @@ document.addEventListener('keydown', function(e) {
       searchInput.focus();
     }
   }
-  
+
   // n - New item (open quick add)
   if (e.key === 'n' || e.key === 'N') {
     e.preventDefault();
     openModal('quickAddModal');
   }
-  
+
   // Ctrl+K or Cmd+K - Command palette
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
     e.preventDefault();
     openCommandPalette();
   }
-  
+
   // b - Toggle sidebar
   if (e.key === 'b' || e.key === 'B') {
     e.preventDefault();
@@ -216,10 +216,10 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ==================== Visual Theme Switcher ====================
-window.setVisualTheme = function(themeName) {
+window.setVisualTheme = function (themeName) {
   document.documentElement.setAttribute('data-theme', themeName);
   localStorage.setItem('visual-theme', themeName);
-  
+
   const themeNames = {
     'default': 'Ocean',
     'sunset': 'Sunset',
@@ -228,44 +228,44 @@ window.setVisualTheme = function(themeName) {
     'candy': 'Candy',
     'aurora': 'Aurora'
   };
-  
+
   showToast(`Theme changed to ${themeNames[themeName]}`, 'success');
 };
 
 // ==================== Initialize ====================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   console.log('SubTrack Web Enhanced - Initialized');
-  
+
   // Initialize theme first
   initTheme();
-  
+
   // Configure HTMX
   if (typeof htmx !== 'undefined') {
     htmx.config.defaultSwapStyle = 'innerHTML';
     htmx.config.defaultSwapDelay = 200;
     htmx.config.defaultSettleDelay = 100;
-    
+
     // HTMX event listeners
-    document.body.addEventListener('htmx:afterSwap', function(evt) {
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
       // Re-initialize any components after HTMX swap
       refreshTooltips();
     });
-    
-    document.body.addEventListener('htmx:afterSettle', function(evt) {
+
+    document.body.addEventListener('htmx:afterSettle', function (evt) {
       // Refresh tooltips after content settles
       refreshTooltips();
     });
   }
-  
+
   // Initialize tooltips
   initTooltips();
-  
+
   // Initialize country autocomplete
   initCountryAutocomplete();
-  
+
   // Setup cascading selects
   document.querySelectorAll('select[name="category_id"]').forEach(select => {
-    select.addEventListener('change', function() {
+    select.addEventListener('change', function () {
       // Find the modal this select is in to get the correct group_id select
       const modal = select.closest('.modal');
       const groupSelectId = modal ? 'group_id' : 'group_id';
@@ -273,12 +273,12 @@ document.addEventListener('DOMContentLoaded', function() {
       updateCustomerSelect(this.value);
     });
   });
-  
+
   // Close search results when clicking outside
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', function (e) {
     const searchWrapper = document.querySelector('.navbar-search');
     const searchResults = document.getElementById('search-results');
-    
+
     if (searchWrapper && searchResults && !searchWrapper.contains(e.target)) {
       searchResults.innerHTML = '';
     }
@@ -371,27 +371,27 @@ class SmartAutocomplete {
       fetchUrl: options.fetchUrl || null,
       ...options
     };
-    
+
     this.dropdown = null;
     this.selectedIndex = -1;
     this.isOpen = false;
     this.recentSelections = this.loadRecentSelections();
-    
+
     this.init();
   }
-  
+
   init() {
     // Remove any existing datalist reference
     this.input.removeAttribute('list');
     this.input.setAttribute('autocomplete', 'off');
-    
+
     // Create dropdown container
     this.createDropdown();
-    
+
     // Bind events
     this.bindEvents();
   }
-  
+
   createDropdown() {
     // Create wrapper if input isn't already wrapped
     let wrapper = this.input.parentElement;
@@ -401,21 +401,21 @@ class SmartAutocomplete {
       this.input.parentNode.insertBefore(wrapper, this.input);
       wrapper.appendChild(this.input);
     }
-    
+
     // Create dropdown
     this.dropdown = document.createElement('div');
     this.dropdown.className = 'smart-autocomplete-dropdown';
     this.dropdown.style.display = 'none';
     wrapper.appendChild(this.dropdown);
   }
-  
+
   bindEvents() {
     // Input events
     this.input.addEventListener('input', (e) => this.onInput(e));
     this.input.addEventListener('focus', (e) => this.onFocus(e));
     this.input.addEventListener('blur', (e) => this.onBlur(e));
     this.input.addEventListener('keydown', (e) => this.onKeyDown(e));
-    
+
     // Prevent form submission on enter when dropdown is open
     this.input.closest('form')?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && this.isOpen && this.selectedIndex >= 0) {
@@ -423,18 +423,18 @@ class SmartAutocomplete {
       }
     });
   }
-  
+
   onInput(e) {
     const value = e.target.value.trim();
-    
+
     if (value.length < this.options.minChars) {
       this.close();
       return;
     }
-    
+
     this.search(value);
   }
-  
+
   onFocus(e) {
     const value = this.input.value.trim();
     if (value.length >= this.options.minChars) {
@@ -444,12 +444,12 @@ class SmartAutocomplete {
       this.showRecent();
     }
   }
-  
+
   onBlur(e) {
     // Delay to allow click on dropdown item
     setTimeout(() => this.close(), 200);
   }
-  
+
   onKeyDown(e) {
     if (!this.isOpen) {
       if (e.key === 'ArrowDown' && this.input.value.length >= this.options.minChars) {
@@ -457,29 +457,29 @@ class SmartAutocomplete {
       }
       return;
     }
-    
+
     const items = this.dropdown.querySelectorAll('.smart-autocomplete-item:not(.empty-message)');
-    
+
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
         this.selectedIndex = Math.min(this.selectedIndex + 1, items.length - 1);
         this.updateSelection(items);
         break;
-        
+
       case 'ArrowUp':
         e.preventDefault();
         this.selectedIndex = Math.max(this.selectedIndex - 1, 0);
         this.updateSelection(items);
         break;
-        
+
       case 'Enter':
         if (this.selectedIndex >= 0 && items[this.selectedIndex]) {
           e.preventDefault();
           this.selectItem(items[this.selectedIndex].dataset.value);
         }
         break;
-        
+
       case 'Tab':
         if (this.selectedIndex >= 0 && items[this.selectedIndex]) {
           e.preventDefault();
@@ -489,34 +489,34 @@ class SmartAutocomplete {
           this.selectItem(items[0].dataset.value);
         }
         break;
-        
+
       case 'Escape':
         this.close();
         break;
     }
   }
-  
+
   updateSelection(items) {
     items.forEach((item, index) => {
       item.classList.toggle('selected', index === this.selectedIndex);
     });
-    
+
     // Scroll selected item into view
     if (items[this.selectedIndex]) {
       items[this.selectedIndex].scrollIntoView({ block: 'nearest' });
     }
   }
-  
+
   search(query) {
     const lowerQuery = query.toLowerCase();
     let data = this.options.dataSource;
-    
+
     // Filter and score results
     let results = data
       .map(item => {
         const lowerItem = item.toLowerCase();
         let score = 0;
-        
+
         // Exact match gets highest score
         if (lowerItem === lowerQuery) score = 100;
         // Starts with query
@@ -526,36 +526,36 @@ class SmartAutocomplete {
         // Contains query
         else if (lowerItem.includes(lowerQuery)) score = 40;
         else score = 0;
-        
+
         // Boost recent selections
         if (this.options.showRecentFirst && this.recentSelections.includes(item)) {
           score += 20;
         }
-        
+
         return { item, score };
       })
       .filter(r => r.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, this.options.maxResults)
       .map(r => r.item);
-    
+
     this.renderResults(results, query);
   }
-  
+
   showRecent() {
     const recentItems = this.recentSelections
       .filter(item => this.options.dataSource.includes(item))
       .slice(0, 5);
-    
+
     if (recentItems.length > 0) {
       this.renderResults(recentItems, '', true);
     }
   }
-  
+
   renderResults(results, query, isRecent = false) {
     this.dropdown.innerHTML = '';
     this.selectedIndex = -1;
-    
+
     if (results.length === 0) {
       this.dropdown.innerHTML = `
         <div class="smart-autocomplete-item empty-message">
@@ -571,67 +571,67 @@ class SmartAutocomplete {
           </div>
         `;
       }
-      
+
       results.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'smart-autocomplete-item';
         div.dataset.value = item;
-        
+
         // Highlight matching text
         let displayText = item;
         if (this.options.highlightMatches && query) {
           const regex = new RegExp(`(${this.escapeRegex(query)})`, 'gi');
           displayText = item.replace(regex, '<mark>$1</mark>');
         }
-        
+
         const isRecentItem = this.recentSelections.includes(item);
         div.innerHTML = `
           ${isRecentItem && !isRecent ? '<span class="recent-indicator">●</span>' : ''}
           <span class="item-text">${displayText}</span>
         `;
-        
+
         div.addEventListener('mousedown', (e) => {
           e.preventDefault();
           this.selectItem(item);
         });
-        
+
         div.addEventListener('mouseenter', () => {
           this.selectedIndex = index;
           this.updateSelection(this.dropdown.querySelectorAll('.smart-autocomplete-item:not(.empty-message)'));
         });
-        
+
         this.dropdown.appendChild(div);
       });
     }
-    
+
     this.open();
   }
-  
+
   selectItem(value) {
     this.input.value = value;
     this.addToRecent(value);
     this.close();
-    
+
     // Trigger input event for any listeners
     this.input.dispatchEvent(new Event('input', { bubbles: true }));
     this.input.dispatchEvent(new Event('change', { bubbles: true }));
-    
+
     if (this.options.onSelect) {
       this.options.onSelect(value);
     }
   }
-  
+
   open() {
     this.dropdown.style.display = 'block';
     this.isOpen = true;
   }
-  
+
   close() {
     this.dropdown.style.display = 'none';
     this.isOpen = false;
     this.selectedIndex = -1;
   }
-  
+
   addToRecent(value) {
     // Remove if already exists, add to front
     this.recentSelections = this.recentSelections.filter(v => v !== value);
@@ -639,7 +639,7 @@ class SmartAutocomplete {
     this.recentSelections = this.recentSelections.slice(0, 10); // Keep last 10
     this.saveRecentSelections();
   }
-  
+
   loadRecentSelections() {
     try {
       const key = `autocomplete_recent_${this.input.name || 'default'}`;
@@ -648,18 +648,18 @@ class SmartAutocomplete {
       return [];
     }
   }
-  
+
   saveRecentSelections() {
     try {
       const key = `autocomplete_recent_${this.input.name || 'default'}`;
       localStorage.setItem(key, JSON.stringify(this.recentSelections));
-    } catch {}
+    } catch { }
   }
-  
+
   escapeRegex(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
-  
+
   updateDataSource(data) {
     this.options.dataSource = data;
   }
@@ -693,7 +693,7 @@ function fetchExistingCountries() {
 function setupSmartCountryInput(input) {
   // Combine cached and default countries
   const allCountries = [...new Set([...cachedCountries, ...defaultCountries])].sort();
-  
+
   // Create smart autocomplete instance
   const autocomplete = new SmartAutocomplete(input, {
     dataSource: allCountries,
@@ -704,7 +704,7 @@ function setupSmartCountryInput(input) {
     highlightMatches: true,
     showRecentFirst: true
   });
-  
+
   // Store reference for later updates
   input._smartAutocomplete = autocomplete;
 }
@@ -721,7 +721,7 @@ function updateAllCountryDatalists() {
 }
 
 // Smooth scroll for anchor links
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   if (e.target.tagName === 'A' && e.target.hash) {
     const target = document.querySelector(e.target.hash);
     if (target) {
@@ -751,7 +751,7 @@ function showToast(message, type = 'info') {
     `;
     document.body.appendChild(toastContainer);
   }
-  
+
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
   toast.style.cssText = `
@@ -767,11 +767,11 @@ function showToast(message, type = 'info') {
     font-size: 14px;
     line-height: 1.5;
   `;
-  
+
   const messageSpan = document.createElement('span');
   messageSpan.textContent = message;
   toast.appendChild(messageSpan);
-  
+
   // Add close button
   const closeBtn = document.createElement('button');
   closeBtn.innerHTML = '×';
@@ -801,15 +801,15 @@ function showToast(message, type = 'info') {
     setTimeout(() => toast.remove(), 200);
   };
   toast.appendChild(closeBtn);
-  
+
   toastContainer.appendChild(toast);
-  
+
   // Auto dismiss after 3 seconds
   const autoDismiss = setTimeout(() => {
     toast.style.animation = 'slideOutRight 0.3s ease-out';
     setTimeout(() => toast.remove(), 300);
   }, 3000);
-  
+
   // Clear auto dismiss if manually closed
   closeBtn.onclick = () => {
     clearTimeout(autoDismiss);
@@ -868,41 +868,62 @@ function confirmAction(message, callback) {
 // Link decision/unlink actions removed (AI/link automation disabled in this deployment)
 
 // AI insights removed (AI features are not configured in this deployment)
-window.refreshInsights = function() {
+window.refreshInsights = function () {
   showToast('Insights are disabled', 'info');
 };
 
 // Link analysis removed (AI features are not configured in this deployment)
-window.runLinkAnalysis = function() {
+window.runLinkAnalysis = function () {
   showToast('Link analysis is disabled', 'info');
 };
 
 // ==================== CRUD Operations ====================
 
 // Load item data for editing
-window.loadEditData = function(type, id) {
+// Load item data for editing
+window.loadEditData = function (type, id) {
   // Handle irregular plurals (category -> categories)
   const pluralType = type === 'category' ? 'categories' : `${type}s`;
   fetch(`/api/${pluralType}/${id}`)
     .then(response => response.json())
     .then(data => {
-      const modalId = `edit${type.charAt(0).toUpperCase() + type.slice(1)}Modal`;
-      
-      // Populate form fields
+      // Determine modal ID - special case for subscription which reuses "subscriptionModal"
+      const modalId = type === 'subscription' ? 'subscriptionModal' : `edit${type.charAt(0).toUpperCase() + type.slice(1)}Modal`;
+
       const form = document.querySelector(`#${modalId} form`);
+      if (!form) {
+        console.error(`Form not found for modal: ${modalId}`);
+        return;
+      }
+
+      // Update Modal Title if it's the subscription modal
+      if (type === 'subscription') {
+        const titleEl = document.querySelector(`#${modalId} .modal-title`);
+        const submitBtn = document.querySelector(`#${modalId} button[type="submit"]`);
+        if (titleEl) titleEl.textContent = 'Edit Subscription';
+        if (submitBtn) submitBtn.textContent = 'Update Subscription';
+      }
+
+      // Populate form fields
       Object.keys(data).forEach(key => {
         const field = form.querySelector(`[name="${key}"]`);
         if (field) {
-          field.value = data[key] || '';
+          // Handle checkbox
+          if (field.type === 'checkbox') {
+            field.checked = data[key];
+          } else {
+            field.value = data[key] || '';
+          }
         }
       });
-      
+
       // Store ID for update
       form.dataset.itemId = id;
 
-      // Special handling: customer edit needs category multi-select and group dropdown
+      // Special handling: CUSTOMER edit
       if (type === 'customer') {
-        // Get category IDs - support both single category_id and multiple categories array
+        // ... (Keep existing customer edit logic) ...
+        // Get category IDs
         let categoryIds = [];
         if (data.categories && Array.isArray(data.categories)) {
           categoryIds = data.categories.map(c => c.id);
@@ -911,15 +932,13 @@ window.loadEditData = function(type, id) {
         } else if (data.category_id) {
           categoryIds = [data.category_id];
         }
-        
-        // Pre-select categories in multi-select
+
         if (categoryIds.length > 0) {
           setTimeout(() => {
             preselectCategories('edit-customer-category-multiselect', categoryIds);
           }, 50);
         }
-        
-        // Get group IDs - support both single group_id and multiple groups array
+
         let groupIds = [];
         if (data.groups && Array.isArray(data.groups)) {
           groupIds = data.groups.map(g => g.id);
@@ -929,24 +948,20 @@ window.loadEditData = function(type, id) {
           groupIds = [data.group_id];
         }
 
-        // Load groups with multi-select, pre-selecting the current groups
         const firstCategoryId = categoryIds.length > 0 ? categoryIds[0] : null;
         setTimeout(() => {
           updateGroupSelectMulti(firstCategoryId, 'edit-customer-groups-container', groupIds);
         }, 100);
-        
-        // Load customer subscriptions
+
         loadCustomerSubscriptions(id);
       }
 
-      // Special handling: subscription edit needs customer dropdown populated AND categories pre-selected
+      // Special handling: SUBSCRIPTION edit using Enhanced Modal
       if (type === 'subscription') {
-        const categoryField = form.querySelector('select[name="category_id"]');
-        const customerField = form.querySelector('select[name="customer_id"]');
         const customerId = data.customer_id;
-        const saveBtn = form.querySelector('button[type="submit"]');
+        const customerName = data.customer ? data.customer.name : (data.customer_name || 'Unknown Customer');
 
-        // Get category IDs from the subscription data (supports both single and multiple)
+        // Get category IDs
         let categoryIds = [];
         if (data.categories && Array.isArray(data.categories)) {
           categoryIds = data.categories.map(c => c.id);
@@ -956,66 +971,27 @@ window.loadEditData = function(type, id) {
           categoryIds = [data.category_id];
         }
 
-        // Pre-select categories in the subscription modal UI (subscription-modal-enhanced.js)
-        if (categoryIds.length > 0 && typeof window.preselectSubscriptionCategories === 'function') {
-          setTimeout(() => {
-            window.preselectSubscriptionCategories(categoryIds);
-          }, 100);
-        }
+        // Initialize Enhanced Modal in Edit Mode
+        // This handles:
+        // 1. Setting context (customer name/id)
+        // 2. Pre-selecting categories in the visual tag cloud
+        // 3. Loading vendors/suggestions
+        // 4. NOT resetting the form
+        setTimeout(() => {
+          if (typeof initEnhancedSubscriptionModal === 'function') {
+            initEnhancedSubscriptionModal(customerId, customerName, null, true);
 
-        // Function to load customers - show ALL customers grouped by category
-        const loadCustomers = (selectedCustId, filterByCategoryId = null) => {
-          let url = `/partials/customer-options?show_all=true`;
-          if (selectedCustId) {
-            url += `&selected_customer_id=${selectedCustId}`;
+            // Explicitly set the customer context again just to be sure
+            if (subscriptionModalState) {
+              subscriptionModalState.selectedCategories = []; // Will be repopulated below
+            }
+
+            // Call preselect to update the UI state
+            preselectSubscriptionCategories(categoryIds);
           }
-          if (filterByCategoryId) {
-            url += `&category_id=${filterByCategoryId}`;
-          }
-          
-          fetch(url)
-            .then(response => response.text())
-            .then(html => {
-              customerField.innerHTML = html;
-              
-              // Check if there are valid customers
-              const options = customerField.querySelectorAll('option');
-              const hasCustomers = Array.from(options).some(opt => opt.value && opt.value !== '');
-              
-              if (!hasCustomers) {
-                // Disable save button if no customers available
-                if (saveBtn) {
-                  saveBtn.disabled = true;
-                  saveBtn.title = 'No customers available';
-                }
-              } else {
-                // Re-enable save button if customers are available
-                if (saveBtn) {
-                  saveBtn.disabled = false;
-                  saveBtn.title = '';
-                }
-              }
-            })
-            .catch(error => {
-              console.error('Error loading customers:', error);
-              customerField.innerHTML = '<option value="">Error loading customers</option>';
-            });
-        };
-
-        // Load ALL customers with preselection of current customer
-        loadCustomers(customerId);
-
-        // Listen for category changes to filter customers (optional)
-        if (categoryField && !categoryField.dataset.customerHooked) {
-          categoryField.addEventListener('change', function() {
-            // When category changes, still show all customers but could filter
-            // For now, keep showing all to allow reassigning to any customer
-            loadCustomers(null);
-          });
-          categoryField.dataset.customerHooked = 'true';
-        }
+        }, 50);
       }
-      
+
       openModal(modalId);
     })
     .catch(error => {
@@ -1025,7 +1001,7 @@ window.loadEditData = function(type, id) {
 };
 
 // Create Category
-window.createCategory = function(formData) {
+window.createCategory = function (formData) {
   fetch('/api/categories', {
     method: 'POST',
     headers: {
@@ -1036,20 +1012,20 @@ window.createCategory = function(formData) {
       description: formData.description
     })
   })
-  .then(response => response.json())
-  .then(data => {
-    showToast('Category created successfully', 'success');
-    closeAllModals();
-    setTimeout(() => window.location.reload(), 500);
-  })
-  .catch(error => {
-    showToast('Error creating category', 'error');
-    console.error('Error:', error);
-  });
+    .then(response => response.json())
+    .then(data => {
+      showToast('Category created successfully', 'success');
+      closeAllModals();
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+      showToast('Error creating category', 'error');
+      console.error('Error:', error);
+    });
 };
 
 // Open Group Modal with pre-selected category
-window.openGroupModalForCategory = function(categoryId) {
+window.openGroupModalForCategory = function (categoryId) {
   openModal('groupModal');
   // Pre-select the category after modal opens
   setTimeout(() => {
@@ -1061,7 +1037,7 @@ window.openGroupModalForCategory = function(categoryId) {
 };
 
 // Open Customer Modal with pre-selected category
-window.openCustomerModalForCategory = function(categoryId) {
+window.openCustomerModalForCategory = function (categoryId) {
   openModal('customerModal');
   // Pre-select the category in multi-select and load groups for that category
   setTimeout(() => {
@@ -1073,7 +1049,7 @@ window.openCustomerModalForCategory = function(categoryId) {
 };
 
 // Open Customer Modal with pre-selected category AND group (from group detail page)
-window.openCustomerModalForGroup = function(categoryId, groupId) {
+window.openCustomerModalForGroup = function (categoryId, groupId) {
   openModal('customerModal');
   // Pre-select the category in multi-select and pre-select the group
   setTimeout(() => {
@@ -1085,7 +1061,7 @@ window.openCustomerModalForGroup = function(categoryId, groupId) {
 };
 
 // Open Subscription Modal with pre-selected category (from category detail page)
-window.openSubscriptionModalForCategory = function(categoryId) {
+window.openSubscriptionModalForCategory = function (categoryId) {
   openModal('subscriptionModal');
   setTimeout(() => {
     const categorySelect = document.querySelector('#subscriptionModal select[name="category_id"]');
@@ -1098,17 +1074,17 @@ window.openSubscriptionModalForCategory = function(categoryId) {
 };
 
 // Open Subscription Modal with pre-selected category and customer (from customer detail page)
-window.openSubscriptionModalForCustomer = function(categoryId, customerId, customerName) {
+window.openSubscriptionModalForCustomer = function (categoryId, customerId, customerName) {
   openModal('subscriptionModal');
   setTimeout(() => {
     // Pre-select category in multi-select
     if (categoryId) {
       preselectSubscriptionCategories([categoryId]);
     }
-    
+
     // Load all customers and pre-select the current customer
     loadCustomersForSubscription(categoryId, customerId, customerName);
-    
+
     // Show context indicator
     if (customerId && customerName) {
       showCustomerContextIndicator(customerName);
@@ -1131,18 +1107,18 @@ function showCustomerContextIndicator(customerName) {
 }
 
 // Clear customer pre-selection and allow changing
-window.clearCustomerPreselection = function() {
+window.clearCustomerPreselection = function () {
   const indicator = document.getElementById('customer-context-indicator');
   if (indicator) {
     indicator.style.display = 'none';
   }
-  
+
   // Enable dropdown interaction
   const trigger = document.getElementById('subscription-customer-trigger');
   if (trigger) {
     trigger.classList.remove('locked');
   }
-  
+
   // Hide suggestions panel
   const suggestionsPanel = document.getElementById('customer-suggestions-panel');
   if (suggestionsPanel) {
@@ -1151,14 +1127,14 @@ window.clearCustomerPreselection = function() {
 };
 
 // Load customer suggestions based on their existing data
-window.loadCustomerSuggestions = function(customerId) {
+window.loadCustomerSuggestions = function (customerId) {
   if (!customerId) return;
-  
+
   const suggestionsPanel = document.getElementById('customer-suggestions-panel');
   const suggestionsContent = document.getElementById('customer-suggestions-content');
-  
+
   if (!suggestionsPanel || !suggestionsContent) return;
-  
+
   // Fetch customer's existing subscriptions to suggest categories/vendors
   fetch(`/api/subscriptions?customer_id=${customerId}`)
     .then(response => response.json())
@@ -1167,11 +1143,11 @@ window.loadCustomerSuggestions = function(customerId) {
         suggestionsPanel.style.display = 'none';
         return;
       }
-      
+
       // Extract unique categories and vendors
       const categories = {};
       const vendors = {};
-      
+
       subscriptions.forEach(sub => {
         if (sub.category_id) {
           categories[sub.category_id] = sub.category_name || 'Unknown';
@@ -1180,9 +1156,9 @@ window.loadCustomerSuggestions = function(customerId) {
           vendors[sub.vendor_name] = (vendors[sub.vendor_name] || 0) + 1;
         }
       });
-      
+
       let html = '';
-      
+
       // Category suggestions
       const categoryIds = Object.keys(categories);
       if (categoryIds.length > 0) {
@@ -1194,7 +1170,7 @@ window.loadCustomerSuggestions = function(customerId) {
           </div>`;
         });
       }
-      
+
       // Vendor suggestions (top 3 most used)
       const sortedVendors = Object.entries(vendors).sort((a, b) => b[1] - a[1]).slice(0, 3);
       if (sortedVendors.length > 0) {
@@ -1206,7 +1182,7 @@ window.loadCustomerSuggestions = function(customerId) {
           </div>`;
         });
       }
-      
+
       if (html) {
         suggestionsContent.innerHTML = html;
         suggestionsPanel.style.display = 'block';
@@ -1221,12 +1197,12 @@ window.loadCustomerSuggestions = function(customerId) {
 };
 
 // Apply category suggestion
-window.applyCategorySuggestion = function(categoryId) {
+window.applyCategorySuggestion = function (categoryId) {
   preselectSubscriptionCategories([parseInt(categoryId)]);
 };
 
 // Apply vendor suggestion
-window.applyVendorSuggestion = function(vendorName) {
+window.applyVendorSuggestion = function (vendorName) {
   const vendorInput = document.querySelector('#subscriptionModal input[name="vendor_name"]');
   if (vendorInput) {
     vendorInput.value = vendorName;
@@ -1237,7 +1213,7 @@ window.applyVendorSuggestion = function(vendorName) {
 // ==================== Subscription Category Multi-Select ====================
 
 // Toggle subscription category item selection
-window.toggleSubscriptionCategoryItem = function(itemElement) {
+window.toggleSubscriptionCategoryItem = function (itemElement) {
   itemElement.classList.toggle('selected');
   updateSubscriptionCategoryDisplay();
 };
@@ -1246,21 +1222,21 @@ window.toggleSubscriptionCategoryItem = function(itemElement) {
 function updateSubscriptionCategoryDisplay() {
   const wrapper = document.getElementById('subscription-category-multiselect');
   if (!wrapper) return;
-  
+
   const trigger = wrapper.querySelector('.multi-select-trigger');
   const hiddenInputIds = document.getElementById('subscription-category-ids');
   const hiddenInputId = document.getElementById('subscription-category-id');
   const selectedItems = wrapper.querySelectorAll('.multi-select-item.selected');
-  
+
   // Collect selected IDs and names
   const selectedIds = [];
   const selectedNames = [];
-  
+
   selectedItems.forEach(item => {
     selectedIds.push(item.dataset.id);
     selectedNames.push(item.dataset.name);
   });
-  
+
   // Update hidden inputs
   if (hiddenInputIds) {
     hiddenInputIds.value = selectedIds.join(',');
@@ -1269,11 +1245,11 @@ function updateSubscriptionCategoryDisplay() {
   if (hiddenInputId) {
     hiddenInputId.value = selectedIds.length > 0 ? selectedIds[0] : '';
   }
-  
+
   // Update trigger display
   if (trigger) {
     trigger.innerHTML = '';
-    
+
     if (selectedNames.length === 0) {
       const placeholder = document.createElement('span');
       placeholder.className = 'placeholder';
@@ -1287,7 +1263,7 @@ function updateSubscriptionCategoryDisplay() {
         trigger.appendChild(tag);
       });
     }
-    
+
     // Add arrow
     const arrow = document.createElement('span');
     arrow.className = 'arrow';
@@ -1297,10 +1273,10 @@ function updateSubscriptionCategoryDisplay() {
 }
 
 // Remove subscription category
-window.removeSubscriptionCategory = function(categoryId) {
+window.removeSubscriptionCategory = function (categoryId) {
   const wrapper = document.getElementById('subscription-category-multiselect');
   if (!wrapper) return;
-  
+
   const item = wrapper.querySelector(`.multi-select-item[data-id="${categoryId}"]`);
   if (item) {
     item.classList.remove('selected');
@@ -1309,15 +1285,15 @@ window.removeSubscriptionCategory = function(categoryId) {
 };
 
 // Pre-select subscription categories
-window.preselectSubscriptionCategories = function(categoryIds) {
+window.preselectSubscriptionCategories = function (categoryIds) {
   const wrapper = document.getElementById('subscription-category-multiselect');
   if (!wrapper) return;
-  
+
   // Clear all selections first
   wrapper.querySelectorAll('.multi-select-item').forEach(item => {
     item.classList.remove('selected');
   });
-  
+
   // Select the specified categories
   const ids = Array.isArray(categoryIds) ? categoryIds : [categoryIds];
   ids.forEach(id => {
@@ -1326,7 +1302,7 @@ window.preselectSubscriptionCategories = function(categoryIds) {
       item.classList.add('selected');
     }
   });
-  
+
   updateSubscriptionCategoryDisplay();
 };
 
@@ -1334,14 +1310,14 @@ window.preselectSubscriptionCategories = function(categoryIds) {
 let subscriptionCustomersCache = [];
 
 // Load customers for the subscription modal
-window.loadCustomersForSubscription = function(categoryId, preSelectedId = null, preSelectedName = null) {
+window.loadCustomersForSubscription = function (categoryId, preSelectedId = null, preSelectedName = null) {
   const wrapper = document.getElementById('subscription-customer-dropdown');
   const hiddenInput = document.getElementById('subscription-customer-id');
   const listContainer = document.getElementById('subscription-customer-list');
   const trigger = wrapper ? wrapper.querySelector('.customer-dropdown-trigger') : null;
   const selectedText = trigger ? trigger.querySelector('.selected-text') : null;
   const countMessage = document.getElementById('customer-count-message');
-  
+
   // Show loading state with spinner
   if (listContainer) {
     listContainer.innerHTML = `
@@ -1358,7 +1334,7 @@ window.loadCustomersForSubscription = function(categoryId, preSelectedId = null,
     selectedText.textContent = 'Loading...';
     selectedText.classList.add('placeholder');
   }
-  
+
   // If we have a pre-selected customer, set it immediately
   if (preSelectedId && preSelectedName) {
     if (hiddenInput) hiddenInput.value = preSelectedId;
@@ -1367,7 +1343,7 @@ window.loadCustomersForSubscription = function(categoryId, preSelectedId = null,
       selectedText.classList.remove('placeholder');
     }
   }
-  
+
   // Fetch all customers
   fetch('/api/customers')
     .then(response => {
@@ -1377,7 +1353,7 @@ window.loadCustomersForSubscription = function(categoryId, preSelectedId = null,
     .then(customers => {
       console.log('Loaded customers:', customers.length);
       subscriptionCustomersCache = customers;
-      
+
       if (!customers || customers.length === 0) {
         if (listContainer) {
           listContainer.innerHTML = `
@@ -1396,42 +1372,42 @@ window.loadCustomersForSubscription = function(categoryId, preSelectedId = null,
         }
         return;
       }
-      
+
       // Group customers by category
       const grouped = {};
       customers.forEach(c => {
         // Handle both 'category' object and 'categories' array from API response
         let catName = 'Uncategorized';
         let catId = c.category_id || 0;
-        
+
         if (c.categories && c.categories.length > 0) {
           catName = c.categories[0].name;
           catId = c.categories[0].id;
         } else if (c.category_names) {
           catName = c.category_names;
         }
-        
+
         if (!grouped[catId]) {
           grouped[catId] = { name: catName, customers: [] };
         }
         grouped[catId].customers.push(c);
       });
-      
+
       // Sort groups: current category first, then alphabetically
       const sortedGroups = Object.entries(grouped).sort((a, b) => {
         if (a[0] == categoryId) return -1;
         if (b[0] == categoryId) return 1;
         return a[1].name.localeCompare(b[1].name);
       });
-      
+
       renderCustomerDropdownList('subscription', sortedGroups, preSelectedId, categoryId);
-      
+
       if (countMessage) {
         const countText = customers.length === 1 ? '1 customer' : `${customers.length} customers`;
         countMessage.innerHTML = `✓ ${countText} available`;
         countMessage.style.color = 'var(--color-success)';
       }
-      
+
       // Update placeholder if no pre-selection
       if (selectedText && !preSelectedId) {
         selectedText.textContent = 'Select a customer...';
@@ -1462,25 +1438,25 @@ window.loadCustomersForSubscription = function(categoryId, preSelectedId = null,
 function renderCustomerDropdownList(prefix, groupedCustomers, selectedId, currentCategoryId) {
   const listContainer = document.getElementById(`${prefix}-customer-list`);
   if (!listContainer) return;
-  
+
   listContainer.innerHTML = '';
-  
+
   if (groupedCustomers.length === 0) {
     listContainer.innerHTML = '<div class="customer-dropdown-empty">No customers found</div>';
     return;
   }
-  
+
   groupedCustomers.forEach(([catId, group]) => {
     const groupDiv = document.createElement('div');
     groupDiv.className = 'customer-dropdown-group';
     groupDiv.dataset.categoryId = catId;
-    
+
     const isCurrentCategory = catId == currentCategoryId;
     const labelDiv = document.createElement('div');
     labelDiv.className = 'customer-dropdown-group-label';
     labelDiv.textContent = group.name + (isCurrentCategory ? ' ★' : '');
     groupDiv.appendChild(labelDiv);
-    
+
     group.customers.forEach(customer => {
       const itemDiv = document.createElement('div');
       itemDiv.className = 'customer-dropdown-item';
@@ -1492,26 +1468,26 @@ function renderCustomerDropdownList(prefix, groupedCustomers, selectedId, curren
       itemDiv.dataset.categoryId = catId;
       itemDiv.dataset.searchText = customer.name.toLowerCase();
       itemDiv.innerHTML = `<span>👤</span> <span>${customer.name}</span>`;
-      
+
       itemDiv.addEventListener('click', () => {
         selectCustomerFromDropdown(prefix, customer.id, customer.name, catId);
       });
-      
+
       groupDiv.appendChild(itemDiv);
     });
-    
+
     listContainer.appendChild(groupDiv);
   });
 }
 
 // Toggle the customer dropdown
-window.toggleCustomerDropdown = function(prefix) {
+window.toggleCustomerDropdown = function (prefix) {
   const menu = document.getElementById(`${prefix}-customer-menu`);
   const trigger = document.querySelector(`#${prefix}-customer-dropdown .customer-dropdown-trigger`);
-  
+
   if (menu && trigger) {
     const isOpen = menu.classList.contains('show');
-    
+
     // Close all other dropdowns first
     document.querySelectorAll('.customer-dropdown-menu.show').forEach(m => {
       m.classList.remove('show');
@@ -1519,18 +1495,18 @@ window.toggleCustomerDropdown = function(prefix) {
     document.querySelectorAll('.customer-dropdown-trigger.open').forEach(t => {
       t.classList.remove('open');
     });
-    
+
     if (!isOpen) {
       menu.classList.add('show');
       trigger.classList.add('open');
-      
+
       // Focus the search input
       const searchInput = menu.querySelector('input');
       if (searchInput) {
         searchInput.focus();
         searchInput.value = '';
       }
-      
+
       // Reset filter
       filterCustomerDropdown(prefix, '');
     }
@@ -1538,17 +1514,17 @@ window.toggleCustomerDropdown = function(prefix) {
 };
 
 // Filter customers in the dropdown
-window.filterCustomerDropdown = function(prefix, searchText) {
+window.filterCustomerDropdown = function (prefix, searchText) {
   const listContainer = document.getElementById(`${prefix}-customer-list`);
   if (!listContainer) return;
-  
+
   const search = searchText.toLowerCase().trim();
   const groups = listContainer.querySelectorAll('.customer-dropdown-group');
-  
+
   groups.forEach(group => {
     const items = group.querySelectorAll('.customer-dropdown-item');
     let visibleCount = 0;
-    
+
     items.forEach(item => {
       const name = item.dataset.searchText || '';
       if (!search || name.includes(search)) {
@@ -1558,7 +1534,7 @@ window.filterCustomerDropdown = function(prefix, searchText) {
         item.style.display = 'none';
       }
     });
-    
+
     // Hide group if no visible items
     group.style.display = visibleCount > 0 ? '' : 'none';
   });
@@ -1571,16 +1547,16 @@ function selectCustomerFromDropdown(prefix, customerId, customerName, categoryId
   const trigger = wrapper ? wrapper.querySelector('.customer-dropdown-trigger') : null;
   const selectedText = trigger ? trigger.querySelector('.selected-text') : null;
   const menu = document.getElementById(`${prefix}-customer-menu`);
-  
+
   // Update hidden input
   if (hiddenInput) hiddenInput.value = customerId;
-  
+
   // Update trigger text
   if (selectedText) {
     selectedText.textContent = customerName;
     selectedText.classList.remove('placeholder');
   }
-  
+
   // Update selected state in list
   const listContainer = document.getElementById(`${prefix}-customer-list`);
   if (listContainer) {
@@ -1588,7 +1564,7 @@ function selectCustomerFromDropdown(prefix, customerId, customerName, categoryId
       item.classList.toggle('selected', item.dataset.customerId == customerId);
     });
   }
-  
+
   // Auto-select category based on customer's category (for subscription modal)
   if (prefix === 'subscription' && categoryId) {
     const categorySelect = document.getElementById('subscription-category-select');
@@ -1596,14 +1572,14 @@ function selectCustomerFromDropdown(prefix, customerId, customerName, categoryId
       categorySelect.value = categoryId;
     }
   }
-  
+
   // Close dropdown
   if (menu) menu.classList.remove('show');
   if (trigger) trigger.classList.remove('open');
 }
 
 // Close dropdown when clicking outside
-document.addEventListener('click', function(e) {
+document.addEventListener('click', function (e) {
   if (!e.target.closest('.customer-dropdown-wrapper')) {
     document.querySelectorAll('.customer-dropdown-menu.show').forEach(menu => {
       menu.classList.remove('show');
@@ -1622,10 +1598,10 @@ document.addEventListener('click', function(e) {
 // ==================== Multi-Select Category Dropdown ====================
 
 // Toggle multi-select dropdown visibility
-window.toggleCategoryMultiSelect = function(wrapperId) {
+window.toggleCategoryMultiSelect = function (wrapperId) {
   const wrapper = document.getElementById(wrapperId);
   if (!wrapper) return;
-  
+
   const menu = wrapper.querySelector('.multi-select-menu');
   if (menu) {
     // Close other dropdowns first
@@ -1637,39 +1613,39 @@ window.toggleCategoryMultiSelect = function(wrapperId) {
 };
 
 // Toggle individual category item selection
-window.toggleCategoryItem = function(itemElement, wrapperId) {
+window.toggleCategoryItem = function (itemElement, wrapperId) {
   itemElement.classList.toggle('selected');
   updateCategoryMultiSelectDisplay(wrapperId);
 };
 
 // Update the display of selected categories in the trigger
-window.updateCategoryMultiSelectDisplay = function(wrapperId) {
+window.updateCategoryMultiSelectDisplay = function (wrapperId) {
   const wrapper = document.getElementById(wrapperId);
   if (!wrapper) return;
-  
+
   const trigger = wrapper.querySelector('.multi-select-trigger');
   const hiddenInput = wrapper.closest('.form-group').querySelector('input[type="hidden"]');
   const selectedItems = wrapper.querySelectorAll('.multi-select-item.selected');
-  
+
   // Collect selected IDs and names
   const selectedIds = [];
   const selectedNames = [];
-  
+
   selectedItems.forEach(item => {
     selectedIds.push(item.dataset.id);
     selectedNames.push(item.dataset.name);
   });
-  
+
   // Update hidden input
   if (hiddenInput) {
     hiddenInput.value = selectedIds.join(',');
   }
-  
+
   // Update trigger display
   if (trigger) {
     // Clear existing content
     trigger.innerHTML = '';
-    
+
     if (selectedNames.length === 0) {
       const placeholder = document.createElement('span');
       placeholder.className = 'placeholder';
@@ -1683,14 +1659,14 @@ window.updateCategoryMultiSelectDisplay = function(wrapperId) {
         trigger.appendChild(tag);
       });
     }
-    
+
     // Add arrow
     const arrow = document.createElement('span');
     arrow.className = 'arrow';
     arrow.textContent = '▼';
     trigger.appendChild(arrow);
   }
-  
+
   // Update groups if this is the customer modal
   if (wrapperId === 'customer-category-multiselect' && selectedIds.length > 0) {
     updateGroupSelectMulti(selectedIds[0], 'customer-groups-container', []);
@@ -1698,10 +1674,10 @@ window.updateCategoryMultiSelectDisplay = function(wrapperId) {
 };
 
 // Remove a category from selection
-window.removeCategoryFromSelect = function(wrapperId, categoryId) {
+window.removeCategoryFromSelect = function (wrapperId, categoryId) {
   const wrapper = document.getElementById(wrapperId);
   if (!wrapper) return;
-  
+
   const item = wrapper.querySelector(`.multi-select-item[data-id="${categoryId}"]`);
   if (item) {
     item.classList.remove('selected');
@@ -1710,15 +1686,15 @@ window.removeCategoryFromSelect = function(wrapperId, categoryId) {
 };
 
 // Pre-select categories in multi-select (for editing or context)
-window.preselectCategories = function(wrapperId, categoryIds) {
+window.preselectCategories = function (wrapperId, categoryIds) {
   const wrapper = document.getElementById(wrapperId);
   if (!wrapper) return;
-  
+
   // Clear all selections first
   wrapper.querySelectorAll('.multi-select-item').forEach(item => {
     item.classList.remove('selected');
   });
-  
+
   // Select the specified categories
   const ids = Array.isArray(categoryIds) ? categoryIds : [categoryIds];
   ids.forEach(id => {
@@ -1727,15 +1703,15 @@ window.preselectCategories = function(wrapperId, categoryIds) {
       item.classList.add('selected');
     }
   });
-  
+
   updateCategoryMultiSelectDisplay(wrapperId);
 };
 
 // Get selected category IDs from a multi-select
-window.getSelectedCategoryIds = function(wrapperId) {
+window.getSelectedCategoryIds = function (wrapperId) {
   const wrapper = document.getElementById(wrapperId);
   if (!wrapper) return [];
-  
+
   const selectedItems = wrapper.querySelectorAll('.multi-select-item.selected');
   return Array.from(selectedItems).map(item => parseInt(item.dataset.id));
 };
@@ -1743,19 +1719,19 @@ window.getSelectedCategoryIds = function(wrapperId) {
 // ==================== Multi-Select Category Dropdown ====================
 
 // Initialize multi-select category dropdown
-window.initCategoryMultiSelect = function(wrapperId, categories, preSelectedIds = []) {
+window.initCategoryMultiSelect = function (wrapperId, categories, preSelectedIds = []) {
   const wrapper = document.getElementById(wrapperId);
   if (!wrapper) return;
-  
+
   const hiddenInput = wrapper.querySelector('input[type="hidden"]');
   const trigger = wrapper.querySelector('.multi-select-trigger');
   const menu = wrapper.querySelector('.multi-select-menu');
-  
+
   if (!trigger || !menu) return;
-  
+
   // Store selected IDs
   wrapper.selectedIds = Array.isArray(preSelectedIds) ? [...preSelectedIds] : [preSelectedIds].filter(Boolean);
-  
+
   // Render menu items
   menu.innerHTML = '';
   categories.forEach(cat => {
@@ -1773,46 +1749,46 @@ window.initCategoryMultiSelect = function(wrapperId, categories, preSelectedIds 
     });
     menu.appendChild(item);
   });
-  
+
   // Update display
   updateCategoryMultiSelectDisplay(wrapperId);
 };
 
 // Toggle category selection
-window.toggleCategorySelection = function(wrapperId, categoryId, categoryName) {
+window.toggleCategorySelection = function (wrapperId, categoryId, categoryName) {
   const wrapper = document.getElementById(wrapperId);
   if (!wrapper) return;
-  
+
   const idx = wrapper.selectedIds.indexOf(categoryId);
   if (idx > -1) {
     wrapper.selectedIds.splice(idx, 1);
   } else {
     wrapper.selectedIds.push(categoryId);
   }
-  
+
   // Update item state
   const item = wrapper.querySelector(`.multi-select-item[data-id="${categoryId}"]`);
   if (item) {
     item.classList.toggle('selected', wrapper.selectedIds.includes(categoryId));
   }
-  
+
   updateCategoryMultiSelectDisplay(wrapperId);
 };
 
 // Update the display of selected categories
-window.updateCategoryMultiSelectDisplay = function(wrapperId) {
+window.updateCategoryMultiSelectDisplay = function (wrapperId) {
   const wrapper = document.getElementById(wrapperId);
   if (!wrapper) return;
-  
+
   const trigger = wrapper.querySelector('.multi-select-trigger');
   const hiddenInput = wrapper.querySelector('input[type="hidden"]');
-  
+
   if (!trigger) return;
-  
+
   // Clear trigger content except arrow
   const arrow = trigger.querySelector('.arrow');
   trigger.innerHTML = '';
-  
+
   if (wrapper.selectedIds.length === 0) {
     const placeholder = document.createElement('span');
     placeholder.className = 'placeholder';
@@ -1829,13 +1805,13 @@ window.updateCategoryMultiSelectDisplay = function(wrapperId) {
       }
     });
   }
-  
+
   // Re-add arrow
   const newArrow = document.createElement('span');
   newArrow.className = 'arrow';
   newArrow.textContent = '▼';
   trigger.appendChild(newArrow);
-  
+
   // Update hidden input
   if (hiddenInput) {
     hiddenInput.value = wrapper.selectedIds.join(',');
@@ -1843,15 +1819,15 @@ window.updateCategoryMultiSelectDisplay = function(wrapperId) {
 };
 
 // Remove a category from selection
-window.removeCategorySelection = function(wrapperId, categoryId) {
+window.removeCategorySelection = function (wrapperId, categoryId) {
   toggleCategorySelection(wrapperId, categoryId);
 };
 
 // Toggle multi-select dropdown
-window.toggleCategoryMultiSelect = function(wrapperId) {
+window.toggleCategoryMultiSelect = function (wrapperId) {
   const wrapper = document.getElementById(wrapperId);
   if (!wrapper) return;
-  
+
   const menu = wrapper.querySelector('.multi-select-menu');
   if (menu) {
     // Close other dropdowns
@@ -1863,20 +1839,20 @@ window.toggleCategoryMultiSelect = function(wrapperId) {
 };
 
 // Get selected category IDs from a multi-select wrapper
-window.getSelectedCategories = function(wrapperId) {
+window.getSelectedCategories = function (wrapperId) {
   const wrapper = document.getElementById(wrapperId);
   return wrapper ? (wrapper.selectedIds || []) : [];
 };
 
 // Open Add Existing Customer Modal with category context
-window.openAddExistingCustomerModal = function(categoryId) {
+window.openAddExistingCustomerModal = function (categoryId) {
   // Store the category context for the modal
   window._addExistingCustomerCategoryId = categoryId;
   openModal('addExistingCustomerModal');
 };
 
 // Create Group
-window.createGroup = function(formData) {
+window.createGroup = function (formData) {
   fetch('/api/groups', {
     method: 'POST',
     headers: {
@@ -1888,27 +1864,27 @@ window.createGroup = function(formData) {
       notes: formData.notes
     })
   })
-  .then(response => response.json())
-  .then(data => {
-    showToast('Group created successfully', 'success');
-    closeAllModals();
-    setTimeout(() => window.location.reload(), 500);
-  })
-  .catch(error => {
-    showToast('Error creating group', 'error');
-    console.error('Error:', error);
-  });
+    .then(response => response.json())
+    .then(data => {
+      showToast('Group created successfully', 'success');
+      closeAllModals();
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+      showToast('Error creating group', 'error');
+      console.error('Error:', error);
+    });
 };
 
 // Create Customer with comprehensive error handling
-window.createCustomer = function(formData) {
+window.createCustomer = function (formData) {
   // Client-side validation first
   const validationErrors = [];
-  
+
   if (!formData.name || !formData.name.trim()) {
     validationErrors.push('Customer name is required');
   }
-  
+
   // Handle both category_ids (multi-select) and category_id (single select)
   let categoryIds = [];
   if (formData.category_ids && formData.category_ids.trim()) {
@@ -1916,15 +1892,15 @@ window.createCustomer = function(formData) {
   } else if (formData.category_id) {
     categoryIds = [parseInt(formData.category_id)];
   }
-  
+
   if (categoryIds.length === 0) {
     validationErrors.push('At least one category is required');
   }
-  
+
   if (!formData.country || !formData.country.trim()) {
     validationErrors.push('Country is required');
   }
-  
+
   // Validate email format if provided
   if (formData.email && formData.email.trim()) {
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -1932,14 +1908,14 @@ window.createCustomer = function(formData) {
       validationErrors.push('Invalid email format');
     }
   }
-  
+
   // Show validation errors and stop if any
   if (validationErrors.length > 0) {
     showToast('Validation Error: ' + validationErrors.join('; '), 'error');
     console.warn('Customer creation validation failed:', validationErrors);
     return;
   }
-  
+
   // Handle group_ids from multi-select (comma-separated string) or legacy group_id
   let groupIds = [];
   if (formData.group_ids && formData.group_ids.trim()) {
@@ -1947,10 +1923,10 @@ window.createCustomer = function(formData) {
   } else if (formData.group_id) {
     groupIds = [parseInt(formData.group_id)];
   }
-  
+
   // Remove duplicates
   groupIds = [...new Set(groupIds)];
-  
+
   // Prepare request payload
   const payload = {
     name: formData.name.trim(),
@@ -1964,13 +1940,13 @@ window.createCustomer = function(formData) {
     tags: formData.tags ? formData.tags.trim() : null,
     notes: formData.notes ? formData.notes.trim() : null
   };
-  
+
   // Log request for debugging (no sensitive data)
   console.log('Creating customer with payload:', {
     ...payload,
     email: payload.email ? '[REDACTED]' : null
   });
-  
+
   fetch('/api/customers', {
     method: 'POST',
     headers: {
@@ -1978,77 +1954,77 @@ window.createCustomer = function(formData) {
     },
     body: JSON.stringify(payload)
   })
-  .then(response => {
-    // Log response status for debugging
-    console.log('Customer creation response:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
-    
-    if (!response.ok) {
-      return response.json().then(err => {
-        // Log full error details
-        console.error('Customer creation failed:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: err,
-          payload: { ...payload, email: payload.email ? '[REDACTED]' : null }
-        });
-        
-        // Extract error message
-        let errorMessage = 'Failed to create customer';
-        if (err.detail) {
-          errorMessage = typeof err.detail === 'string' 
-            ? err.detail 
-            : JSON.stringify(err.detail);
-        } else if (err.message) {
-          errorMessage = err.message;
-        }
-        
-        throw new Error(errorMessage);
-      }).catch(parseError => {
-        // Handle JSON parse errors
-        if (parseError.message && parseError.message !== 'Failed to create customer') {
-          throw parseError;
-        }
-        console.error('Failed to parse error response:', parseError);
-        throw new Error(`Server error (${response.status}): ${response.statusText}`);
+    .then(response => {
+      // Log response status for debugging
+      console.log('Customer creation response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
       });
-    }
-    return response.json();
-  })
-  .then(data => {
-    console.log('Customer created successfully:', { id: data.id, name: data.name });
-    showToast('Customer created successfully', 'success');
-    closeAllModals();
-    setTimeout(() => window.location.reload(), 500);
-  })
-  .catch(error => {
-    // Show user-friendly error message
-    const errorMsg = error.message || 'Unknown error occurred';
-    showToast('Error: ' + errorMsg, 'error');
-    console.error('Customer creation error:', error);
-  });
+
+      if (!response.ok) {
+        return response.json().then(err => {
+          // Log full error details
+          console.error('Customer creation failed:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: err,
+            payload: { ...payload, email: payload.email ? '[REDACTED]' : null }
+          });
+
+          // Extract error message
+          let errorMessage = 'Failed to create customer';
+          if (err.detail) {
+            errorMessage = typeof err.detail === 'string'
+              ? err.detail
+              : JSON.stringify(err.detail);
+          } else if (err.message) {
+            errorMessage = err.message;
+          }
+
+          throw new Error(errorMessage);
+        }).catch(parseError => {
+          // Handle JSON parse errors
+          if (parseError.message && parseError.message !== 'Failed to create customer') {
+            throw parseError;
+          }
+          console.error('Failed to parse error response:', parseError);
+          throw new Error(`Server error (${response.status}): ${response.statusText}`);
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Customer created successfully:', { id: data.id, name: data.name });
+      showToast('Customer created successfully', 'success');
+      closeAllModals();
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+      // Show user-friendly error message
+      const errorMsg = error.message || 'Unknown error occurred';
+      showToast('Error: ' + errorMsg, 'error');
+      console.error('Customer creation error:', error);
+    });
 };
 
 // Create Subscription
-window.createSubscription = function(formData) {
+window.createSubscription = function (formData) {
   // Validation
   const validationErrors = [];
-  
+
   if (!formData.customer_id) {
     validationErrors.push('Please select a customer');
   }
-  
+
   // SINGLE SOURCE OF TRUTH: Get categoryIds from subscriptionModalState first
   // This ensures validation uses the same state that the checkbox UI updates
   let categoryIds = [];
-  
+
   // Primary source: subscriptionModalState.selectedCategories (what the UI shows)
-  if (typeof subscriptionModalState !== 'undefined' && 
-      subscriptionModalState.selectedCategories && 
-      subscriptionModalState.selectedCategories.length > 0) {
+  if (typeof subscriptionModalState !== 'undefined' &&
+    subscriptionModalState.selectedCategories &&
+    subscriptionModalState.selectedCategories.length > 0) {
     categoryIds = subscriptionModalState.selectedCategories.map(cat => cat.id);
   }
   // Fallback: hidden input (for backward compatibility)
@@ -2062,26 +2038,26 @@ window.createSubscription = function(formData) {
       categoryIds = [singleId];
     }
   }
-  
+
   // Primary category is first one, but we now send ALL categoryIds
   const categoryId = categoryIds.length > 0 ? categoryIds[0] : null;
-  
+
   if (!categoryId || categoryIds.length === 0) {
     validationErrors.push('Please select at least one category');
   }
 
   // Ensure uniqueness
   categoryIds = [...new Set(categoryIds)];
-  
+
   if (!formData.vendor_name || !formData.vendor_name.trim()) {
     validationErrors.push('Vendor name is required');
   }
-  
+
   if (validationErrors.length > 0) {
     showToast('Validation Error: ' + validationErrors.join('; '), 'error');
     return;
   }
-  
+
   fetch('/api/subscriptions', {
     method: 'POST',
     headers: {
@@ -2103,27 +2079,27 @@ window.createSubscription = function(formData) {
       notes: formData.notes ? formData.notes.trim() : null
     })
   })
-  .then(response => {
-    if (!response.ok) {
-      return response.json().then(err => {
-        throw new Error(err.detail || 'Failed to create subscription');
-      });
-    }
-    return response.json();
-  })
-  .then(data => {
-    showToast('Subscription created successfully', 'success');
-    closeAllModals();
-    setTimeout(() => window.location.reload(), 500);
-  })
-  .catch(error => {
-    showToast('Error: ' + (error.message || 'Failed to create subscription'), 'error');
-    console.error('Error:', error);
-  });
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => {
+          throw new Error(err.detail || 'Failed to create subscription');
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      showToast('Subscription created successfully', 'success');
+      closeAllModals();
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+      showToast('Error: ' + (error.message || 'Failed to create subscription'), 'error');
+      console.error('Error:', error);
+    });
 };
 
 // Update Category
-window.updateCategory = function(formData, id) {
+window.updateCategory = function (formData, id) {
   fetch(`/api/categories/${id}`, {
     method: 'PUT',
     headers: {
@@ -2134,20 +2110,20 @@ window.updateCategory = function(formData, id) {
       description: formData.description
     })
   })
-  .then(response => response.json())
-  .then(data => {
-    showToast('Category updated successfully', 'success');
-    closeAllModals();
-    setTimeout(() => window.location.reload(), 500);
-  })
-  .catch(error => {
-    showToast('Error updating category', 'error');
-    console.error('Error:', error);
-  });
+    .then(response => response.json())
+    .then(data => {
+      showToast('Category updated successfully', 'success');
+      closeAllModals();
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+      showToast('Error updating category', 'error');
+      console.error('Error:', error);
+    });
 };
 
 // Update Group
-window.updateGroup = function(formData, id) {
+window.updateGroup = function (formData, id) {
   fetch(`/api/groups/${id}`, {
     method: 'PUT',
     headers: {
@@ -2159,27 +2135,27 @@ window.updateGroup = function(formData, id) {
       notes: formData.notes
     })
   })
-  .then(response => response.json())
-  .then(data => {
-    showToast('Group updated successfully', 'success');
-    closeAllModals();
-    setTimeout(() => window.location.reload(), 500);
-  })
-  .catch(error => {
-    showToast('Error updating group', 'error');
-    console.error('Error:', error);
-  });
+    .then(response => response.json())
+    .then(data => {
+      showToast('Group updated successfully', 'success');
+      closeAllModals();
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+      showToast('Error updating group', 'error');
+      console.error('Error:', error);
+    });
 };
 
 // Update Customer with comprehensive error handling
-window.updateCustomer = function(formData, id) {
+window.updateCustomer = function (formData, id) {
   // Client-side validation first
   const validationErrors = [];
-  
+
   if (!formData.name || !formData.name.trim()) {
     validationErrors.push('Customer name is required');
   }
-  
+
   // Handle both category_ids (multi-select) and category_id (single select)
   let categoryIds = [];
   if (formData.category_ids && formData.category_ids.trim()) {
@@ -2187,11 +2163,11 @@ window.updateCustomer = function(formData, id) {
   } else if (formData.category_id) {
     categoryIds = [parseInt(formData.category_id)];
   }
-  
+
   if (categoryIds.length === 0) {
     validationErrors.push('At least one category is required');
   }
-  
+
   // Validate email format if provided
   if (formData.email && formData.email.trim()) {
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -2199,14 +2175,14 @@ window.updateCustomer = function(formData, id) {
       validationErrors.push('Invalid email format');
     }
   }
-  
+
   // Show validation errors and stop if any
   if (validationErrors.length > 0) {
     showToast('Validation Error: ' + validationErrors.join('; '), 'error');
     console.warn('Customer update validation failed:', validationErrors);
     return;
   }
-  
+
   // Handle group_ids from multi-select (comma-separated string) or legacy group_id
   let groupIds = [];
   if (formData.group_ids && formData.group_ids.trim()) {
@@ -2214,10 +2190,10 @@ window.updateCustomer = function(formData, id) {
   } else if (formData.group_id) {
     groupIds = [parseInt(formData.group_id)];
   }
-  
+
   // Remove duplicates
   groupIds = [...new Set(groupIds)];
-  
+
   // Prepare request payload
   const payload = {
     name: formData.name.trim(),
@@ -2231,14 +2207,14 @@ window.updateCustomer = function(formData, id) {
     tags: formData.tags ? formData.tags.trim() : null,
     notes: formData.notes ? formData.notes.trim() : null
   };
-  
+
   // Log request for debugging
   console.log('Updating customer with payload:', {
     id,
     ...payload,
     email: payload.email ? '[REDACTED]' : null
   });
-  
+
   fetch(`/api/customers/${id}`, {
     method: 'PUT',
     headers: {
@@ -2246,52 +2222,52 @@ window.updateCustomer = function(formData, id) {
     },
     body: JSON.stringify(payload)
   })
-  .then(response => {
-    console.log('Customer update response:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
-    
-    if (!response.ok) {
-      return response.json().then(err => {
-        console.error('Customer update failed:', {
-          status: response.status,
-          error: err,
-          customerId: id
-        });
-        
-        let errorMessage = 'Failed to update customer';
-        if (err.detail) {
-          errorMessage = typeof err.detail === 'string' 
-            ? err.detail 
-            : JSON.stringify(err.detail);
-        }
-        throw new Error(errorMessage);
-      }).catch(parseError => {
-        if (parseError.message && parseError.message !== 'Failed to update customer') {
-          throw parseError;
-        }
-        throw new Error(`Server error (${response.status}): ${response.statusText}`);
+    .then(response => {
+      console.log('Customer update response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
       });
-    }
-    return response.json();
-  })
-  .then(data => {
-    console.log('Customer updated successfully:', { id: data.id, name: data.name });
-    showToast('Customer updated successfully', 'success');
-    closeAllModals();
-    setTimeout(() => window.location.reload(), 500);
-  })
-  .catch(error => {
-    const errorMsg = error.message || 'Unknown error occurred';
-    showToast('Error: ' + errorMsg, 'error');
-    console.error('Customer update error:', error);
-  });
+
+      if (!response.ok) {
+        return response.json().then(err => {
+          console.error('Customer update failed:', {
+            status: response.status,
+            error: err,
+            customerId: id
+          });
+
+          let errorMessage = 'Failed to update customer';
+          if (err.detail) {
+            errorMessage = typeof err.detail === 'string'
+              ? err.detail
+              : JSON.stringify(err.detail);
+          }
+          throw new Error(errorMessage);
+        }).catch(parseError => {
+          if (parseError.message && parseError.message !== 'Failed to update customer') {
+            throw parseError;
+          }
+          throw new Error(`Server error (${response.status}): ${response.statusText}`);
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Customer updated successfully:', { id: data.id, name: data.name });
+      showToast('Customer updated successfully', 'success');
+      closeAllModals();
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+      const errorMsg = error.message || 'Unknown error occurred';
+      showToast('Error: ' + errorMsg, 'error');
+      console.error('Customer update error:', error);
+    });
 };
 
 // Update Subscription
-window.updateSubscription = function(formData, id) {
+window.updateSubscription = function (formData, id) {
   fetch(`/api/subscriptions/${id}`, {
     method: 'PUT',
     headers: {
@@ -2312,37 +2288,37 @@ window.updateSubscription = function(formData, id) {
       notes: formData.notes || null
     })
   })
-  .then(response => response.json())
-  .then(data => {
-    showToast('Subscription updated successfully', 'success');
-    closeAllModals();
-    setTimeout(() => window.location.reload(), 500);
-  })
-  .catch(error => {
-    showToast('Error updating subscription', 'error');
-    console.error('Error:', error);
-  });
+    .then(response => response.json())
+    .then(data => {
+      showToast('Subscription updated successfully', 'success');
+      closeAllModals();
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+      showToast('Error updating subscription', 'error');
+      console.error('Error:', error);
+    });
 };
 
 // Delete with confirmation and undo option
-window.deleteItem = function(type, id, name) {
+window.deleteItem = function (type, id, name) {
   const confirmMsg = `Delete "${name}"?\n\nThis will remove:\n• The ${type} itself\n• All associated data\n\nThis action can be undone for 10 seconds.`;
-  
+
   if (!confirm(confirmMsg)) {
     return;
   }
-  
+
   const endpoints = {
     category: '/api/categories',
     group: '/api/groups',
     customer: '/api/customers',
     subscription: '/api/subscriptions'
   };
-  
+
   // Store delete info for potential undo
   let undoTimeout;
   let deleteExecuted = false;
-  
+
   // Show undo toast
   const undoToast = document.createElement('div');
   undoToast.className = 'toast toast-warning';
@@ -2365,38 +2341,38 @@ window.deleteItem = function(type, id, name) {
     <span>Deleting "${name}"...</span>
     <button onclick="window.cancelDelete()" style="background: white; color: #f59e0b; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;">UNDO</button>
   `;
-  
+
   document.body.appendChild(undoToast);
-  
+
   // Store cancel function globally
-  window.cancelDelete = function() {
+  window.cancelDelete = function () {
     clearTimeout(undoTimeout);
     undoToast.remove();
     if (!deleteExecuted) {
       showToast('Delete cancelled', 'info');
     }
   };
-  
+
   // Execute delete after 10 seconds
   undoTimeout = setTimeout(() => {
     deleteExecuted = true;
     undoToast.remove();
-    
+
     fetch(`${endpoints[type]}/${id}`, {
       method: 'DELETE'
     })
-    .then(response => {
-      if (response.ok) {
-        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`, 'success');
-        setTimeout(() => window.location.reload(), 500);
-      } else {
-        throw new Error('Delete failed');
-      }
-    })
-    .catch(error => {
-      showToast(`Error deleting ${type}`, 'error');
-      console.error('Error:', error);
-    });
+      .then(response => {
+        if (response.ok) {
+          showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`, 'success');
+          setTimeout(() => window.location.reload(), 500);
+        } else {
+          throw new Error('Delete failed');
+        }
+      })
+      .catch(error => {
+        showToast(`Error deleting ${type}`, 'error');
+        console.error('Error:', error);
+      });
   }, 10000);
 };
 
@@ -2404,7 +2380,7 @@ window.deleteItem = function(type, id, name) {
 function initTooltips() {
   // Modern tooltips use CSS ::before/::after pseudo-elements via data attributes
   // No JavaScript initialization needed for [data-tooltip] elements
-  
+
   // Legacy tooltip support for dynamically added elements
   const legacyTooltips = document.querySelectorAll('.tooltip:not([data-tooltip])');
   legacyTooltips.forEach(el => {
@@ -2424,11 +2400,11 @@ function refreshTooltips() {
 }
 
 // ==================== Form Helpers ====================
-window.handleFormSubmit = function(event, callback) {
+window.handleFormSubmit = function (event, callback) {
   event.preventDefault();
   const formData = new FormData(event.target);
   const data = Object.fromEntries(formData.entries());
-  
+
   // Check if this is an edit operation
   const itemId = event.target.dataset.itemId;
   if (itemId) {
@@ -2440,10 +2416,10 @@ window.handleFormSubmit = function(event, callback) {
 
 // ==================== Multi-Select Group Component ====================
 // Shows ALL groups organized by category for maximum flexibility
-window.updateGroupSelectMulti = function(categoryId, containerId, selectedGroupIds = []) {
+window.updateGroupSelectMulti = function (categoryId, containerId, selectedGroupIds = []) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  
+
   // Determine the hidden input ID based on container ID
   let hiddenInputId = 'customer-group-ids';
   if (containerId.includes('edit-customer')) {
@@ -2453,7 +2429,7 @@ window.updateGroupSelectMulti = function(categoryId, containerId, selectedGroupI
   } else if (containerId.includes('edit-subscription')) {
     hiddenInputId = 'edit-subscription-group-ids';
   }
-  
+
   // Convert selectedGroupIds to array if it's a string
   if (typeof selectedGroupIds === 'string') {
     selectedGroupIds = selectedGroupIds ? selectedGroupIds.split(',').map(id => parseInt(id)) : [];
@@ -2461,7 +2437,7 @@ window.updateGroupSelectMulti = function(categoryId, containerId, selectedGroupI
   if (!Array.isArray(selectedGroupIds)) {
     selectedGroupIds = selectedGroupIds ? [selectedGroupIds] : [];
   }
-  
+
   // Fetch ALL groups and ALL categories to organize them
   Promise.all([
     fetch('/api/groups').then(r => r.json()),
@@ -2472,15 +2448,15 @@ window.updateGroupSelectMulti = function(categoryId, containerId, selectedGroupI
         container.innerHTML = '<div class="multi-select-placeholder">No groups available. Create a group first.</div>';
         return;
       }
-      
+
       container.innerHTML = '';
-      
+
       // Create a map of category id to category name
       const categoryMap = {};
       categories.forEach(cat => {
         categoryMap[cat.id] = cat.name;
       });
-      
+
       // Group the groups by category
       const groupsByCategory = {};
       groups.forEach(group => {
@@ -2490,7 +2466,7 @@ window.updateGroupSelectMulti = function(categoryId, containerId, selectedGroupI
         }
         groupsByCategory[catId].push(group);
       });
-      
+
       // Sort categories - put current category first if specified
       let sortedCategoryIds = Object.keys(groupsByCategory).map(Number);
       if (categoryId) {
@@ -2500,24 +2476,24 @@ window.updateGroupSelectMulti = function(categoryId, containerId, selectedGroupI
           return (categoryMap[a] || '').localeCompare(categoryMap[b] || '');
         });
       }
-      
+
       // Create sections for each category
       sortedCategoryIds.forEach(catId => {
         const catGroups = groupsByCategory[catId];
         if (catGroups && catGroups.length > 0) {
           const catName = categoryMap[catId] || 'Unknown Category';
           const isCurrent = catId == categoryId;
-          
+
           // Category header
           const header = document.createElement('div');
           header.className = 'multi-select-category-header';
           header.innerHTML = `<span class="category-icon">📁</span> ${catName}${isCurrent ? ' <span class="current-badge">(Current)</span>' : ''}`;
           container.appendChild(header);
-          
+
           // Groups wrapper for this category
           const groupsWrapper = document.createElement('div');
           groupsWrapper.className = 'multi-select-group-wrapper';
-          
+
           catGroups.forEach(group => {
             const isSelected = selectedGroupIds.includes(group.id);
             const option = document.createElement('div');
@@ -2528,19 +2504,19 @@ window.updateGroupSelectMulti = function(categoryId, containerId, selectedGroupI
               <span class="check-icon"></span>
               <span class="group-name">${group.name}</span>
             `;
-            
-            option.addEventListener('click', function() {
+
+            option.addEventListener('click', function () {
               this.classList.toggle('selected');
               updateGroupIdsHiddenInput(containerId, hiddenInputId);
             });
-            
+
             groupsWrapper.appendChild(option);
           });
-          
+
           container.appendChild(groupsWrapper);
         }
       });
-      
+
       // Update hidden input
       updateGroupIdsHiddenInput(containerId, hiddenInputId);
     })
@@ -2554,22 +2530,22 @@ window.updateGroupSelectMulti = function(categoryId, containerId, selectedGroupI
 function updateGroupIdsHiddenInput(containerId, hiddenInputId) {
   const container = document.getElementById(containerId);
   const hiddenInput = document.getElementById(hiddenInputId);
-  
+
   if (!container || !hiddenInput) return;
-  
+
   const selectedOptions = container.querySelectorAll('.multi-select-option.selected');
   const selectedIds = Array.from(selectedOptions).map(opt => opt.dataset.groupId);
-  
+
   // Remove duplicates
   const uniqueIds = [...new Set(selectedIds)];
   hiddenInput.value = uniqueIds.join(',');
 }
 
 // Helper to set selected groups when editing
-window.setSelectedGroups = function(containerId, groupIds) {
+window.setSelectedGroups = function (containerId, groupIds) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  
+
   // Convert to array if needed
   if (typeof groupIds === 'string') {
     groupIds = groupIds ? groupIds.split(',').map(id => parseInt(id)) : [];
@@ -2577,7 +2553,7 @@ window.setSelectedGroups = function(containerId, groupIds) {
   if (!Array.isArray(groupIds)) {
     groupIds = groupIds ? [groupIds] : [];
   }
-  
+
   // Select the matching options
   const options = container.querySelectorAll('.multi-select-option');
   options.forEach(opt => {
@@ -2588,7 +2564,7 @@ window.setSelectedGroups = function(containerId, groupIds) {
       opt.classList.remove('selected');
     }
   });
-  
+
   // Update hidden input
   let hiddenInputId = 'customer-group-ids';
   if (containerId.includes('edit-customer')) {
@@ -2598,10 +2574,10 @@ window.setSelectedGroups = function(containerId, groupIds) {
 };
 
 // Dynamic cascading selects - Shows ALL groups organized by category
-window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id', selectedGroupId = null) {
+window.updateGroupSelect = function (categoryId, groupSelectId = 'group_id', selectedGroupId = null) {
   // Find the group select - prefer searching within open modals first
   let groupSelect = null;
-  
+
   // Try to find within an open modal (check both flex and block display)
   const openModals = document.querySelectorAll('.modal[style*="display: grid"], .modal[style*="display: flex"], .modal[style*="display: block"], .modal.show');
   for (let modal of openModals) {
@@ -2611,14 +2587,14 @@ window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id', sele
       break;
     }
   }
-  
+
   // Fallback to global search if not found in modals
   if (!groupSelect) {
     groupSelect = document.querySelector(`select[name="${groupSelectId}"]`);
   }
-  
+
   if (!groupSelect) return;
-  
+
   // Fetch ALL groups and ALL categories to organize them
   Promise.all([
     fetch('/api/groups').then(r => r.json()),
@@ -2626,13 +2602,13 @@ window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id', sele
   ])
     .then(([groups, categories]) => {
       groupSelect.innerHTML = '<option value="">No group</option>';
-      
+
       // Create a map of category id to category name
       const categoryMap = {};
       categories.forEach(cat => {
         categoryMap[cat.id] = cat.name;
       });
-      
+
       // Group the groups by category
       const groupsByCategory = {};
       groups.forEach(group => {
@@ -2642,7 +2618,7 @@ window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id', sele
         }
         groupsByCategory[catId].push(group);
       });
-      
+
       // Sort categories - put current category first if specified
       let sortedCategoryIds = Object.keys(groupsByCategory).map(Number);
       if (categoryId) {
@@ -2652,7 +2628,7 @@ window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id', sele
           return (categoryMap[a] || '').localeCompare(categoryMap[b] || '');
         });
       }
-      
+
       // Create optgroups for each category
       sortedCategoryIds.forEach(catId => {
         const catGroups = groupsByCategory[catId];
@@ -2660,7 +2636,7 @@ window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id', sele
           const optgroup = document.createElement('optgroup');
           const catName = categoryMap[catId] || 'Unknown Category';
           optgroup.label = catId == categoryId ? `📁 ${catName} (Current)` : `📁 ${catName}`;
-          
+
           catGroups.forEach(group => {
             const option = document.createElement('option');
             option.value = group.id;
@@ -2670,7 +2646,7 @@ window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id', sele
             }
             optgroup.appendChild(option);
           });
-          
+
           groupSelect.appendChild(optgroup);
         }
       });
@@ -2678,10 +2654,10 @@ window.updateGroupSelect = function(categoryId, groupSelectId = 'group_id', sele
     .catch(error => console.error('Error loading groups:', error));
 };
 
-window.updateCustomerSelect = function(categoryId, customerSelectId = 'customer_id', selectedCustomerId = null) {
+window.updateCustomerSelect = function (categoryId, customerSelectId = 'customer_id', selectedCustomerId = null) {
   // Find the customer select - prefer searching within open modals first
   let customerSelect = null;
-  
+
   // Try to find within an open modal
   const openModals = document.querySelectorAll('.modal[style*="display: grid"], .modal[style*="display: flex"], .modal.show');
   for (let modal of openModals) {
@@ -2691,12 +2667,12 @@ window.updateCustomerSelect = function(categoryId, customerSelectId = 'customer_
       break;
     }
   }
-  
+
   // Fallback to global search if not found in modals
   if (!customerSelect) {
     customerSelect = document.querySelector(`select[name="${customerSelectId}"]`);
   }
-  
+
   if (!customerSelect) return;
 
   // Always load ALL customers to allow full selection flexibility
@@ -2728,15 +2704,15 @@ window.updateCustomerSelect = function(categoryId, customerSelectId = 'customer_
 };
 
 // Update customer select specifically for edit subscription modal
-window.updateCustomerSelectForEdit = function(categoryId) {
+window.updateCustomerSelectForEdit = function (categoryId) {
   const modal = document.getElementById('editSubscriptionModal');
   if (!modal) return;
-  
+
   const customerSelect = modal.querySelector('select[name="customer_id"]');
   if (!customerSelect) return;
-  
+
   const currentCustomerId = customerSelect.value;
-  
+
   // Load all customers (not filtered by category) to allow reassignment
   fetch('/api/customers')
     .then(response => response.json())
@@ -2765,12 +2741,12 @@ window.updateCustomerSelectForEdit = function(categoryId) {
 };
 
 // Apply plan preset to plan name field
-window.applyPlanPreset = function(preset) {
+window.applyPlanPreset = function (preset) {
   if (!preset) return;
-  
+
   const modal = document.getElementById('editSubscriptionModal');
   if (!modal) return;
-  
+
   const planNameInput = modal.querySelector('input[name="plan_name"]');
   if (planNameInput) {
     const presetNames = {
@@ -2785,18 +2761,18 @@ window.applyPlanPreset = function(preset) {
 };
 
 // Update renewal date based on billing cycle change
-window.updateRenewalDateFromCycle = function(cycle) {
+window.updateRenewalDateFromCycle = function (cycle) {
   const modal = document.getElementById('editSubscriptionModal');
   if (!modal) return;
-  
+
   const startDateInput = modal.querySelector('input[name="start_date"]');
   const renewalDateInput = modal.querySelector('input[name="next_renewal_date"]');
-  
+
   if (!startDateInput || !renewalDateInput || !startDateInput.value) return;
-  
+
   const startDate = new Date(startDateInput.value);
   let renewalDate = new Date(startDate);
-  
+
   switch (cycle) {
     case 'weekly':
       renewalDate.setDate(renewalDate.getDate() + 7);
@@ -2814,14 +2790,14 @@ window.updateRenewalDateFromCycle = function(cycle) {
       renewalDate.setFullYear(renewalDate.getFullYear() + 1);
       break;
   }
-  
+
   // Format date as YYYY-MM-DD for input
   const formattedDate = renewalDate.toISOString().split('T')[0];
   renewalDateInput.value = formattedDate;
 };
 
 // ==================== Sidebar Toggle ====================
-window.toggleSidebar = function() {
+window.toggleSidebar = function () {
   const sidebar = document.querySelector('.sidebar');
   if (sidebar) {
     sidebar.classList.toggle('open');
@@ -2831,9 +2807,9 @@ window.toggleSidebar = function() {
 // Sidebar collapse feature removed
 
 // ==================== Command Palette ====================
-window.openCommandPalette = function() {
+window.openCommandPalette = function () {
   let palette = document.getElementById('command-palette');
-  
+
   if (!palette) {
     // Create command palette
     palette = document.createElement('div');
@@ -2847,19 +2823,19 @@ window.openCommandPalette = function() {
       </div>
     `;
     document.body.appendChild(palette);
-    
+
     const searchInput = document.getElementById('command-search');
     searchInput.addEventListener('input', handleCommandSearch);
     searchInput.addEventListener('keydown', handleCommandNavigation);
   }
-  
+
   palette.style.display = 'block';
   document.getElementById('command-search').value = '';
   document.getElementById('command-search').focus();
   showDefaultCommands();
 };
 
-window.closeCommandPalette = function() {
+window.closeCommandPalette = function () {
   const palette = document.getElementById('command-palette');
   if (palette) {
     palette.style.display = 'none';
@@ -2879,18 +2855,18 @@ function showDefaultCommands() {
     { icon: '🌙', name: 'Toggle Theme', action: () => { closeCommandPalette(); toggleTheme(); } },
     { icon: '🤖', name: 'Run Link Analysis', action: () => { closeCommandPalette(); analyzeLinks(); } },
   ];
-  
+
   displayCommands(commands);
 }
 
 function handleCommandSearch(e) {
   const query = e.target.value.toLowerCase();
-  
+
   if (!query) {
     showDefaultCommands();
     return;
   }
-  
+
   const allCommands = [
     { icon: '➕', name: 'New Subscription', action: () => { closeCommandPalette(); openModal('subscriptionModal'); } },
     { icon: '👤', name: 'New Customer', action: () => { closeCommandPalette(); openModal('customerModal'); } },
@@ -2903,29 +2879,29 @@ function handleCommandSearch(e) {
     { icon: '🌙', name: 'Toggle Theme', action: () => { closeCommandPalette(); toggleTheme(); } },
     { icon: '🤖', name: 'Run Link Analysis', action: () => { closeCommandPalette(); analyzeLinks(); } },
   ];
-  
-  const filtered = allCommands.filter(cmd => 
+
+  const filtered = allCommands.filter(cmd =>
     cmd.name.toLowerCase().includes(query)
   );
-  
+
   displayCommands(filtered);
 }
 
 function displayCommands(commands) {
   const results = document.getElementById('command-results');
-  
+
   if (commands.length === 0) {
     results.innerHTML = '<div class="command-empty">No commands found</div>';
     return;
   }
-  
+
   results.innerHTML = commands.map((cmd, index) => `
     <div class="command-item ${index === 0 ? 'selected' : ''}" data-index="${index}">
       <span class="command-icon">${cmd.icon}</span>
       <span class="command-name">${cmd.name}</span>
     </div>
   `).join('');
-  
+
   // Add click handlers
   results.querySelectorAll('.command-item').forEach((item, index) => {
     item.addEventListener('click', () => {
@@ -2939,7 +2915,7 @@ function handleCommandNavigation(e) {
   const items = results.querySelectorAll('.command-item');
   const selected = results.querySelector('.command-item.selected');
   let currentIndex = selected ? parseInt(selected.dataset.index) : 0;
-  
+
   if (e.key === 'ArrowDown') {
     e.preventDefault();
     currentIndex = (currentIndex + 1) % items.length;
@@ -2955,24 +2931,24 @@ function handleCommandNavigation(e) {
   } else {
     return;
   }
-  
+
   items.forEach((item, index) => {
     item.classList.toggle('selected', index === currentIndex);
   });
-  
+
   items[currentIndex].scrollIntoView({ block: 'nearest' });
 }
 
 // ==================== Customer Subscriptions Management ====================
 let currentEditingCustomerId = null;
 
-window.loadCustomerSubscriptions = function(customerId) {
+window.loadCustomerSubscriptions = function (customerId) {
   currentEditingCustomerId = customerId;
   const container = document.getElementById('customer-subscriptions-list');
   if (!container) return;
-  
+
   container.innerHTML = '<p class="text-secondary text-sm">Loading subscriptions...</p>';
-  
+
   fetch(`/api/subscriptions?customer_id=${customerId}`)
     .then(response => response.json())
     .then(subscriptions => {
@@ -2985,7 +2961,7 @@ window.loadCustomerSubscriptions = function(customerId) {
         `;
         return;
       }
-      
+
       container.innerHTML = subscriptions.map(sub => `
         <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--color-bg-secondary);">
           <div class="flex-1">
@@ -3008,19 +2984,19 @@ window.loadCustomerSubscriptions = function(customerId) {
     });
 };
 
-window.addSubscriptionForCustomer = function() {
+window.addSubscriptionForCustomer = function () {
   if (!currentEditingCustomerId) {
     showToast('Please save the customer first', 'warning');
     return;
   }
-  
+
   // Close the edit customer modal
   closeModal('editCustomerModal');
-  
+
   // Open subscription modal and pre-fill customer
   setTimeout(() => {
     openModal('subscriptionModal');
-    
+
     // Fetch customer to get category
     fetch(`/api/customers/${currentEditingCustomerId}`)
       .then(response => response.json())
@@ -3028,7 +3004,7 @@ window.addSubscriptionForCustomer = function() {
         const form = document.querySelector('#subscriptionModal form');
         const categorySelect = form.querySelector('select[name="category_id"]');
         const customerSelect = form.querySelector('select[name="customer_id"]');
-        
+
         if (categorySelect) {
           categorySelect.value = customer.category_id;
           // Load customers for this category
@@ -3039,7 +3015,7 @@ window.addSubscriptionForCustomer = function() {
   }, 350);
 };
 
-window.editSubscriptionFromCustomer = function(subscriptionId) {
+window.editSubscriptionFromCustomer = function (subscriptionId) {
   // Close customer modal and open subscription edit
   closeModal('editCustomerModal');
   setTimeout(() => {
@@ -3051,27 +3027,27 @@ window.editSubscriptionFromCustomer = function(subscriptionId) {
 let renewalSubscriptionId = null;
 let renewalSubscriptionData = null;
 
-window.renewSubscription = function(subscriptionId) {
+window.renewSubscription = function (subscriptionId) {
   // Store the subscription ID for the modal
   renewalSubscriptionId = subscriptionId;
-  
+
   // Fetch subscription data
   fetch(`/api/subscriptions/${subscriptionId}`)
     .then(response => response.json())
     .then(subscription => {
       renewalSubscriptionData = subscription;
-      
+
       // Show the renewal modal with options
       const modal = document.getElementById('renewalModal');
       if (!modal) {
         createRenewalModal();
       }
-      
+
       // Set the billing cycle info
       const billingCycleText = subscription.billing_cycle.charAt(0).toUpperCase() + subscription.billing_cycle.slice(1);
       document.getElementById('renewal-billing-cycle').textContent = billingCycleText;
       document.getElementById('renewal-periods').value = '1';
-      
+
       openModal('renewalModal');
     })
     .catch(error => {
@@ -3120,21 +3096,21 @@ function createRenewalModal() {
     </div>
   `;
   document.body.appendChild(modal);
-  
+
   // Add event listener to update preview
   document.getElementById('renewal-periods').addEventListener('input', updateRenewalPreview);
 }
 
 function updateRenewalPreview() {
   if (!renewalSubscriptionData) return;
-  
+
   const periods = parseInt(document.getElementById('renewal-periods').value) || 1;
   const currentDate = new Date(renewalSubscriptionData.next_renewal_date);
   let newDate = new Date(currentDate);
-  
+
   const billingCycle = renewalSubscriptionData.billing_cycle.toLowerCase();
-  
-  switch(billingCycle) {
+
+  switch (billingCycle) {
     case 'monthly':
       newDate.setMonth(newDate.getMonth() + periods);
       break;
@@ -3148,37 +3124,37 @@ function updateRenewalPreview() {
       newDate.setDate(newDate.getDate() + (7 * periods));
       break;
   }
-  
+
   const options = { year: 'numeric', month: 'short', day: 'numeric' };
   const formattedDate = newDate.toLocaleDateString('en-US', options);
   document.getElementById('renewal-date-preview').textContent = formattedDate;
 }
 
-window.confirmRenewal = function() {
+window.confirmRenewal = function () {
   if (!renewalSubscriptionId || !renewalSubscriptionData) {
     showToast('Error: No subscription data', 'error');
     return;
   }
-  
+
   const periods = parseInt(document.getElementById('renewal-periods').value) || 1;
-  
+
   if (periods < 1) {
     showToast('Please enter at least 1 period', 'warning');
     return;
   }
-  
+
   if (periods > 120) {
     showToast('Maximum 120 periods allowed', 'warning');
     return;
   }
-  
+
   // Calculate new renewal date
   const currentDate = new Date(renewalSubscriptionData.next_renewal_date);
   let newDate = new Date(currentDate);
-  
+
   const billingCycle = renewalSubscriptionData.billing_cycle.toLowerCase();
-  
-  switch(billingCycle) {
+
+  switch (billingCycle) {
     case 'monthly':
       newDate.setMonth(newDate.getMonth() + periods);
       break;
@@ -3192,7 +3168,7 @@ window.confirmRenewal = function() {
       newDate.setDate(newDate.getDate() + (7 * periods));
       break;
   }
-  
+
   // Update subscription
   fetch(`/api/subscriptions/${renewalSubscriptionId}`, {
     method: 'PUT',
@@ -3203,23 +3179,23 @@ window.confirmRenewal = function() {
       status: 'active'
     })
   })
-  .then(response => response.json())
-  .then(data => {
-    closeModal('renewalModal');
-    showToast(`Subscription renewed for ${periods} ${renewalSubscriptionData.billing_cycle}(s)!`, 'success');
-    setTimeout(() => window.location.reload(), 500);
-  })
-  .catch(error => {
-    showToast('Error renewing subscription', 'error');
-    console.error('Error:', error);
-  });
+    .then(response => response.json())
+    .then(data => {
+      closeModal('renewalModal');
+      showToast(`Subscription renewed for ${periods} ${renewalSubscriptionData.billing_cycle}(s)!`, 'success');
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+      showToast('Error renewing subscription', 'error');
+      console.error('Error:', error);
+    });
 };
 
-window.pauseSubscription = function(subscriptionId) {
+window.pauseSubscription = function (subscriptionId) {
   if (!confirm('Pause this subscription? You can reactivate it later.')) {
     return;
   }
-  
+
   fetch(`/api/subscriptions/${subscriptionId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -3227,27 +3203,27 @@ window.pauseSubscription = function(subscriptionId) {
       status: 'paused'
     })
   })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Failed to pause subscription');
-    }
-    return response.json();
-  })
-  .then(data => {
-    showToast('Subscription paused', 'success');
-    setTimeout(() => window.location.reload(), 500);
-  })
-  .catch(error => {
-    showToast('Error pausing subscription', 'error');
-    console.error('Error:', error);
-  });
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to pause subscription');
+      }
+      return response.json();
+    })
+    .then(data => {
+      showToast('Subscription paused', 'success');
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+      showToast('Error pausing subscription', 'error');
+      console.error('Error:', error);
+    });
 };
 
-window.cancelSubscription = function(subscriptionId) {
+window.cancelSubscription = function (subscriptionId) {
   if (!confirm('Cancel this subscription? This will set the status to cancelled.')) {
     return;
   }
-  
+
   fetch(`/api/subscriptions/${subscriptionId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -3255,37 +3231,37 @@ window.cancelSubscription = function(subscriptionId) {
       status: 'cancelled'
     })
   })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Failed to cancel subscription');
-    }
-    return response.json();
-  })
-  .then(data => {
-    showToast('Subscription cancelled', 'success');
-    setTimeout(() => window.location.reload(), 500);
-  })
-  .catch(error => {
-    showToast('Error cancelling subscription', 'error');
-    console.error('Error:', error);
-  });
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to cancel subscription');
+      }
+      return response.json();
+    })
+    .then(data => {
+      showToast('Subscription cancelled', 'success');
+      setTimeout(() => window.location.reload(), 500);
+    })
+    .catch(error => {
+      showToast('Error cancelling subscription', 'error');
+      console.error('Error:', error);
+    });
 };
 
 // ==================== AI Functions ====================
-window.analyzeLinks = async function() {
+window.analyzeLinks = async function () {
   showToast('Analyzing links...', 'info');
-  
+
   try {
     const response = await fetch('/api/ai/analyze-links', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ use_ai: false })
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to analyze links');
     }
-    
+
     const data = await response.json();
     showToast(`Found ${data.links_found} potential links!`, 'success');
     setTimeout(() => window.location.reload(), 1000);
@@ -3295,18 +3271,18 @@ window.analyzeLinks = async function() {
   }
 };
 
-window.acceptLink = async function(linkId) {
+window.acceptLink = async function (linkId) {
   try {
     const response = await fetch(`/api/ai/links/${linkId}/decide`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ decision: 'accepted' })
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to accept link');
     }
-    
+
     showToast('Link accepted', 'success');
     setTimeout(() => window.location.reload(), 500);
   } catch (error) {
@@ -3315,18 +3291,18 @@ window.acceptLink = async function(linkId) {
   }
 };
 
-window.rejectLink = async function(linkId) {
+window.rejectLink = async function (linkId) {
   try {
     const response = await fetch(`/api/ai/links/${linkId}/decide`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ decision: 'rejected' })
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to reject link');
     }
-    
+
     showToast('Link rejected', 'success');
     setTimeout(() => window.location.reload(), 500);
   } catch (error) {
@@ -3335,20 +3311,20 @@ window.rejectLink = async function(linkId) {
   }
 };
 
-window.unlinkRelationship = async function(linkId) {
+window.unlinkRelationship = async function (linkId) {
   if (!confirm('Remove this link permanently?')) {
     return;
   }
-  
+
   try {
     const response = await fetch(`/api/ai/links/${linkId}`, {
       method: 'DELETE'
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to unlink');
     }
-    
+
     showToast('Link removed', 'success');
     setTimeout(() => window.location.reload(), 500);
   } catch (error) {
@@ -3357,29 +3333,29 @@ window.unlinkRelationship = async function(linkId) {
   }
 };
 
-window.saveAIConfig = function() {
+window.saveAIConfig = function () {
   const apiKey = document.getElementById('ai-api-key').value;
   const model = document.getElementById('ai-model').value;
   const enabled = document.getElementById('ai-enabled').checked;
-  
+
   localStorage.setItem('ai-api-key', apiKey);
   localStorage.setItem('ai-model', model);
   localStorage.setItem('ai-enabled', enabled);
-  
+
   showToast('AI configuration saved', 'success');
   closeModal('aiConfigModal');
 };
 
 // Load AI config when modal opens
-window.loadAIConfig = function() {
+window.loadAIConfig = function () {
   const apiKey = localStorage.getItem('ai-api-key') || '';
   const model = localStorage.getItem('ai-model') || 'gemini-2.0-flash';
   const enabled = localStorage.getItem('ai-enabled') === 'true';
-  
+
   const apiKeyInput = document.getElementById('ai-api-key');
   const modelSelect = document.getElementById('ai-model');
   const enabledCheckbox = document.getElementById('ai-enabled');
-  
+
   if (apiKeyInput) apiKeyInput.value = apiKey;
   if (modelSelect) modelSelect.value = model;
   if (enabledCheckbox) enabledCheckbox.checked = enabled;
@@ -3388,9 +3364,9 @@ window.loadAIConfig = function() {
 // ==================== Email Notification Functions ====================
 
 // Preview renewal notice before sending
-window.previewRenewalNotice = function(subscriptionId) {
+window.previewRenewalNotice = function (subscriptionId) {
   showToast('Loading preview...', 'info');
-  
+
   fetch(`/api/email/preview/${subscriptionId}`)
     .then(response => {
       if (!response.ok) {
@@ -3443,12 +3419,12 @@ window.previewRenewalNotice = function(subscriptionId) {
           </div>
           
           <div class="preview-actions">
-            <p>${data.email_configured 
-              ? '✅ Email service is configured and ready to send.' 
-              : '⚠️ Email service not configured. Set SMTP_USER and SMTP_PASSWORD environment variables.'}</p>
-            ${data.customer_email 
-              ? '<button class="btn btn-primary" onclick="window.opener.sendRenewalNotice(' + subscriptionId + '); window.close();">Send This Email</button>'
-              : '<button class="btn btn-primary" onclick="window.opener.sendRenewalNoticeWithEmail(' + subscriptionId + '); window.close();">Send to Custom Email</button>'}
+            <p>${data.email_configured
+          ? '✅ Email service is configured and ready to send.'
+          : '⚠️ Email service not configured. Set SMTP_USER and SMTP_PASSWORD environment variables.'}</p>
+            ${data.customer_email
+          ? '<button class="btn btn-primary" onclick="window.opener.sendRenewalNotice(' + subscriptionId + '); window.close();">Send This Email</button>'
+          : '<button class="btn btn-primary" onclick="window.opener.sendRenewalNoticeWithEmail(' + subscriptionId + '); window.close();">Send to Custom Email</button>'}
             <button class="btn btn-secondary" onclick="window.close();">Close Preview</button>
           </div>
           
@@ -3475,75 +3451,75 @@ window.previewRenewalNotice = function(subscriptionId) {
 };
 
 // Send renewal notice for a subscription
-window.sendRenewalNotice = function(subscriptionId) {
+window.sendRenewalNotice = function (subscriptionId) {
   if (!confirm('Send renewal notice email to the customer?')) {
     return;
   }
-  
+
   showToast('Sending renewal notice...', 'info');
-  
+
   fetch(`/api/email/renewal-notice/${subscriptionId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     }
   })
-  .then(response => {
-    if (!response.ok) {
-      return response.json().then(err => {
-        throw new Error(err.detail || 'Failed to send renewal notice');
-      });
-    }
-    return response.json();
-  })
-  .then(data => {
-    showToast(`✅ Renewal notice sent to ${data.recipient}`, 'success');
-  })
-  .catch(error => {
-    showToast('Error: ' + error.message, 'error');
-    console.error('Send renewal notice error:', error);
-  });
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => {
+          throw new Error(err.detail || 'Failed to send renewal notice');
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      showToast(`✅ Renewal notice sent to ${data.recipient}`, 'success');
+    })
+    .catch(error => {
+      showToast('Error: ' + error.message, 'error');
+      console.error('Send renewal notice error:', error);
+    });
 };
 
 // Send renewal notice to a custom email address
-window.sendRenewalNoticeWithEmail = function(subscriptionId) {
+window.sendRenewalNoticeWithEmail = function (subscriptionId) {
   const email = prompt('Enter email address to send renewal notice to:');
   if (!email) return;
-  
+
   // Validate email format
   const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailPattern.test(email)) {
     showToast('Invalid email format', 'error');
     return;
   }
-  
+
   showToast('Sending renewal notice...', 'info');
-  
+
   fetch(`/api/email/renewal-notice/${subscriptionId}?override_email=${encodeURIComponent(email)}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     }
   })
-  .then(response => {
-    if (!response.ok) {
-      return response.json().then(err => {
-        throw new Error(err.detail || 'Failed to send renewal notice');
-      });
-    }
-    return response.json();
-  })
-  .then(data => {
-    showToast(`✅ Renewal notice sent to ${data.recipient}`, 'success');
-  })
-  .catch(error => {
-    showToast('Error: ' + error.message, 'error');
-    console.error('Send renewal notice error:', error);
-  });
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => {
+          throw new Error(err.detail || 'Failed to send renewal notice');
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      showToast(`✅ Renewal notice sent to ${data.recipient}`, 'success');
+    })
+    .catch(error => {
+      showToast('Error: ' + error.message, 'error');
+      console.error('Send renewal notice error:', error);
+    });
 };
 
 // View notice history for a subscription
-window.viewNoticeHistory = function(subscriptionId) {
+window.viewNoticeHistory = function (subscriptionId) {
   fetch(`/api/email/renewal-notices?subscription_id=${subscriptionId}`)
     .then(response => response.json())
     .then(notices => {
@@ -3551,12 +3527,12 @@ window.viewNoticeHistory = function(subscriptionId) {
         showToast('No renewal notices have been sent for this subscription', 'info');
         return;
       }
-      
+
       // Create a simple modal to display history
       let historyHtml = '<div style="max-height: 400px; overflow-y: auto;">';
       historyHtml += '<table style="width: 100%; border-collapse: collapse;">';
       historyHtml += '<tr style="border-bottom: 1px solid var(--color-border);"><th style="text-align: left; padding: 8px;">Date</th><th style="text-align: left; padding: 8px;">Recipient</th><th style="text-align: left; padding: 8px;">Status</th></tr>';
-      
+
       notices.forEach(notice => {
         const date = new Date(notice.sent_at).toLocaleString();
         const status = notice.success ? '✅ Sent' : `❌ Failed: ${notice.error_message || 'Unknown error'}`;
@@ -3566,9 +3542,9 @@ window.viewNoticeHistory = function(subscriptionId) {
           <td style="padding: 8px;">${status}</td>
         </tr>`;
       });
-      
+
       historyHtml += '</table></div>';
-      
+
       // Show in an alert for now (could be improved with a proper modal)
       const historyWindow = window.open('', 'Notice History', 'width=600,height=400');
       historyWindow.document.write(`
@@ -3596,7 +3572,7 @@ window.viewNoticeHistory = function(subscriptionId) {
 };
 
 // Check email configuration status
-window.checkEmailConfig = function() {
+window.checkEmailConfig = function () {
   fetch('/api/email/config')
     .then(response => response.json())
     .then(config => {
@@ -3615,25 +3591,25 @@ window.checkEmailConfig = function() {
 function setupCategoryChangeListener(categoryWrapperId, groupContainerId) {
   const wrapper = document.getElementById(categoryWrapperId);
   if (!wrapper) return;
-  
+
   // Watch for changes to the hidden input
   const hiddenInput = wrapper.closest('.form-group')?.querySelector('input[name="category_ids"]');
   if (!hiddenInput) return;
-  
+
   // Use MutationObserver to watch for value changes
   const observer = new MutationObserver(() => {
     const categoryIds = hiddenInput.value.split(',').filter(id => id).map(id => parseInt(id));
     const firstCategoryId = categoryIds.length > 0 ? categoryIds[0] : null;
-    
+
     // Reload groups for the first selected category
     updateGroupSelectMulti(firstCategoryId, groupContainerId, []);
   });
-  
+
   observer.observe(hiddenInput, { attributes: true, attributeFilter: ['value'] });
-  
+
   // Also trigger on category item clicks
   wrapper.querySelectorAll('.multi-select-item').forEach(item => {
-    item.addEventListener('click', function() {
+    item.addEventListener('click', function () {
       setTimeout(() => {
         const categoryIds = hiddenInput.value.split(',').filter(id => id).map(id => parseInt(id));
         const firstCategoryId = categoryIds.length > 0 ? categoryIds[0] : null;
@@ -3644,11 +3620,11 @@ function setupCategoryChangeListener(categoryWrapperId, groupContainerId) {
 }
 
 // ==================== Export Functions ====================
-window.openShortcutsModal = function() {
+window.openShortcutsModal = function () {
   openModal('shortcutsModal');
 };
 
-window.openAboutModal = function() {
+window.openAboutModal = function () {
   openModal('aboutModal');
 };
 
