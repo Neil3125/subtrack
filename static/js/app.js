@@ -2017,10 +2017,6 @@ window.createCustomer = function(formData) {
 
 // Create Subscription
 window.createSubscription = function(formData) {
-  console.log('createSubscription called with formData:', formData);
-  console.log('category_ids from form:', formData.category_ids);
-  console.log('category_id from form:', formData.category_id);
-  
   // Validation
   const validationErrors = [];
   
@@ -2028,19 +2024,30 @@ window.createSubscription = function(formData) {
     validationErrors.push('Please select a customer');
   }
   
-  // Handle category_ids (multi-select) or category_id (single select)
-  let categoryId = null;
-  if (formData.category_ids && formData.category_ids.trim()) {
-    const categoryIds = formData.category_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-    console.log('Parsed categoryIds:', categoryIds);
-    if (categoryIds.length > 0) {
-      categoryId = categoryIds[0]; // Use first category as primary
+  // SINGLE SOURCE OF TRUTH: Get categoryIds from subscriptionModalState first
+  // This ensures validation uses the same state that the checkbox UI updates
+  let categoryIds = [];
+  
+  // Primary source: subscriptionModalState.selectedCategories (what the UI shows)
+  if (typeof subscriptionModalState !== 'undefined' && 
+      subscriptionModalState.selectedCategories && 
+      subscriptionModalState.selectedCategories.length > 0) {
+    categoryIds = subscriptionModalState.selectedCategories.map(cat => cat.id);
+  }
+  // Fallback: hidden input (for backward compatibility)
+  else if (formData.category_ids && formData.category_ids.trim()) {
+    categoryIds = formData.category_ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+  }
+  // Legacy fallback: single category_id
+  else if (formData.category_id) {
+    const singleId = parseInt(formData.category_id);
+    if (!isNaN(singleId)) {
+      categoryIds = [singleId];
     }
-  } else if (formData.category_id) {
-    categoryId = parseInt(formData.category_id);
   }
   
-  console.log('Final categoryId:', categoryId);
+  // Use first category as primary (database only supports single category for subscriptions)
+  const categoryId = categoryIds.length > 0 ? categoryIds[0] : null;
   
   if (!categoryId) {
     validationErrors.push('Please select at least one category');

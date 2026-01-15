@@ -574,26 +574,22 @@ function updateCategoryDisplay() {
   const idInput = document.getElementById('subscription-category-id');
   
   if (!display) {
-    console.warn('Category display element not found');
     return;
   }
   
   display.innerHTML = '';
   
-  // Get the category IDs for the hidden inputs
+  // SINGLE SOURCE OF TRUTH: subscriptionModalState.selectedCategories
+  // Get the category IDs for the hidden inputs (backup for form serialization)
   const ids = subscriptionModalState.selectedCategories.map(cat => cat.id);
   
-  // Always update hidden inputs first (even if empty)
+  // Always update hidden inputs to stay in sync (backup for form serialization)
   if (idsInput) {
     idsInput.value = ids.join(',');
-    console.log('Updated category_ids input:', idsInput.value);
-  } else {
-    console.warn('Hidden input subscription-category-ids not found');
   }
   
   if (idInput) {
     idInput.value = ids[0] || '';
-    console.log('Updated category_id input:', idInput.value);
   }
   
   if (subscriptionModalState.selectedCategories.length === 0) {
