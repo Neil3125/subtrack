@@ -168,7 +168,16 @@ window.saveEnhancedCustomer = function (formData, itemId = null) {
         body: JSON.stringify(formData)
     })
         .then(response => {
-            if (!response.ok) return response.json().then(e => { throw new Error(e.detail || 'Error'); });
+            if (!response.ok) return response.json().then(e => {
+                let msg = e.detail || 'Error';
+                if (typeof msg === 'object') {
+                    // Handle array of errors (e.g. FastAPI validation) or object
+                    msg = Array.isArray(msg)
+                        ? msg.map(err => `${err.loc.join('.')}: ${err.msg}`).join('\n')
+                        : JSON.stringify(msg);
+                }
+                throw new Error(msg);
+            });
             return response.json();
         })
         .then(data => {
@@ -177,6 +186,7 @@ window.saveEnhancedCustomer = function (formData, itemId = null) {
             setTimeout(() => window.location.reload(), 500);
         })
         .catch(error => {
+            console.error('Customer save error:', error);
             showToast(error.message, 'error');
         });
 };
