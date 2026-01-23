@@ -626,13 +626,13 @@ async function importData(file) {
             
             showToast('📥 Importing data...', 'info');
             
-            // Send to import endpoint
-            const response = await fetch('/api/import/data', {
+            // Send to import endpoint using file upload
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await fetch('/api/import/file', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
+                body: formData
             });
             
             if (!response.ok) {
@@ -650,11 +650,16 @@ async function importData(file) {
                 console.error('Import error from server:', result.error);
                 showToast('❌ ' + result.error, 'error');
             } else {
-                const imported = result.imported;
+                const imported = result.imported || {};
+                const warningCount = result.warnings ? result.warnings.length : 0;
+                const warningNote = warningCount > 0 ? `\n⚠️ ${warningCount} warnings (see console)` : '';
                 showToast(
-                    `✅ Import successful!\n${imported.categories} categories, ${imported.groups} groups, ${imported.customers} customers, ${imported.subscriptions} subscriptions`,
+                    `✅ Import successful!\n${imported.categories || 0} categories, ${imported.groups || 0} groups, ${imported.customers || 0} customers, ${imported.subscriptions || 0} subscriptions${warningNote}`,
                     'success'
                 );
+                if (warningCount > 0) {
+                    console.warn('Import warnings:', result.warnings);
+                }
                 // Reload page after short delay to show new data
                 setTimeout(() => {
                     if (confirm('Import complete! Reload page to see imported data?')) {

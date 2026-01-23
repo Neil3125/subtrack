@@ -341,73 +341,98 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         }
         warnings = []
         
+        id_map = {
+            "categories": {},
+            "groups": {},
+            "customers": {}
+        }
+        
         for cat_data in data.get("categories", []):
             existing = db.query(Category).filter(Category.id == cat_data["id"]).first()
-            if not existing:
-                try:
-                    cat = Category(
-                        id=cat_data["id"],
-                        name=cat_data["name"],
-                        description=cat_data.get("description")
-                    )
-                    db.add(cat)
-                    imported_counts["categories"] += 1
-                except IntegrityError as e:
-                    warnings.append(f"Category {cat_data.get('id')} skipped: {str(e)}")
-                    db.rollback()
+            if existing:
+                id_map["categories"][cat_data["id"]] = existing.id
+                continue
+            # Check for unique name conflicts
+            existing_by_name = db.query(Category).filter(Category.name == cat_data.get("name")).first()
+            if existing_by_name:
+                id_map["categories"][cat_data["id"]] = existing_by_name.id
+                warnings.append(f"Category '{cat_data.get('name')}' already exists. Using existing category ID {existing_by_name.id}.")
+                continue
+            try:
+                cat = Category(
+                    id=cat_data["id"],
+                    name=cat_data["name"],
+                    description=cat_data.get("description")
+                )
+                db.add(cat)
+                imported_counts["categories"] += 1
+                id_map["categories"][cat_data["id"]] = cat_data["id"]
+            except IntegrityError as e:
+                warnings.append(f"Category {cat_data.get('id')} skipped: {str(e)}")
+                db.rollback()
         db.commit()
         
         # Import groups
         for group_data in data.get("groups", []):
             existing = db.query(Group).filter(Group.id == group_data["id"]).first()
-            if not existing:
-                # Skip if referenced category missing
-                if group_data.get("category_id") and not db.query(Category).filter(Category.id == group_data["category_id"]).first():
-                    warnings.append(f"Group {group_data.get('id')} skipped: missing category {group_data.get('category_id')}")
-                    continue
-                try:
-                    group = Group(
-                        id=group_data["id"],
-                        category_id=group_data["category_id"],
-                        name=group_data["name"],
-                        notes=group_data.get("notes")
-                    )
-                    db.add(group)
-                    imported_counts["groups"] += 1
-                except IntegrityError as e:
-                    warnings.append(f"Group {group_data.get('id')} skipped: {str(e)}")
-                    db.rollback()
+            if existing:
+                id_map["groups"][group_data["id"]] = existing.id
+                continue
+            # Skip if referenced category missing
+            category_id = group_data.get("category_id")
+            mapped_category_id = id_map["categories"].get(category_id, category_id)
+            if mapped_category_id and not db.query(Category).filter(Category.id == mapped_category_id).first():
+                warnings.append(f"Group {group_data.get('id')} skipped: missing category {mapped_category_id}")
+                continue
+            try:
+                group = Group(
+                    id=group_data["id"],
+                    category_id=mapped_category_id,
+                    name=group_data["name"],
+                    notes=group_data.get("notes")
+                )
+                db.add(group)
+                imported_counts["groups"] += 1
+                id_map["groups"][group_data["id"]] = group_data["id"]
+            except IntegrityError as e:
+                warnings.append(f"Group {group_data.get('id')} skipped: {str(e)}")
+                db.rollback()
         db.commit()
         
         # Import customers
         for customer_data in data.get("customers", []):
             existing = db.query(Customer).filter(Customer.id == customer_data["id"]).first()
-            if not existing:
-                if customer_data.get("category_id") and not db.query(Category).filter(Category.id == customer_data["category_id"]).first():
-                    warnings.append(f"Customer {customer_data.get('id')} skipped: missing category {customer_data.get('category_id')}")
-                    continue
-                if customer_data.get("group_id") and not db.query(Group).filter(Group.id == customer_data.get("group_id")).first():
-                    warnings.append(f"Customer {customer_data.get('id')} skipped: missing group {customer_data.get('group_id')}")
-                    continue
-                try:
-                    customer = Customer(
-                        id=customer_data["id"],
-                        category_id=customer_data["category_id"],
-                        group_id=customer_data.get("group_id"),
-                        name=customer_data["name"],
-                        email=customer_data.get("email"),
-                        phone=customer_data.get("phone"),
-                        tags=customer_data.get("tags"),
-                        notes=customer_data.get("notes")
-                    )
-                    # Set country if available
-                    if "country" in customer_data and hasattr(customer, 'country'):
-                        customer.country = customer_data["country"]
-                    db.add(customer)
-                    imported_counts["customers"] += 1
-                except IntegrityError as e:
-                    warnings.append(f"Customer {customer_data.get('id')} skipped: {str(e)}")
-                    db.rollback()
+            if existing:
+                id_map["customers"][customer_data["id"]] = existing.id
+                continue
+            mapped_category_id = id_map["categories"].get(customer_data.get("category_id"), customer_data.get("category_id"))
+            mapped_group_id = id_map["groups"].get(customer_data.get("group_id"), customer_data.get("group_id"))
+            if mapped_category_id and not db.query(Category).filter(Category.id == mapped_category_id).first():
+                warnings.append(f"Customer {customer_data.get('id')} skipped: missing category {mapped_category_id}")
+                continue
+            if mapped_group_id and not db.query(Group).filter(Group.id == mapped_group_id).first():
+                warnings.append(f"Customer {customer_data.get('id')} skipped: missing group {mapped_group_id}")
+                continue
+            try:
+                customer = Customer(
+                    id=customer_data["id"],
+                    category_id=mapped_category_id,
+                    group_id=mapped_group_id,
+                    name=customer_data["name"],
+                    email=customer_data.get("email"),
+                    phone=customer_data.get("phone"),
+                    tags=customer_data.get("tags"),
+                    notes=customer_data.get("notes")
+                )
+                # Set country if available
+                if "country" in customer_data and hasattr(customer, 'country'):
+                    customer.country = customer_data["country"]
+                db.add(customer)
+                imported_counts["customers"] += 1
+                id_map["customers"][customer_data["id"]] = customer_data["id"]
+            except IntegrityError as e:
+                warnings.append(f"Customer {customer_data.get('id')} skipped: {str(e)}")
+                db.rollback()
         db.commit()
         
         # Import subscriptions
@@ -415,11 +440,13 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
             existing = db.query(Subscription).filter(Subscription.id == sub_data["id"]).first()
             if not existing:
                 # Skip if referenced customer/category missing
-                if sub_data.get("customer_id") and not db.query(Customer).filter(Customer.id == sub_data["customer_id"]).first():
-                    warnings.append(f"Subscription {sub_data.get('id')} skipped: missing customer {sub_data.get('customer_id')}")
+                mapped_customer_id = id_map["customers"].get(sub_data.get("customer_id"), sub_data.get("customer_id"))
+                mapped_category_id = id_map["categories"].get(sub_data.get("category_id"), sub_data.get("category_id"))
+                if mapped_customer_id and not db.query(Customer).filter(Customer.id == mapped_customer_id).first():
+                    warnings.append(f"Subscription {sub_data.get('id')} skipped: missing customer {mapped_customer_id}")
                     continue
-                if sub_data.get("category_id") and not db.query(Category).filter(Category.id == sub_data["category_id"]).first():
-                    warnings.append(f"Subscription {sub_data.get('id')} skipped: missing category {sub_data.get('category_id')}")
+                if mapped_category_id and not db.query(Category).filter(Category.id == mapped_category_id).first():
+                    warnings.append(f"Subscription {sub_data.get('id')} skipped: missing category {mapped_category_id}")
                     continue
                 # Normalize enum values (handle uppercase Postgres exports)
                 raw_billing_cycle = sub_data.get("billing_cycle", "monthly")
@@ -444,8 +471,8 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                 try:
                     sub = Subscription(
                         id=sub_data["id"],
-                        customer_id=sub_data["customer_id"],
-                        category_id=sub_data["category_id"],
+                        customer_id=mapped_customer_id,
+                        category_id=mapped_category_id,
                         vendor_name=sub_data["vendor_name"],
                         plan_name=sub_data.get("plan_name"),
                         cost=sub_data.get("cost", 0),
@@ -515,16 +542,17 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         # Import subscription-category relationships
         try:
             for rel in many_to_many.get("subscription_categories", []):
+                mapped_category_id = id_map["categories"].get(rel.get("category_id"), rel.get("category_id"))
                 # Check if relationship already exists
                 existing = db.execute(
                     text("SELECT 1 FROM subscription_categories WHERE subscription_id = :sub_id AND category_id = :cat_id"),
-                    {"sub_id": rel["subscription_id"], "cat_id": rel["category_id"]}
+                    {"sub_id": rel["subscription_id"], "cat_id": mapped_category_id}
                 ).fetchone()
                 
                 if not existing:
                     db.execute(
                         text("INSERT INTO subscription_categories (subscription_id, category_id) VALUES (:sub_id, :cat_id)"),
-                        {"sub_id": rel["subscription_id"], "cat_id": rel["category_id"]}
+                        {"sub_id": rel["subscription_id"], "cat_id": mapped_category_id}
                     )
         except Exception as e:
             print(f"[DataPersistence] Error importing subscription_categories: {e}")
@@ -532,15 +560,17 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         # Import customer-category relationships
         try:
             for rel in many_to_many.get("customer_categories", []):
+                mapped_category_id = id_map["categories"].get(rel.get("category_id"), rel.get("category_id"))
+                mapped_customer_id = id_map["customers"].get(rel.get("customer_id"), rel.get("customer_id"))
                 existing = db.execute(
                     text("SELECT 1 FROM customer_categories WHERE customer_id = :cust_id AND category_id = :cat_id"),
-                    {"cust_id": rel["customer_id"], "cat_id": rel["category_id"]}
+                    {"cust_id": mapped_customer_id, "cat_id": mapped_category_id}
                 ).fetchone()
                 
                 if not existing:
                     db.execute(
                         text("INSERT INTO customer_categories (customer_id, category_id) VALUES (:cust_id, :cat_id)"),
-                        {"cust_id": rel["customer_id"], "cat_id": rel["category_id"]}
+                        {"cust_id": mapped_customer_id, "cat_id": mapped_category_id}
                     )
         except Exception as e:
             print(f"[DataPersistence] Error importing customer_categories: {e}")
@@ -548,15 +578,17 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         # Import customer-group relationships
         try:
             for rel in many_to_many.get("customer_groups", []):
+                mapped_customer_id = id_map["customers"].get(rel.get("customer_id"), rel.get("customer_id"))
+                mapped_group_id = id_map["groups"].get(rel.get("group_id"), rel.get("group_id"))
                 existing = db.execute(
                     text("SELECT 1 FROM customer_groups WHERE customer_id = :cust_id AND group_id = :grp_id"),
-                    {"cust_id": rel["customer_id"], "grp_id": rel["group_id"]}
+                    {"cust_id": mapped_customer_id, "grp_id": mapped_group_id}
                 ).fetchone()
                 
                 if not existing:
                     db.execute(
                         text("INSERT INTO customer_groups (customer_id, group_id) VALUES (:cust_id, :grp_id)"),
-                        {"cust_id": rel["customer_id"], "grp_id": rel["group_id"]}
+                        {"cust_id": mapped_customer_id, "grp_id": mapped_group_id}
                     )
         except Exception as e:
             print(f"[DataPersistence] Error importing customer_groups: {e}")
