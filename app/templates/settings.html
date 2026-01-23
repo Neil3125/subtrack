@@ -540,6 +540,12 @@ async function importData(file) {
     reader.onload = async function(e) {
         try {
             const data = JSON.parse(e.target.result);
+            console.log('Parsed import data:', {
+                categories: data.categories?.length || 0,
+                groups: data.groups?.length || 0,
+                customers: data.customers?.length || 0,
+                subscriptions: data.subscriptions?.length || 0
+            });
             
             // Validate the data structure
             if (!data.categories && !data.customers && !data.subscriptions && !data.groups) {
@@ -559,9 +565,19 @@ async function importData(file) {
                 body: JSON.stringify(data)
             });
             
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Import response not OK:', response.status, errorText);
+                showToast(`❌ Import failed: ${response.status} - ${errorText}`, 'error');
+                fileInput.value = '';
+                return;
+            }
+            
             const result = await response.json();
+            console.log('Import result:', result);
             
             if (result.error) {
+                console.error('Import error from server:', result.error);
                 showToast('❌ ' + result.error, 'error');
             } else {
                 const imported = result.imported;
