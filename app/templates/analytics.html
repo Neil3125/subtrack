@@ -24,7 +24,8 @@
 
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="card card-glass card-3d card-hover clickable-card" style="cursor: pointer;" onclick="openModal('totalSpendModal')">
+        <div class="card card-glass card-3d card-hover clickable-card" style="cursor: pointer;"
+            onclick="openModal('totalSpendModal')">
             <div class="flex items-center justify-between mb-2">
                 <div class="text-sm text-secondary">Total Spend</div>
                 <span class="text-2xl">💰</span>
@@ -32,8 +33,9 @@
             <div class="text-3xl font-bold text-primary mb-1">${{ "{:,.2f}".format(total_spend) }}</div>
             <div class="text-xs text-secondary">Click for breakdown →</div>
         </div>
-        
-        <div class="card card-glass card-3d card-hover clickable-card" style="cursor: pointer;" onclick="openModal('activeSubsAnalyticsModal')">
+
+        <div class="card card-glass card-3d card-hover clickable-card" style="cursor: pointer;"
+            onclick="openModal('activeSubsAnalyticsModal')">
             <div class="flex items-center justify-between mb-2">
                 <div class="text-sm text-secondary">Active Subscriptions</div>
                 <span class="text-2xl">📋</span>
@@ -41,8 +43,9 @@
             <div class="text-3xl font-bold text-primary mb-1">{{ active_count }}</div>
             <div class="text-xs text-secondary">Click to view details →</div>
         </div>
-        
-        <div class="card card-glass card-3d card-hover clickable-card" style="cursor: pointer;" onclick="openModal('avgCostModal')">
+
+        <div class="card card-glass card-3d card-hover clickable-card" style="cursor: pointer;"
+            onclick="openModal('avgCostModal')">
             <div class="flex items-center justify-between mb-2">
                 <div class="text-sm text-secondary">Avg Cost/Sub</div>
                 <span class="text-2xl">📊</span>
@@ -50,8 +53,9 @@
             <div class="text-3xl font-bold text-primary mb-1">${{ "{:.2f}".format(avg_cost) }}</div>
             <div class="text-xs text-secondary">Click for analysis →</div>
         </div>
-        
-        <div class="card card-glass card-3d card-hover clickable-card" style="cursor: pointer;" onclick="openModal('renewalsModal')">
+
+        <div class="card card-glass card-3d card-hover clickable-card" style="cursor: pointer;"
+            onclick="openModal('renewalsModal')">
             <div class="flex items-center justify-between mb-2">
                 <div class="text-sm text-secondary">Renewals (30d)</div>
                 <span class="text-2xl">🔄</span>
@@ -63,22 +67,44 @@
 
     <!-- Charts Section -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <!-- Spending Trend -->
+        <!-- Spending by Category -->
         <div class="card card-glass">
             <div class="card-header">
-                <h2 class="card-title">💹 Spending Trend</h2>
+                <h2 class="card-title">💹 Spending by Category</h2>
                 <button class="btn btn-sm btn-secondary" onclick="window.location.href='/reports'">View Reports</button>
             </div>
-            <div id="spending-chart" style="height: 300px; display: flex; align-items: center; justify-content: center;">
-                <div style="text-align: center;">
-                    <div style="font-size: 4rem; margin-bottom: 1rem;">📈</div>
-                    <p class="text-secondary">Monthly spending visualization</p>
-                    <small class="text-secondary">Integration with Chart.js or similar library recommended</small>
+            <div class="space-y-3" style="padding: var(--space-2) 0;">
+                {% if categories %}
+                {% for category in categories|sort(attribute='total', reverse=True) %}
+                {% if category.total and category.total > 0 %}
+                <div class="flex items-center justify-between p-3 rounded-lg"
+                    style="background: var(--color-bg-secondary);">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl">📁</span>
+                        <div>
+                            <div class="font-semibold">{{ category.name }}</div>
+                            <div class="w-full bg-gray-200 rounded-full h-2" style="width: 150px;">
+                                <div class="bg-gradient-primary h-2 rounded-full"
+                                    style="width: {{ (category.total / total_spend * 100) if total_spend > 0 else 0 }}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-primary">${{ "{:.2f}".format(category.total) }}</div>
+                        <div class="text-xs text-secondary">{{ "{:.0f}".format((category.total / total_spend * 100) if
+                            total_spend > 0 else 0) }}% of total</div>
+                    </div>
                 </div>
+                {% endif %}
+                {% endfor %}
+                {% else %}
+                <div class="text-center text-secondary p-4">No category spending data available</div>
+                {% endif %}
             </div>
         </div>
-        
-        <!-- Category Breakdown -->
+
+        <!-- Category Breakdown (original) -->
         <div class="card card-glass">
             <div class="card-header">
                 <h2 class="card-title">🎯 Category Breakdown</h2>
@@ -92,10 +118,41 @@
                         <span class="font-bold text-primary">${{ "{:.2f}".format(category.total or 0) }}</span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-gradient-primary h-2 rounded-full" style="width: {{ (category.total / total_spend * 100) if total_spend > 0 else 0 }}%"></div>
+                        <div class="bg-gradient-primary h-2 rounded-full"
+                            style="width: {{ (category.total / total_spend * 100) if total_spend > 0 else 0 }}%"></div>
                     </div>
                 </div>
                 {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Insights Row -->
+    <div class="card card-glass mb-8">
+        <div class="card-header">
+            <h2 class="card-title">💡 Quick Insights</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
+            <div class="p-4 rounded-lg"
+                style="background: linear-gradient(135deg, var(--color-success-50) 0%, var(--color-bg-secondary) 100%); border-left: 4px solid var(--color-success);">
+                <div class="text-sm font-semibold text-secondary mb-1">💰 Projected Annual</div>
+                <div class="text-2xl font-bold text-success">${{ "{:,.2f}".format(total_spend * 12) }}</div>
+                <div class="text-xs text-secondary mt-1">Based on current monthly spend</div>
+            </div>
+            <div class="p-4 rounded-lg"
+                style="background: linear-gradient(135deg, var(--color-warning-50) 0%, var(--color-bg-secondary) 100%); border-left: 4px solid var(--color-warning);">
+                <div class="text-sm font-semibold text-secondary mb-1">🔄 Upcoming Renewals</div>
+                <div class="text-2xl font-bold text-warning">{{ upcoming_renewals }}</div>
+                <div class="text-xs text-secondary mt-1">Worth ${{ "{:,.2f}".format(renewal_value) }} in next 30 days
+                </div>
+            </div>
+            <div class="p-4 rounded-lg"
+                style="background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-bg-secondary) 100%); border-left: 4px solid var(--color-primary);">
+                <div class="text-sm font-semibold text-secondary mb-1">📊 Health Score</div>
+                <div class="text-2xl font-bold text-primary">{{ "{:.0f}".format((status_counts.active or 0) /
+                    (status_counts.active + status_counts.paused + status_counts.cancelled) * 100 if
+                    (status_counts.active + status_counts.paused + status_counts.cancelled) > 0 else 100) }}%</div>
+                <div class="text-xs text-secondary mt-1">Active vs total subscriptions</div>
             </div>
         </div>
     </div>
@@ -109,7 +166,8 @@
             </div>
             <div class="space-y-3">
                 {% for vendor in top_vendors %}
-                <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--color-bg-secondary);">
+                <div class="flex items-center justify-between p-3 rounded-lg"
+                    style="background: var(--color-bg-secondary);">
                     <div>
                         <div class="font-semibold">{{ vendor.name }}</div>
                         <div class="text-xs text-secondary">{{ vendor.count }} subscriptions</div>
@@ -122,7 +180,7 @@
                 {% endfor %}
             </div>
         </div>
-        
+
         <!-- Billing Cycles -->
         <div class="card card-glass">
             <div class="card-header">
@@ -130,7 +188,8 @@
             </div>
             <div class="space-y-3">
                 {% for cycle in billing_cycles %}
-                <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--color-bg-secondary);">
+                <div class="flex items-center justify-between p-3 rounded-lg"
+                    style="background: var(--color-bg-secondary);">
                     <div class="flex items-center gap-3">
                         <span class="text-2xl">{{ cycle.icon }}</span>
                         <div>
@@ -143,14 +202,15 @@
                 {% endfor %}
             </div>
         </div>
-        
+
         <!-- Status Overview -->
         <div class="card card-glass">
             <div class="card-header">
                 <h2 class="card-title">✅ Status Overview</h2>
             </div>
             <div class="space-y-3">
-                <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--color-success-50);">
+                <div class="flex items-center justify-between p-3 rounded-lg"
+                    style="background: var(--color-success-50);">
                     <div class="flex items-center gap-3">
                         <span class="text-2xl">✅</span>
                         <div>
@@ -160,8 +220,9 @@
                     </div>
                     <div class="text-2xl font-bold text-success">{{ status_counts.active or 0 }}</div>
                 </div>
-                
-                <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--color-warning-50);">
+
+                <div class="flex items-center justify-between p-3 rounded-lg"
+                    style="background: var(--color-warning-50);">
                     <div class="flex items-center gap-3">
                         <span class="text-2xl">⏸️</span>
                         <div>
@@ -171,8 +232,9 @@
                     </div>
                     <div class="text-2xl font-bold text-warning">{{ status_counts.paused or 0 }}</div>
                 </div>
-                
-                <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--color-danger-50);">
+
+                <div class="flex items-center justify-between p-3 rounded-lg"
+                    style="background: var(--color-danger-50);">
                     <div class="flex items-center gap-3">
                         <span class="text-2xl">❌</span>
                         <div>
@@ -209,11 +271,14 @@
             <h4 class="font-semibold mb-3">Spend by Category</h4>
             <div class="space-y-2">
                 {% for category in categories %}
-                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-bg-secondary);">
+                <div class="flex justify-between items-center p-3 rounded"
+                    style="background: var(--color-bg-secondary);">
                     <span class="font-medium">{{ category.name }}</span>
                     <div class="flex items-center gap-3">
                         <div class="progress" style="width: 100px; height: 6px;">
-                            <div class="progress-bar" style="width: {{ (category.total / total_spend * 100) if total_spend > 0 else 0 }}%;"></div>
+                            <div class="progress-bar"
+                                style="width: {{ (category.total / total_spend * 100) if total_spend > 0 else 0 }}%;">
+                            </div>
                         </div>
                         <span class="badge badge-primary">${{ "{:.2f}".format(category.total or 0) }}</span>
                     </div>
@@ -244,15 +309,18 @@
             </div>
             <h4 class="font-semibold mb-3">Status Distribution</h4>
             <div class="space-y-2">
-                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-success-bg, rgba(16, 185, 129, 0.1));">
+                <div class="flex justify-between items-center p-3 rounded"
+                    style="background: var(--color-success-bg, rgba(16, 185, 129, 0.1));">
                     <span>✅ Active</span>
                     <span class="badge badge-success">{{ status_counts.active or 0 }}</span>
                 </div>
-                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-warning-bg, rgba(245, 158, 11, 0.1));">
+                <div class="flex justify-between items-center p-3 rounded"
+                    style="background: var(--color-warning-bg, rgba(245, 158, 11, 0.1));">
                     <span>⏸️ Paused</span>
                     <span class="badge badge-warning">{{ status_counts.paused or 0 }}</span>
                 </div>
-                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-danger-bg, rgba(239, 68, 68, 0.1));">
+                <div class="flex justify-between items-center p-3 rounded"
+                    style="background: var(--color-danger-bg, rgba(239, 68, 68, 0.1));">
                     <span>❌ Cancelled</span>
                     <span class="badge badge-danger">{{ status_counts.cancelled or 0 }}</span>
                 </div>
@@ -289,7 +357,8 @@
             <h4 class="font-semibold mb-3">Cost by Billing Cycle</h4>
             <div class="space-y-2">
                 {% for cycle in billing_cycles %}
-                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-bg-secondary);">
+                <div class="flex justify-between items-center p-3 rounded"
+                    style="background: var(--color-bg-secondary);">
                     <div class="flex items-center gap-2">
                         <span class="text-xl">{{ cycle.icon }}</span>
                         <span>{{ cycle.name }}</span>
@@ -324,7 +393,8 @@
                 </div>
             </div>
             <div class="info-box info-box-warning mb-4">
-                <strong>💡 Tip:</strong> Review these subscriptions before renewal to ensure you're getting the best value.
+                <strong>💡 Tip:</strong> Review these subscriptions before renewal to ensure you're getting the best
+                value.
             </div>
             <div class="mt-4">
                 <a href="/subscriptions?filter=expiring" class="btn btn-primary w-full">View Expiring Subscriptions</a>
@@ -334,65 +404,65 @@
 </div>
 
 <script>
-function updateAnalyticsPeriod(period) {
-    showToast(`Loading ${period === 'all' ? 'All Time' : period + ' days'} data...`, 'info');
-    window.location.href = `/analytics?period=${period}`;
-}
+    function updateAnalyticsPeriod(period) {
+        showToast(`Loading ${period === 'all' ? 'All Time' : period + ' days'} data...`, 'info');
+        window.location.href = `/analytics?period=${period}`;
+    }
 
-function exportAnalytics() {
-    showToast('Generating analytics report...', 'info');
-    
-    // Generate CSV data from current page data
-    const csvData = generateAnalyticsCSV();
-    
-    // Create and download the file
-    const blob = new Blob([csvData], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `subtrack-analytics-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    
-    showToast('Analytics report downloaded!', 'success');
-}
+    function exportAnalytics() {
+        showToast('Generating analytics report...', 'info');
 
-function generateAnalyticsCSV() {
-    const lines = [];
-    
-    // Header
-    lines.push('SubTrack Analytics Report');
-    lines.push(`Generated: ${new Date().toLocaleString()}`);
-    lines.push('');
-    
-    // Summary stats
-    lines.push('SUMMARY');
-    lines.push('Metric,Value');
-    lines.push(`Total Spend,${{ "{:,.2f}".format(total_spend) }}`);
-    lines.push(`Active Subscriptions,{{ active_count }}`);
-    lines.push(`Average Cost per Subscription,${{ "{:.2f}".format(avg_cost) }}`);
-    lines.push(`Upcoming Renewals (30 days),{{ upcoming_renewals }}`);
-    lines.push(`Renewal Value,${{ "{:,.2f}".format(renewal_value) }}`);
-    lines.push('');
-    
-    // Category breakdown
-    lines.push('CATEGORY BREAKDOWN');
-    lines.push('Category,Total Spend');
-    {% for category in categories %}
-    lines.push(`{{ category.name }},${{ "{:.2f}".format(category.total or 0) }}`);
-    {% endfor %}
-    lines.push('');
-    
-    // Status counts
-    lines.push('STATUS OVERVIEW');
-    lines.push('Status,Count');
-    lines.push(`Active,{{ status_counts.active or 0 }}`);
-    lines.push(`Paused,{{ status_counts.paused or 0 }}`);
-    lines.push(`Cancelled,{{ status_counts.cancelled or 0 }}`);
-    
-    return lines.join('\n');
-}
+        // Generate CSV data from current page data
+        const csvData = generateAnalyticsCSV();
+
+        // Create and download the file
+        const blob = new Blob([csvData], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `subtrack-analytics-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        showToast('Analytics report downloaded!', 'success');
+    }
+
+    function generateAnalyticsCSV() {
+        const lines = [];
+
+        // Header
+        lines.push('SubTrack Analytics Report');
+        lines.push(`Generated: ${new Date().toLocaleString()}`);
+        lines.push('');
+
+        // Summary stats
+        lines.push('SUMMARY');
+        lines.push('Metric,Value');
+        lines.push(`Total Spend,${{ "{:,.2f}".format(total_spend) }}`);
+        lines.push(`Active Subscriptions,{{ active_count }}`);
+        lines.push(`Average Cost per Subscription,${{ "{:.2f}".format(avg_cost) }}`);
+        lines.push(`Upcoming Renewals (30 days),{{ upcoming_renewals }}`);
+        lines.push(`Renewal Value,${{ "{:,.2f}".format(renewal_value) }}`);
+        lines.push('');
+
+        // Category breakdown
+        lines.push('CATEGORY BREAKDOWN');
+        lines.push('Category,Total Spend');
+        {% for category in categories %}
+        lines.push(`{{ category.name }},${{ "{:.2f}".format(category.total or 0) }}`);
+        {% endfor %}
+        lines.push('');
+
+        // Status counts
+        lines.push('STATUS OVERVIEW');
+        lines.push('Status,Count');
+        lines.push(`Active,{{ status_counts.active or 0 }}`);
+        lines.push(`Paused,{{ status_counts.paused or 0 }}`);
+        lines.push(`Cancelled,{{ status_counts.cancelled or 0 }}`);
+
+        return lines.join('\n');
+    }
 </script>
 {% endblock %}
