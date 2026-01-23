@@ -223,22 +223,22 @@ class EmailService:
             urgency = "OVERDUE"
             urgency_color = "#dc2626"
             urgency_bg = "#fef2f2"
-            urgency_message = f"This subscription renewal is <strong>{abs(days_until_renewal)} days overdue</strong>. Please take action immediately to avoid service interruption."
+            urgency_message = f"This subscription expired <strong>{abs(days_until_renewal)} days ago</strong>. Please take action immediately to avoid service interruption."
         elif days_until_renewal <= 7:
-            urgency = "DUE SOON"
+            urgency = "EXPIRING SOON"
             urgency_color = "#ea580c"
             urgency_bg = "#fff7ed"
-            urgency_message = f"Your subscription renews in <strong>{days_until_renewal} days</strong>. Please ensure your payment details are up to date."
+            urgency_message = f"Your subscription expires in <strong>{days_until_renewal} days</strong>. Please ensure your payment details are up to date."
         elif days_until_renewal <= 14:
-            urgency = "UPCOMING"
+            urgency = "UPCOMING EXPIRY"
             urgency_color = "#f59e0b"
             urgency_bg = "#fffbeb"
-            urgency_message = f"Your subscription renews in <strong>{days_until_renewal} days</strong>. This is a friendly reminder to review your subscription."
+            urgency_message = f"Your subscription expires in <strong>{days_until_renewal} days</strong>. This is a friendly reminder to review your subscription."
         else:
             urgency = "REMINDER"
             urgency_color = "#10b981"
             urgency_bg = "#f0fdf4"
-            urgency_message = f"Your subscription renews in <strong>{days_until_renewal} days</strong>. No action is required at this time."
+            urgency_message = f"Your subscription expires in <strong>{days_until_renewal} days</strong>. No action is required at this time."
         
         plan_display = f"{subscription_vendor} - {subscription_plan}" if subscription_plan else subscription_vendor
         
@@ -248,7 +248,7 @@ class EmailService:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subscription Renewal Notice</title>
+    <title>Subscription Expiration Notice</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6; line-height: 1.6;">
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f3f4f6;">
@@ -260,7 +260,7 @@ class EmailService:
                     <tr>
                         <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 40px 30px; border-radius: 12px 12px 0 0; text-align: center;">
                             <h1 style="margin: 0 0 15px 0; color: #ffffff; font-size: 28px; font-weight: 600;">
-                                Subscription Renewal Notice
+                                Subscription Expiration Notice
                             </h1>
                             <span style="display: inline-block; background: {urgency_color}; color: #ffffff; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px;">
                                 {urgency}
@@ -301,7 +301,7 @@ class EmailService:
                                     </tr>
                                     <tr>
                                         <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-                                            <span style="color: #6b7280; font-size: 14px;">Renewal Date</span>
+                                            <span style="color: #6b7280; font-size: 14px;">Expiration Date</span>
                                         </td>
                                         <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">
                                             <span style="color: #111827; font-size: 14px; font-weight: 600;">{renewal_date_str}</span>
@@ -320,7 +320,7 @@ class EmailService:
                             
                             <!-- Help Text -->
                             <p style="margin: 0; color: #6b7280; font-size: 14px;">
-                                If you have any questions about this renewal or need to make changes to your subscription, please contact your account manager.
+                                If you have any questions about this expiration or need to make changes to your subscription, please contact your account manager.
                             </p>
                             
                         </td>
@@ -355,10 +355,12 @@ class EmailService:
         renewal_date: date,
         cost: float,
         currency: str,
-        days_until_renewal: int
+        days_until_renewal: int,
+        custom_subject: Optional[str] = None,
+        custom_body_html: Optional[str] = None
     ) -> Tuple[bool, str]:
         """
-        Send a subscription renewal notice email.
+        Send a subscription expiration notice email.
         
         Returns:
             Tuple of (success: bool, message: str)
@@ -366,21 +368,7 @@ class EmailService:
         if not customer_email:
             return False, f"Customer '{customer_name}' has no email address"
         
-        # Generate HTML body
-        body_html = self.generate_renewal_notice_html(
-            customer_name=customer_name,
-            subscription_vendor=subscription_vendor,
-            subscription_plan=subscription_plan,
-            renewal_date=renewal_date,
-            cost=cost,
-            currency=currency,
-            days_until_renewal=days_until_renewal
-        )
-        
-        # Format the renewal date for subject
-        renewal_date_str = renewal_date.strftime("%B %d, %Y")
-        
-        # Determine urgency for subject
+        # Determine urgency for default subject
         if days_until_renewal <= 0:
             urgency = "OVERDUE"
         elif days_until_renewal <= 7:
@@ -389,41 +377,29 @@ class EmailService:
             urgency = "SOON"
         else:
             urgency = "UPCOMING"
-        
+            
+        renewal_date_str = renewal_date.strftime("%B %d, %Y")
         plan_info = f" ({subscription_plan})" if subscription_plan else ""
-        subject = f"[{urgency}] Subscription Renewal: {subscription_vendor}{plan_info} - {renewal_date_str}"
         
-        # Plain text version
-        plan_display = f"{subscription_vendor} - {subscription_plan}" if subscription_plan else subscription_vendor
+        # Use custom subject or generate default
+        subject = custom_subject or f"[{urgency}] Subscription Expiration: {subscription_vendor}{plan_info} - {renewal_date_str}"
         
-        if days_until_renewal <= 0:
-            urgency_text = f"This subscription renewal is {abs(days_until_renewal)} days overdue. Please take action immediately."
-        elif days_until_renewal <= 7:
-            urgency_text = f"Your subscription renews in {days_until_renewal} days. Please ensure your payment details are up to date."
-        elif days_until_renewal <= 14:
-            urgency_text = f"Your subscription renews in {days_until_renewal} days. This is a friendly reminder to review your subscription."
+        # Use custom body or generate default
+        if custom_body_html:
+            body_html = custom_body_html
         else:
-            urgency_text = f"Your subscription renews in {days_until_renewal} days. No action is required at this time."
+            body_html = self.generate_renewal_notice_html(
+                customer_name=customer_name,
+                subscription_vendor=subscription_vendor,
+                subscription_plan=subscription_plan,
+                renewal_date=renewal_date,
+                cost=cost,
+                currency=currency,
+                days_until_renewal=days_until_renewal
+            )
         
-        body_text = f"""
-SUBSCRIPTION RENEWAL NOTICE
-
-Hi {customer_name},
-
-{urgency_text}
-
-SUBSCRIPTION DETAILS
---------------------
-Service:      {plan_display}
-Renewal Date: {renewal_date_str}
-Amount Due:   {currency} {cost:.2f}
-
-If you have any questions about this renewal or need to make changes to your subscription, please contact your account manager.
-
----
-This is an automated message from SubTrack.
-You received this email because you are the registered contact for this subscription.
-        """
+        # Generate plain text version (simplified for custom emails)
+        body_text = "Please view this email in a client that supports HTML."
         
         return self.send_email(customer_email, subject, body_html, body_text)
 

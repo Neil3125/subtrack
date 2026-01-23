@@ -131,19 +131,27 @@ def preview_renewal_notice(
     }
 
 
+from pydantic import BaseModel
+
+class EmailRequest(BaseModel):
+    override_email: Optional[str] = None
+    custom_subject: Optional[str] = None
+    custom_body_html: Optional[str] = None
+
 @router.post("/renewal-notice/{subscription_id}")
 def send_renewal_notice(
     subscription_id: int,
-    override_email: Optional[str] = None,
+    email_request: EmailRequest = None,
     db: Session = Depends(get_db)
 ):
     """
-    Send a renewal notice email for a specific subscription.
-    
-    Args:
-        subscription_id: ID of the subscription
-        override_email: Optional email to send to instead of customer's email
+    Send a renewal/expiration notice email for a specific subscription.
     """
+    # Parse request body
+    override_email = email_request.override_email if email_request else None
+    custom_subject = email_request.custom_subject if email_request else None
+    custom_body_html = email_request.custom_body_html if email_request else None
+    
     # Get subscription with customer
     subscription = db.query(Subscription).filter(Subscription.id == subscription_id).first()
     if not subscription:
@@ -159,7 +167,7 @@ def send_renewal_notice(
     if not recipient_email:
         raise HTTPException(
             status_code=400,
-            detail=f"Customer '{customer.name}' has no email address. Provide override_email parameter."
+            detail=f"Customer '{customer.name}' has no email address. Provide override_email."
         )
     
     # Check if email service is configured
@@ -178,7 +186,9 @@ def send_renewal_notice(
         renewal_date=subscription.next_renewal_date,
         cost=subscription.cost,
         currency=subscription.currency,
-        days_until_renewal=subscription.days_until_renewal()
+        days_until_renewal=subscription.days_until_renewal(),
+        custom_subject=custom_subject,
+        custom_body_html=custom_body_html
     )
     
     # Record the notice attempt
