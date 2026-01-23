@@ -25,7 +25,7 @@
                         <span id="theme-text">Switch Theme</span>
                     </button>
                 </div>
-                
+
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <div class="font-medium">Animations</div>
@@ -118,8 +118,8 @@
 
                 <div class="form-group">
                     <label class="form-label">Link Confidence Threshold</label>
-                    <input type="range" class="form-input" id="confidence-threshold" min="0" max="100" value="40" 
-                           onchange="saveSettings(); document.getElementById('confidence-value').textContent = this.value + '%'">
+                    <input type="range" class="form-input" id="confidence-threshold" min="0" max="100" value="40"
+                        onchange="saveSettings(); document.getElementById('confidence-value').textContent = this.value + '%'">
                     <small id="confidence-value">40%</small>
                     <div class="text-sm text-secondary">Minimum confidence to show suggested links</div>
                 </div>
@@ -134,7 +134,8 @@
             <div class="card-body">
                 <div class="form-group">
                     <label class="form-label">Renewal Reminder (Days Before)</label>
-                    <input type="number" class="form-input" id="reminder-days" value="30" min="1" max="365" onchange="saveSettings()">
+                    <input type="number" class="form-input" id="reminder-days" value="30" min="1" max="365"
+                        onchange="saveSettings()">
                 </div>
 
                 <div class="flex items-center justify-between mb-4">
@@ -154,7 +155,8 @@
                         <div class="text-sm text-secondary">Show browser notifications</div>
                     </div>
                     <label class="toggle-switch">
-                        <input type="checkbox" id="desktop-notifications" onchange="toggleDesktopNotifications(this.checked)">
+                        <input type="checkbox" id="desktop-notifications"
+                            onchange="toggleDesktopNotifications(this.checked)">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
@@ -198,7 +200,8 @@
                         <button class="btn btn-primary" onclick="document.getElementById('import-file').click()">
                             📤 Import Data
                         </button>
-                        <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importData(this.files[0])">
+                        <input type="file" id="import-file" style="display: none;" accept=".json"
+                            onchange="importData(this.files[0])">
                     </div>
                     <div class="text-xs text-secondary mt-2">
                         💡 Tip: Always export your data before clearing records or making major changes
@@ -223,24 +226,72 @@
                         🗑️ Clear All Records
                     </button>
                     <div class="text-xs text-secondary mt-2">
-                        ⚠️ This will permanently delete all categories, customers, subscriptions, and groups. Export your data first!
+                        ⚠️ This will permanently delete all categories, customers, subscriptions, and groups. Export
+                        your data first!
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Admin Actions -->
+        <div class="card card-hover">
+            <div class="card-header">
+                <h2 class="card-title">🛡️ Admin Actions</h2>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <div class="font-medium text-danger mb-2">Database Maintenance</div>
+                    <div class="text-sm text-secondary mb-3">
+                        Use these tools to repair database schema issues.
+                        Commonly used if you see "500 Server Error" due to missing columns.
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mb-4">
+                    <button class="btn btn-warning" onclick="fixDatabaseSchema()">
+                        🛠️ Fix Database Schema
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Actions -->
+        <div class="card card-hover">
+            <div class="card-header">
+                <h2 class="card-title">🛡️ Admin Actions</h2>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <div class="font-medium text-danger mb-2">Database Maintenance</div>
+                    <div class="text-sm text-secondary mb-3">
+                        Use these tools to repair database schema issues.
+                        Commonly used if you see "500 Server Error" due to missing columns.
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mb-4">
+                    <button class="btn btn-warning" onclick="fixDatabaseSchema()">
+                        🛠️ Fix Database Schema
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Cloud Backup (Data Persistence) -->
-        <div class="card card-hover" style="border: 2px solid var(--color-warning); background: var(--color-warning-bg);">
+        <div class="card card-hover"
+            style="border: 2px solid var(--color-warning); background: var(--color-warning-bg);">
             <div class="card-header">
                 <h2 class="card-title">☁️ Cloud Backup (IMPORTANT)</h2>
             </div>
             <div class="card-body">
-                <div class="mb-4" style="background: var(--color-bg); padding: 16px; border-radius: 8px; border: 1px solid var(--color-border);">
+                <div class="mb-4"
+                    style="background: var(--color-bg); padding: 16px; border-radius: 8px; border: 1px solid var(--color-border);">
                     <div class="font-medium mb-2">⚠️ Data Persistence for Deployments</div>
                     <div class="text-sm text-secondary mb-3">
                         If you're using Railway, Render, or Heroku, your data may be lost when you push new code.
-                        <strong>Use the button below to generate a backup string</strong>, then set it as the 
-                        <code style="background: var(--color-bg-tertiary); padding: 2px 6px; border-radius: 4px;">SUBTRACK_DATA</code> 
+                        <strong>Use the button below to generate a backup string</strong>, then set it as the
+                        <code
+                            style="background: var(--color-bg-tertiary); padding: 2px 6px; border-radius: 4px;">SUBTRACK_DATA</code>
                         environment variable in your deployment platform.
                     </div>
                 </div>
@@ -257,7 +308,7 @@
                 <div id="backup-string-container" style="display: none;">
                     <div class="form-group">
                         <label class="form-label">Backup String (copy this entire value)</label>
-                        <textarea id="backup-string-output" class="form-input" rows="4" readonly 
+                        <textarea id="backup-string-output" class="form-input" rows="4" readonly
                             style="font-family: monospace; font-size: 12px; word-break: break-all;"></textarea>
                     </div>
                     <div class="flex gap-3">
@@ -328,184 +379,531 @@
 </div>
 
 <style>
-/* Toggle Switch */
-.toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 24px;
-}
+    /* Toggle Switch */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
 
-.toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
 
-.toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--color-bg-tertiary);
-    transition: 0.3s;
-    border-radius: 24px;
-    border: 1px solid var(--color-border);
-}
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--color-bg-tertiary);
+        transition: 0.3s;
+        border-radius: 24px;
+        border: 1px solid var(--color-border);
+    }
 
-.toggle-slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 2px;
-    background-color: white;
-    transition: 0.3s;
-    border-radius: 50%;
-}
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 2px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+    }
 
-.toggle-switch input:checked + .toggle-slider {
-    background-color: var(--color-primary);
-}
+    .toggle-switch input:checked+.toggle-slider {
+        background-color: var(--color-primary);
+    }
 
-.toggle-switch input:checked + .toggle-slider:before {
-    transform: translateX(26px);
-}
+    .toggle-switch input:checked+.toggle-slider:before {
+        transform: translateX(26px);
+    }
 
-/* Range Slider */
-.form-range {
-    width: 100%;
-    height: 8px;
-    background: var(--color-bg-tertiary);
-    border-radius: var(--radius-full);
-    outline: none;
-    -webkit-appearance: none;
-}
+    /* Range Slider */
+    .form-range {
+        width: 100%;
+        height: 8px;
+        background: var(--color-bg-tertiary);
+        border-radius: var(--radius-full);
+        outline: none;
+        -webkit-appearance: none;
+    }
 
-.form-range::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    background: var(--color-primary);
-    cursor: pointer;
-    border-radius: 50%;
-}
+    .form-range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: var(--color-primary);
+        cursor: pointer;
+        border-radius: 50%;
+    }
 
-.form-range::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    background: var(--color-primary);
-    cursor: pointer;
-    border-radius: 50%;
-    border: none;
-}
+    .form-range::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: var(--color-primary);
+        cursor: pointer;
+        border-radius: 50%;
+        border: none;
+    }
 </style>
 
 <script>
-// Load settings on page load
-document.addEventListener('DOMContentLoaded', function() {
-    loadSettings();
-    updateCurrentTheme();
-});
+    // Load settings on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        loadSettings();
+        updateCurrentTheme();
+    });
 
-function loadSettings() {
-    const settings = JSON.parse(localStorage.getItem('subtrack_settings') || '{}');
-    
-    // Apply saved settings
-    if (settings.defaultView) document.getElementById('default-view').value = settings.defaultView;
-    if (settings.itemsPerPage) document.getElementById('items-per-page').value = settings.itemsPerPage;
-    if (settings.reminderDays) document.getElementById('reminder-days').value = settings.reminderDays;
-    // Apply toggle states
-    if (settings.animations !== undefined) document.getElementById('animations-toggle').checked = settings.animations;
-    if (settings.compactMode !== undefined) document.getElementById('compact-toggle').checked = settings.compactMode;
-    if (settings.showEmpty !== undefined) document.getElementById('show-empty').checked = settings.showEmpty;
-}
+    function loadSettings() {
+        const settings = JSON.parse(localStorage.getItem('subtrack_settings') || '{}');
 
-function saveSettings() {
-    const settings = {
-        defaultView: document.getElementById('default-view').value,
-        itemsPerPage: document.getElementById('items-per-page').value,
-        reminderDays: document.getElementById('reminder-days').value,
-        animations: document.getElementById('animations-toggle').checked,
-        compactMode: document.getElementById('compact-toggle').checked,
-        showEmpty: document.getElementById('show-empty').checked,
-        emailNotifications: document.getElementById('email-notifications').checked,
-        desktopNotifications: document.getElementById('desktop-notifications').checked,
-        soundAlerts: document.getElementById('sound-alerts').checked,
-        autoSave: document.getElementById('auto-save').checked
+        // Apply saved settings
+        if (settings.defaultView) document.getElementById('default-view').value = settings.defaultView;
+        if (settings.itemsPerPage) document.getElementById('items-per-page').value = settings.itemsPerPage;
+        if (settings.reminderDays) document.getElementById('reminder-days').value = settings.reminderDays;
+        // Apply toggle states
+        if (settings.animations !== undefined) document.getElementById('animations-toggle').checked = settings.animations;
+        if (settings.compactMode !== undefined) document.getElementById('compact-toggle').checked = settings.compactMode;
+        if (settings.showEmpty !== undefined) document.getElementById('show-empty').checked = settings.showEmpty;
+    }
+
+    function saveSettings() {
+        const settings = {
+            defaultView: document.getElementById('default-view').value,
+            itemsPerPage: document.getElementById('items-per-page').value,
+            reminderDays: document.getElementById('reminder-days').value,
+            animations: document.getElementById('animations-toggle').checked,
+            compactMode: document.getElementById('compact-toggle').checked,
+            showEmpty: document.getElementById('show-empty').checked,
+            emailNotifications: document.getElementById('email-notifications').checked,
+            desktopNotifications: document.getElementById('desktop-notifications').checked,
+            soundAlerts: document.getElementById('sound-alerts').checked,
+            autoSave: document.getElementById('auto-save').checked
+        };
+
+        localStorage.setItem('subtrack_settings', JSON.stringify(settings));
+        showToast('Settings saved', 'success');
+    }
+
+    function updateThresholdLabel(value) {
+        document.getElementById('threshold-value').textContent = value + '%';
+    }
+
+    function toggleAnimations(enabled) {
+        document.documentElement.style.setProperty('--transition-fast', enabled ? '150ms' : '0ms');
+        document.documentElement.style.setProperty('--transition-base', enabled ? '250ms' : '0ms');
+        document.documentElement.style.setProperty('--transition-slow', enabled ? '350ms' : '0ms');
+        saveSettings();
+        showToast(`Animations ${enabled ? 'enabled' : 'disabled'}`, 'success');
+    }
+
+    function toggleCompactMode(enabled) {
+        if (enabled) {
+            document.documentElement.style.setProperty('--space-4', '0.75rem');
+            document.documentElement.style.setProperty('--space-6', '1rem');
+            document.documentElement.style.setProperty('--space-8', '1.5rem');
+        } else {
+            document.documentElement.style.setProperty('--space-4', '1rem');
+            document.documentElement.style.setProperty('--space-6', '1.5rem');
+            document.documentElement.style.setProperty('--space-8', '2rem');
+        }
+        saveSettings();
+        showToast(`Compact mode ${enabled ? 'enabled' : 'disabled'}`, 'success');
+    }
+
+    function toggleDesktopNotifications(enabled) {
+        if (enabled && 'Notification' in window) {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    showToast('Desktop notifications enabled', 'success');
+                    new Notification('SubTrack', {
+                        body: 'You will now receive desktop notifications',
+                        icon: '/static/favicon.ico'
+                    });
+                }
+            });
+        }
+        saveSettings();
+    }
+
+    function updateCurrentTheme() {
+        const theme = document.documentElement.getAttribute('data-theme');
+        document.getElementById('current-theme').textContent = theme === 'dark' ? 'Dark' : 'Light';
+    }
+
+    // Override toggleTheme to update settings page
+    const originalToggleTheme = window.toggleTheme;
+    window.toggleTheme = function () {
+        originalToggleTheme();
+        updateCurrentTheme();
     };
-    
-    localStorage.setItem('subtrack_settings', JSON.stringify(settings));
-    showToast('Settings saved', 'success');
-}
 
-function updateThresholdLabel(value) {
-    document.getElementById('threshold-value').textContent = value + '%';
-}
-
-function toggleAnimations(enabled) {
-    document.documentElement.style.setProperty('--transition-fast', enabled ? '150ms' : '0ms');
-    document.documentElement.style.setProperty('--transition-base', enabled ? '250ms' : '0ms');
-    document.documentElement.style.setProperty('--transition-slow', enabled ? '350ms' : '0ms');
-    saveSettings();
-    showToast(`Animations ${enabled ? 'enabled' : 'disabled'}`, 'success');
-}
-
-function toggleCompactMode(enabled) {
-    if (enabled) {
-        document.documentElement.style.setProperty('--space-4', '0.75rem');
-        document.documentElement.style.setProperty('--space-6', '1rem');
-        document.documentElement.style.setProperty('--space-8', '1.5rem');
-    } else {
-        document.documentElement.style.setProperty('--space-4', '1rem');
-        document.documentElement.style.setProperty('--space-6', '1.5rem');
-        document.documentElement.style.setProperty('--space-8', '2rem');
+    function exportData() {
+        showToast('Exporting data...', 'info');
+        fetch('/api/export')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Export failed');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `subtrack_backup_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                showToast('✅ Data exported successfully!', 'success');
+            })
+            .catch(error => {
+                console.error('Export error:', error);
+                showToast('❌ Export failed. Please try again.', 'error');
+            });
     }
-    saveSettings();
-    showToast(`Compact mode ${enabled ? 'enabled' : 'disabled'}`, 'success');
-}
 
-function toggleDesktopNotifications(enabled) {
-    if (enabled && 'Notification' in window) {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                showToast('Desktop notifications enabled', 'success');
-                new Notification('SubTrack', {
-                    body: 'You will now receive desktop notifications',
-                    icon: '/static/favicon.ico'
+    function validateImportData(data) {
+        const errors = [];
+        const warnings = [];
+
+        const hasAnyKey = data.categories || data.customers || data.subscriptions || data.groups;
+        if (!hasAnyKey) {
+            errors.push('Missing required sections: categories, customers, subscriptions, or groups.');
+            return { errors, warnings };
+        }
+
+        const validateArray = (key) => {
+            if (data[key] !== undefined && !Array.isArray(data[key])) {
+                errors.push(`${key} must be an array.`);
+            }
+        };
+
+        ['categories', 'groups', 'customers', 'subscriptions', 'links', 'saved_reports'].forEach(validateArray);
+
+        if (data.subscriptions && Array.isArray(data.subscriptions)) {
+            const validBillingCycles = ['monthly', 'quarterly', 'yearly', 'weekly', 'biannual'];
+            const validStatuses = ['active', 'cancelled', 'paused', 'expired'];
+            data.subscriptions.forEach((sub, index) => {
+                if (!sub.vendor_name) {
+                    errors.push(`Subscription #${index + 1} missing vendor_name.`);
+                }
+                if (sub.cost === undefined || sub.cost === null) {
+                    warnings.push(`Subscription #${index + 1} missing cost (defaulting to 0).`);
+                }
+                if (sub.billing_cycle && typeof sub.billing_cycle === 'string') {
+                    const normalized = sub.billing_cycle.toLowerCase();
+                    if (!validBillingCycles.includes(normalized)) {
+                        warnings.push(`Subscription #${index + 1} has unknown billing_cycle: ${sub.billing_cycle}.`);
+                    }
+                }
+                if (sub.status && typeof sub.status === 'string') {
+                    const normalized = sub.status.toLowerCase();
+                    if (!validStatuses.includes(normalized)) {
+                        warnings.push(`Subscription #${index + 1} has unknown status: ${sub.status}.`);
+                    }
+                }
+            });
+        }
+
+        return { errors, warnings };
+    }
+
+    async function importData(file) {
+        if (!file) return;
+
+        // Reset the file input
+        const fileInput = document.getElementById('import-file');
+
+        // Confirm before importing
+        if (!confirm('⚠️ Import data from this file?\n\nThis will ADD new records to your database.\nExisting records with the same IDs will NOT be overwritten.\n\nContinue?')) {
+            fileInput.value = '';
+            return;
+        }
+
+        showToast('📖 Reading file...', 'info');
+
+        const reader = new FileReader();
+        reader.onload = async function (e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                console.log('Parsed import data:', {
+                    categories: data.categories?.length || 0,
+                    groups: data.groups?.length || 0,
+                    customers: data.customers?.length || 0,
+                    subscriptions: data.subscriptions?.length || 0
                 });
+
+                // Validate the data structure
+                if (!data.categories && !data.customers && !data.subscriptions && !data.groups) {
+                    showToast('❌ Invalid file format. Expected SubTrack backup JSON.', 'error');
+                    fileInput.value = '';
+                    return;
+                }
+
+                // Pre-import validation
+                const validation = validateImportData(data);
+                if (validation.errors.length > 0) {
+                    console.error('Import validation errors:', validation.errors);
+                    showToast(`❌ Import blocked: ${validation.errors[0]}`, 'error');
+                    fileInput.value = '';
+                    return;
+                }
+
+                if (validation.warnings.length > 0) {
+                    console.warn('Import validation warnings:', validation.warnings);
+                    const proceed = confirm(
+                        '⚠️ Import validation warnings found:\n\n' +
+                        validation.warnings.slice(0, 5).join('\n') +
+                        (validation.warnings.length > 5 ? `\n...and ${validation.warnings.length - 5} more` : '') +
+                        '\n\nDo you want to proceed?'
+                    );
+                    if (!proceed) {
+                        showToast('Import cancelled due to warnings', 'info');
+                        fileInput.value = '';
+                        return;
+                    }
+                }
+
+                showToast('📥 Importing data...', 'info');
+
+                // Send to import endpoint using file upload
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/api/import/file', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Import response not OK:', response.status, errorText);
+                    showToast(`❌ Import failed: ${response.status} - ${errorText}`, 'error');
+                    fileInput.value = '';
+                    return;
+                }
+
+                const result = await response.json();
+                console.log('Import result:', result);
+
+                if (result.error) {
+                    console.error('Import error from server:', result.error);
+                    showToast('❌ ' + result.error, 'error');
+                } else {
+                    const imported = result.imported || {};
+                    const warningCount = result.warnings ? result.warnings.length : 0;
+                    const warningNote = warningCount > 0 ? `\n⚠️ ${warningCount} warnings (see console)` : '';
+                    showToast(
+                        `✅ Import successful!\n${imported.categories || 0} categories, ${imported.groups || 0} groups, ${imported.customers || 0} customers, ${imported.subscriptions || 0} subscriptions${warningNote}`,
+                        'success'
+                    );
+                    if (warningCount > 0) {
+                        console.warn('Import warnings:', result.warnings);
+                    }
+                    // Reload page after short delay to show new data
+                    setTimeout(() => {
+                        if (confirm('Import complete! Reload page to see imported data?')) {
+                            window.location.reload();
+                        }
+                    }, 1500);
+                }
+            } catch (error) {
+                console.error('Import error:', error);
+                showToast('❌ Invalid file format or import failed', 'error');
+            } finally {
+                fileInput.value = '';
             }
-        });
+        };
+
+        reader.onerror = function () {
+            showToast('❌ Failed to read file', 'error');
+            fileInput.value = '';
+        };
+
+        reader.readAsText(file);
     }
-    saveSettings();
-}
 
-function updateCurrentTheme() {
-    const theme = document.documentElement.getAttribute('data-theme');
-    document.getElementById('current-theme').textContent = theme === 'dark' ? 'Dark' : 'Light';
-}
+    function clearCache() {
+        if (confirm('Clear all cached data? This will not delete your subscriptions.')) {
+            localStorage.removeItem('subtrack_cache');
+            showToast('✅ Cache cleared', 'success');
+        }
+    }
 
-// Override toggleTheme to update settings page
-const originalToggleTheme = window.toggleTheme;
-window.toggleTheme = function() {
-    originalToggleTheme();
-    updateCurrentTheme();
-};
+    function resetSettings() {
+        if (confirm('Reset all settings to default? This cannot be undone.')) {
+            localStorage.removeItem('subtrack_settings');
+            location.reload();
+        }
+    }
 
-function exportData() {
-    showToast('Exporting data...', 'info');
-    fetch('/api/export')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Export failed');
+    async function confirmClearAllRecords() {
+        // First confirmation
+        const firstConfirm = confirm(
+            '⚠️ WARNING: Clear All Records?\n\n' +
+            'This will PERMANENTLY DELETE:\n' +
+            '• All categories\n' +
+            '• All groups\n' +
+            '• All customers\n' +
+            '• All subscriptions\n' +
+            '• All links\n' +
+            '• All saved reports\n' +
+            '• All activity logs\n\n' +
+            'This action CANNOT be undone!\n\n' +
+            'Have you exported your data?\n\n' +
+            'Click OK to continue or Cancel to abort.'
+        );
+
+        if (!firstConfirm) {
+            showToast('Operation cancelled', 'info');
+            return;
+        }
+
+        // Second confirmation - make them type
+        const confirmation = prompt(
+            'To confirm, please type "DELETE ALL" (in capital letters):'
+        );
+
+        if (confirmation !== 'DELETE ALL') {
+            showToast('❌ Confirmation text did not match. Operation cancelled.', 'warning');
+            return;
+        }
+
+        // Final confirmation
+        const finalConfirm = confirm(
+            '⚠️ FINAL WARNING!\n\n' +
+            'This is your last chance to cancel.\n\n' +
+            'All data will be permanently deleted.\n\n' +
+            'Are you absolutely sure?'
+        );
+
+        if (!finalConfirm) {
+            showToast('Operation cancelled', 'info');
+            return;
+        }
+
+        // Proceed with deletion
+        showToast('🗑️ Clearing all records...', 'info');
+
+        try {
+            const response = await fetch('/api/clear-all-records', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.error) {
+                showToast('❌ Error: ' + result.error, 'error');
+            } else {
+                const deleted = result.deleted;
+                showToast(
+                    `✅ All records cleared!\n\n` +
+                    `Deleted:\n` +
+                    `${deleted.categories} categories\n` +
+                    `${deleted.groups} groups\n` +
+                    `${deleted.customers} customers\n` +
+                    `${deleted.subscriptions} subscriptions`,
+                    'success'
+                );
+
+                // Reload after short delay
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
             }
-            return response.blob();
-        })
-        .then(blob => {
+        } catch (error) {
+            console.error('Clear records error:', error);
+            showToast('❌ Failed to clear records. Please try again.', 'error');
+        }
+    }
+
+    async function fixDatabaseSchema() {
+        if (!confirm('Run database schema repair?\nThis attempts to add missing columns (e.g., user_id in check_categories).')) {
+            return;
+        }
+
+        showToast('Running schema fix...', 'info');
+
+        try {
+            const response = await fetch('/api/admin/fix-schema', {
+                method: 'POST'
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                let details = data.details ? '\nResults:\n' + data.details.join('\n') : '';
+                alert('Schema fix executed successfully.' + details);
+                showToast('✅ Schema fixed', 'success');
+            } else {
+                showToast('❌ ' + (data.detail || 'Fix failed'), 'error');
+            }
+        } catch (error) {
+            console.error('Schema fix error:', error);
+            showToast('❌ Network request failed', 'error');
+        }
+    }
+
+    // Cloud Backup Functions
+    async function generateBackupString() {
+        try {
+            showToast('Generating backup...', 'info');
+            const response = await fetch('/api/export/data-string');
+            const data = await response.json();
+
+            if (data.data_string) {
+                document.getElementById('backup-string-output').value = data.data_string;
+                document.getElementById('backup-string-container').style.display = 'block';
+                document.getElementById('backup-stats').style.display = 'block';
+
+                // Update stats
+                document.getElementById('backup-categories').textContent = data.data_stats.categories;
+                document.getElementById('backup-customers').textContent = data.data_stats.customers;
+                document.getElementById('backup-subscriptions').textContent = data.data_stats.subscriptions;
+                document.getElementById('backup-groups').textContent = data.data_stats.groups;
+
+                showToast('Backup string generated! Copy it to your deployment settings.', 'success');
+            } else {
+                showToast('Failed to generate backup', 'error');
+            }
+        } catch (error) {
+            console.error('Backup error:', error);
+            showToast('Error generating backup', 'error');
+        }
+    }
+
+    async function copyBackupString() {
+        const textarea = document.getElementById('backup-string-output');
+        try {
+            await navigator.clipboard.writeText(textarea.value);
+            showToast('Backup string copied to clipboard!', 'success');
+        } catch (error) {
+            // Fallback for older browsers
+            textarea.select();
+            document.execCommand('copy');
+            showToast('Backup string copied!', 'success');
+        }
+    }
+
+    async function downloadBackupFile() {
+        try {
+            showToast('Preparing download...', 'info');
+            const response = await fetch('/api/export/data-backup');
+            const blob = await response.blob();
+
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -514,333 +912,12 @@ function exportData() {
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
-            showToast('✅ Data exported successfully!', 'success');
-        })
-        .catch(error => {
-            console.error('Export error:', error);
-            showToast('❌ Export failed. Please try again.', 'error');
-        });
-}
 
-function validateImportData(data) {
-    const errors = [];
-    const warnings = [];
-    
-    const hasAnyKey = data.categories || data.customers || data.subscriptions || data.groups;
-    if (!hasAnyKey) {
-        errors.push('Missing required sections: categories, customers, subscriptions, or groups.');
-        return { errors, warnings };
-    }
-    
-    const validateArray = (key) => {
-        if (data[key] !== undefined && !Array.isArray(data[key])) {
-            errors.push(`${key} must be an array.`);
-        }
-    };
-    
-    ['categories', 'groups', 'customers', 'subscriptions', 'links', 'saved_reports'].forEach(validateArray);
-    
-    if (data.subscriptions && Array.isArray(data.subscriptions)) {
-        const validBillingCycles = ['monthly', 'quarterly', 'yearly', 'weekly', 'biannual'];
-        const validStatuses = ['active', 'cancelled', 'paused', 'expired'];
-        data.subscriptions.forEach((sub, index) => {
-            if (!sub.vendor_name) {
-                errors.push(`Subscription #${index + 1} missing vendor_name.`);
-            }
-            if (sub.cost === undefined || sub.cost === null) {
-                warnings.push(`Subscription #${index + 1} missing cost (defaulting to 0).`);
-            }
-            if (sub.billing_cycle && typeof sub.billing_cycle === 'string') {
-                const normalized = sub.billing_cycle.toLowerCase();
-                if (!validBillingCycles.includes(normalized)) {
-                    warnings.push(`Subscription #${index + 1} has unknown billing_cycle: ${sub.billing_cycle}.`);
-                }
-            }
-            if (sub.status && typeof sub.status === 'string') {
-                const normalized = sub.status.toLowerCase();
-                if (!validStatuses.includes(normalized)) {
-                    warnings.push(`Subscription #${index + 1} has unknown status: ${sub.status}.`);
-                }
-            }
-        });
-    }
-    
-    return { errors, warnings };
-}
-
-async function importData(file) { 
-    if (!file) return;
-    
-    // Reset the file input
-    const fileInput = document.getElementById('import-file');
-    
-    // Confirm before importing
-    if (!confirm('⚠️ Import data from this file?\n\nThis will ADD new records to your database.\nExisting records with the same IDs will NOT be overwritten.\n\nContinue?')) {
-        fileInput.value = '';
-        return;
-    }
-    
-    showToast('📖 Reading file...', 'info');
-    
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            console.log('Parsed import data:', {
-                categories: data.categories?.length || 0,
-                groups: data.groups?.length || 0,
-                customers: data.customers?.length || 0,
-                subscriptions: data.subscriptions?.length || 0
-            });
-            
-            // Validate the data structure
-            if (!data.categories && !data.customers && !data.subscriptions && !data.groups) {
-                showToast('❌ Invalid file format. Expected SubTrack backup JSON.', 'error');
-                fileInput.value = '';
-                return;
-            }
-            
-            // Pre-import validation
-            const validation = validateImportData(data);
-            if (validation.errors.length > 0) {
-                console.error('Import validation errors:', validation.errors);
-                showToast(`❌ Import blocked: ${validation.errors[0]}`, 'error');
-                fileInput.value = '';
-                return;
-            }
-            
-            if (validation.warnings.length > 0) {
-                console.warn('Import validation warnings:', validation.warnings);
-                const proceed = confirm(
-                    '⚠️ Import validation warnings found:\n\n' +
-                    validation.warnings.slice(0, 5).join('\n') +
-                    (validation.warnings.length > 5 ? `\n...and ${validation.warnings.length - 5} more` : '') +
-                    '\n\nDo you want to proceed?'
-                );
-                if (!proceed) {
-                    showToast('Import cancelled due to warnings', 'info');
-                    fileInput.value = '';
-                    return;
-                }
-            }
-            
-            showToast('📥 Importing data...', 'info');
-            
-            // Send to import endpoint using file upload
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            const response = await fetch('/api/import/file', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Import response not OK:', response.status, errorText);
-                showToast(`❌ Import failed: ${response.status} - ${errorText}`, 'error');
-                fileInput.value = '';
-                return;
-            }
-            
-            const result = await response.json();
-            console.log('Import result:', result);
-            
-            if (result.error) {
-                console.error('Import error from server:', result.error);
-                showToast('❌ ' + result.error, 'error');
-            } else {
-                const imported = result.imported || {};
-                const warningCount = result.warnings ? result.warnings.length : 0;
-                const warningNote = warningCount > 0 ? `\n⚠️ ${warningCount} warnings (see console)` : '';
-                showToast(
-                    `✅ Import successful!\n${imported.categories || 0} categories, ${imported.groups || 0} groups, ${imported.customers || 0} customers, ${imported.subscriptions || 0} subscriptions${warningNote}`,
-                    'success'
-                );
-                if (warningCount > 0) {
-                    console.warn('Import warnings:', result.warnings);
-                }
-                // Reload page after short delay to show new data
-                setTimeout(() => {
-                    if (confirm('Import complete! Reload page to see imported data?')) {
-                        window.location.reload();
-                    }
-                }, 1500);
-            }
+            showToast('Backup file downloaded!', 'success');
         } catch (error) {
-            console.error('Import error:', error);
-            showToast('❌ Invalid file format or import failed', 'error');
-        } finally {
-            fileInput.value = '';
+            console.error('Download error:', error);
+            showToast('Error downloading backup', 'error');
         }
-    };
-    
-    reader.onerror = function() {
-        showToast('❌ Failed to read file', 'error');
-        fileInput.value = '';
-    };
-    
-    reader.readAsText(file);
-}
-
-function clearCache() {
-    if (confirm('Clear all cached data? This will not delete your subscriptions.')) {
-        localStorage.removeItem('subtrack_cache');
-        showToast('✅ Cache cleared', 'success');
     }
-}
-
-function resetSettings() {
-    if (confirm('Reset all settings to default? This cannot be undone.')) {
-        localStorage.removeItem('subtrack_settings');
-        location.reload();
-    }
-}
-
-async function confirmClearAllRecords() {
-    // First confirmation
-    const firstConfirm = confirm(
-        '⚠️ WARNING: Clear All Records?\n\n' +
-        'This will PERMANENTLY DELETE:\n' +
-        '• All categories\n' +
-        '• All groups\n' +
-        '• All customers\n' +
-        '• All subscriptions\n' +
-        '• All links\n' +
-        '• All saved reports\n' +
-        '• All activity logs\n\n' +
-        'This action CANNOT be undone!\n\n' +
-        'Have you exported your data?\n\n' +
-        'Click OK to continue or Cancel to abort.'
-    );
-    
-    if (!firstConfirm) {
-        showToast('Operation cancelled', 'info');
-        return;
-    }
-    
-    // Second confirmation - make them type
-    const confirmation = prompt(
-        'To confirm, please type "DELETE ALL" (in capital letters):'
-    );
-    
-    if (confirmation !== 'DELETE ALL') {
-        showToast('❌ Confirmation text did not match. Operation cancelled.', 'warning');
-        return;
-    }
-    
-    // Final confirmation
-    const finalConfirm = confirm(
-        '⚠️ FINAL WARNING!\n\n' +
-        'This is your last chance to cancel.\n\n' +
-        'All data will be permanently deleted.\n\n' +
-        'Are you absolutely sure?'
-    );
-    
-    if (!finalConfirm) {
-        showToast('Operation cancelled', 'info');
-        return;
-    }
-    
-    // Proceed with deletion
-    showToast('🗑️ Clearing all records...', 'info');
-    
-    try {
-        const response = await fetch('/api/clear-all-records', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const result = await response.json();
-        
-        if (result.error) {
-            showToast('❌ Error: ' + result.error, 'error');
-        } else {
-            const deleted = result.deleted;
-            showToast(
-                `✅ All records cleared!\n\n` +
-                `Deleted:\n` +
-                `${deleted.categories} categories\n` +
-                `${deleted.groups} groups\n` +
-                `${deleted.customers} customers\n` +
-                `${deleted.subscriptions} subscriptions`,
-                'success'
-            );
-            
-            // Reload after short delay
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 2000);
-        }
-    } catch (error) {
-        console.error('Clear records error:', error);
-        showToast('❌ Failed to clear records. Please try again.', 'error');
-    }
-}
-
-// Cloud Backup Functions
-async function generateBackupString() {
-    try {
-        showToast('Generating backup...', 'info');
-        const response = await fetch('/api/export/data-string');
-        const data = await response.json();
-        
-        if (data.data_string) {
-            document.getElementById('backup-string-output').value = data.data_string;
-            document.getElementById('backup-string-container').style.display = 'block';
-            document.getElementById('backup-stats').style.display = 'block';
-            
-            // Update stats
-            document.getElementById('backup-categories').textContent = data.data_stats.categories;
-            document.getElementById('backup-customers').textContent = data.data_stats.customers;
-            document.getElementById('backup-subscriptions').textContent = data.data_stats.subscriptions;
-            document.getElementById('backup-groups').textContent = data.data_stats.groups;
-            
-            showToast('Backup string generated! Copy it to your deployment settings.', 'success');
-        } else {
-            showToast('Failed to generate backup', 'error');
-        }
-    } catch (error) {
-        console.error('Backup error:', error);
-        showToast('Error generating backup', 'error');
-    }
-}
-
-async function copyBackupString() {
-    const textarea = document.getElementById('backup-string-output');
-    try {
-        await navigator.clipboard.writeText(textarea.value);
-        showToast('Backup string copied to clipboard!', 'success');
-    } catch (error) {
-        // Fallback for older browsers
-        textarea.select();
-        document.execCommand('copy');
-        showToast('Backup string copied!', 'success');
-    }
-}
-
-async function downloadBackupFile() {
-    try {
-        showToast('Preparing download...', 'info');
-        const response = await fetch('/api/export/data-backup');
-        const blob = await response.blob();
-        
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `subtrack_backup_${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        
-        showToast('Backup file downloaded!', 'success');
-    } catch (error) {
-        console.error('Download error:', error);
-        showToast('Error downloading backup', 'error');
-    }
-}
 </script>
 {% endblock %}

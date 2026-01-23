@@ -7,7 +7,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 from app.config import settings
 from app.routers import categories, groups, customers, subscriptions, ai_routes, search, search_routes
-from app.routers import web_routes, export_routes, auth_routes, users, saved_reports_routes, email_routes, log_check_routes
+from app.routers import web_routes, export_routes, auth_routes, users, saved_reports_routes, email_routes, log_check_routes, admin_routes
 from app.routers import activity_routes
 from app.routers.auth_routes import get_session
 
@@ -115,6 +115,7 @@ app.include_router(saved_reports_routes.router, prefix="/api", tags=["saved-repo
 app.include_router(email_routes.router, prefix="/api/email", tags=["email"])
 app.include_router(log_check_routes.router, tags=["log-check"])
 app.include_router(activity_routes.router, tags=["activity"])
+app.include_router(admin_routes.router)
 
 
 @app.get("/health")
