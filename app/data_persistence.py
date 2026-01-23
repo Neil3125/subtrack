@@ -372,6 +372,26 @@ def import_data_to_db(db: Session, data: dict) -> bool:
         for sub_data in data.get("subscriptions", []):
             existing = db.query(Subscription).filter(Subscription.id == sub_data["id"]).first()
             if not existing:
+                # Normalize enum values (handle uppercase Postgres exports)
+                raw_billing_cycle = sub_data.get("billing_cycle", "monthly")
+                raw_status = sub_data.get("status", "active")
+                
+                billing_cycle_value = raw_billing_cycle.lower() if isinstance(raw_billing_cycle, str) else "monthly"
+                status_value = raw_status.lower() if isinstance(raw_status, str) else "active"
+                
+                # Validate enum values with safe fallbacks
+                try:
+                    billing_cycle_enum = BillingCycle(billing_cycle_value)
+                except Exception:
+                    print(f"[DataPersistence] Invalid billing_cycle '{raw_billing_cycle}' for subscription {sub_data.get('id')}, defaulting to monthly")
+                    billing_cycle_enum = BillingCycle.MONTHLY
+                
+                try:
+                    status_enum = SubscriptionStatus(status_value)
+                except Exception:
+                    print(f"[DataPersistence] Invalid status '{raw_status}' for subscription {sub_data.get('id')}, defaulting to active")
+                    status_enum = SubscriptionStatus.ACTIVE
+                
                 sub = Subscription(
                     id=sub_data["id"],
                     customer_id=sub_data["customer_id"],
@@ -380,10 +400,10 @@ def import_data_to_db(db: Session, data: dict) -> bool:
                     plan_name=sub_data.get("plan_name"),
                     cost=sub_data.get("cost", 0),
                     currency=sub_data.get("currency", "USD"),
-                    billing_cycle=BillingCycle(sub_data.get("billing_cycle", "monthly")),
+                    billing_cycle=billing_cycle_enum,
                     start_date=datetime.fromisoformat(sub_data["start_date"]).date() if sub_data.get("start_date") else None,
                     next_renewal_date=datetime.fromisoformat(sub_data["next_renewal_date"]).date() if sub_data.get("next_renewal_date") else None,
-                    status=SubscriptionStatus(sub_data.get("status", "active")),
+                    status=status_enum,
                     notes=sub_data.get("notes")
                 )
                 # Set country if available

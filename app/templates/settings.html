@@ -522,7 +522,53 @@ function exportData() {
         });
 }
 
-async function importData(file) {
+function validateImportData(data) {
+    const errors = [];
+    const warnings = [];
+    
+    const hasAnyKey = data.categories || data.customers || data.subscriptions || data.groups;
+    if (!hasAnyKey) {
+        errors.push('Missing required sections: categories, customers, subscriptions, or groups.');
+        return { errors, warnings };
+    }
+    
+    const validateArray = (key) => {
+        if (data[key] !== undefined && !Array.isArray(data[key])) {
+            errors.push(`${key} must be an array.`);
+        }
+    };
+    
+    ['categories', 'groups', 'customers', 'subscriptions', 'links', 'saved_reports'].forEach(validateArray);
+    
+    if (data.subscriptions && Array.isArray(data.subscriptions)) {
+        const validBillingCycles = ['monthly', 'quarterly', 'yearly', 'weekly', 'biannual'];
+        const validStatuses = ['active', 'cancelled', 'paused', 'expired'];
+        data.subscriptions.forEach((sub, index) => {
+            if (!sub.vendor_name) {
+                errors.push(`Subscription #${index + 1} missing vendor_name.`);
+            }
+            if (sub.cost === undefined || sub.cost === null) {
+                warnings.push(`Subscription #${index + 1} missing cost (defaulting to 0).`);
+            }
+            if (sub.billing_cycle && typeof sub.billing_cycle === 'string') {
+                const normalized = sub.billing_cycle.toLowerCase();
+                if (!validBillingCycles.includes(normalized)) {
+                    warnings.push(`Subscription #${index + 1} has unknown billing_cycle: ${sub.billing_cycle}.`);
+                }
+            }
+            if (sub.status && typeof sub.status === 'string') {
+                const normalized = sub.status.toLowerCase();
+                if (!validStatuses.includes(normalized)) {
+                    warnings.push(`Subscription #${index + 1} has unknown status: ${sub.status}.`);
+                }
+            }
+        });
+    }
+    
+    return { errors, warnings };
+}
+
+async function importData(file) { 
     if (!file) return;
     
     // Reset the file input
@@ -552,6 +598,30 @@ async function importData(file) {
                 showToast('❌ Invalid file format. Expected SubTrack backup JSON.', 'error');
                 fileInput.value = '';
                 return;
+            }
+            
+            // Pre-import validation
+            const validation = validateImportData(data);
+            if (validation.errors.length > 0) {
+                console.error('Import validation errors:', validation.errors);
+                showToast(`❌ Import blocked: ${validation.errors[0]}`, 'error');
+                fileInput.value = '';
+                return;
+            }
+            
+            if (validation.warnings.length > 0) {
+                console.warn('Import validation warnings:', validation.warnings);
+                const proceed = confirm(
+                    '⚠️ Import validation warnings found:\n\n' +
+                    validation.warnings.slice(0, 5).join('\n') +
+                    (validation.warnings.length > 5 ? `\n...and ${validation.warnings.length - 5} more` : '') +
+                    '\n\nDo you want to proceed?'
+                );
+                if (!proceed) {
+                    showToast('Import cancelled due to warnings', 'info');
+                    fileInput.value = '';
+                    return;
+                }
             }
             
             showToast('📥 Importing data...', 'info');
