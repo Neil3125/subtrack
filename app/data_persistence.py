@@ -488,6 +488,10 @@ def import_data_to_db(db: Session, data: dict) -> bool:
         
     except Exception as e:
         print(f"[DataPersistence] Error importing data: {e}")
+        print(f"[DataPersistence] Exception type: {type(e).__name__}")
+        import traceback
+        print(f"[DataPersistence] Full traceback:")
+        traceback.print_exc()
         db.rollback()
         return False
     finally:

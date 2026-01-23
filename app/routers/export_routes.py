@@ -707,15 +707,21 @@ async def import_data_json(payload: dict, db: Session = Depends(get_db)):
     the same IDs will NOT be overwritten.
     """
     from app.data_persistence import import_data_to_db
+    import traceback
     
     # Check if payload has the expected structure
     if not any(key in payload for key in ["categories", "customers", "subscriptions", "groups"]):
         return {"error": "Invalid data format. Expected JSON with categories, customers, subscriptions, or groups."}
     
     try:
+        print(f"[ImportAPI] Starting import... Categories: {len(payload.get('categories', []))}, "
+              f"Customers: {len(payload.get('customers', []))}, "
+              f"Subscriptions: {len(payload.get('subscriptions', []))}")
+        
         success = import_data_to_db(db, payload)
         
         if success:
+            print(f"[ImportAPI] Import successful!")
             return {
                 "message": "Data imported successfully",
                 "imported": {
@@ -726,9 +732,15 @@ async def import_data_json(payload: dict, db: Session = Depends(get_db)):
                 }
             }
         else:
-            return {"error": "Import failed - check server logs for details"}
+            error_msg = "Import failed - the import function returned False. This usually means a database error occurred. Check the console for [DataPersistence] error messages."
+            print(f"[ImportAPI] {error_msg}")
+            return {"error": error_msg}
     except Exception as e:
-        return {"error": f"Import failed: {str(e)}"}
+        error_msg = f"Import exception: {str(e)}"
+        print(f"[ImportAPI] {error_msg}")
+        print(f"[ImportAPI] Traceback:")
+        traceback.print_exc()
+        return {"error": error_msg}
 
 
 @router.post("/clear-all-records")
