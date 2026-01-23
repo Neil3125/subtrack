@@ -7,7 +7,8 @@
     <div class="flex items-center justify-between mb-8">
         <div>
             <h1>🔗 Links & Relationships</h1>
-            <p class="text-secondary">Discover and manage connections between your subscriptions, customers, and categories</p>
+            <p class="text-secondary">Discover and manage connections between your subscriptions, customers, and
+                categories</p>
         </div>
         <div class="flex gap-2">
             <button class="btn btn-primary" onclick="analyzeLinks()">
@@ -21,22 +22,26 @@
 
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="card card-hover stat-card clickable-card" style="cursor: pointer;" onclick="openModal('totalLinksModal')">
+        <div class="card card-hover stat-card clickable-card" style="cursor: pointer;"
+            onclick="openModal('totalLinksModal')">
             <div class="text-2xl font-bold text-primary">{{ total_links }}</div>
             <div class="text-sm text-secondary">Total Links</div>
             <div class="text-xs text-secondary mt-2">Click to view →</div>
         </div>
-        <div class="card card-hover stat-card clickable-card" style="cursor: pointer;" onclick="filterByStatus('accepted')">
+        <div class="card card-hover stat-card clickable-card" style="cursor: pointer;"
+            onclick="filterByStatus('accepted')">
             <div class="text-2xl font-bold text-success">{{ accepted_links }}</div>
             <div class="text-sm text-secondary">Accepted</div>
             <div class="text-xs text-secondary mt-2">Click to filter →</div>
         </div>
-        <div class="card card-hover stat-card clickable-card" style="cursor: pointer;" onclick="filterByStatus('pending')">
+        <div class="card card-hover stat-card clickable-card" style="cursor: pointer;"
+            onclick="filterByStatus('pending')">
             <div class="text-2xl font-bold text-warning">{{ pending_links }}</div>
             <div class="text-sm text-secondary">Pending Review</div>
             <div class="text-xs text-secondary mt-2">Click to filter →</div>
         </div>
-        <div class="card card-hover stat-card clickable-card" style="cursor: pointer;" onclick="filterByStatus('rejected')">
+        <div class="card card-hover stat-card clickable-card" style="cursor: pointer;"
+            onclick="filterByStatus('rejected')">
             <div class="text-2xl font-bold text-secondary">{{ rejected_links }}</div>
             <div class="text-sm text-secondary">Rejected</div>
             <div class="text-xs text-secondary mt-2">Click to filter →</div>
@@ -66,8 +71,8 @@
             </div>
             <div class="form-group flex-1">
                 <label class="form-label">Minimum Confidence</label>
-                <input type="range" class="form-input" id="filter-confidence" min="0" max="100" value="0" 
-                       onchange="filterLinks(); document.getElementById('confidence-value').textContent = this.value + '%'">
+                <input type="range" class="form-input" id="filter-confidence" min="0" max="100" value="0"
+                    onchange="filterLinks(); document.getElementById('confidence-value').textContent = this.value + '%'">
                 <small id="confidence-value">0%</small>
             </div>
         </div>
@@ -82,20 +87,21 @@
             {% if links %}
             <div class="space-y-3">
                 {% for link in links %}
-                <div class="link-item card" 
-                     data-type="{{ link.source_type }}" 
-                     data-status="{{ link.user_decision or 'pending' }}"
-                     data-confidence="{{ link.confidence }}"
-                     style="background: var(--color-bg-secondary); border-left: 4px solid {% if link.confidence >= 0.7 %}var(--color-success){% elif link.confidence >= 0.4 %}var(--color-warning){% else %}var(--color-secondary){% endif %};">
+                <div class="link-item card" data-type="{{ link.source_type }}"
+                    data-status="{{ link.user_decision or 'pending' }}" data-confidence="{{ link.confidence }}"
+                    style="background: var(--color-bg-secondary); border-left: 4px solid {% if link.confidence >= 0.7 %}var(--color-success){% elif link.confidence >= 0.4 %}var(--color-warning){% else %}var(--color-secondary){% endif %};">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <div class="flex items-center gap-3 mb-2">
-                                <span class="badge badge-{{ 'success' if link.confidence >= 0.7 else 'warning' if link.confidence >= 0.4 else 'secondary' }}">
+                                <span
+                                    class="badge badge-{{ 'success' if link.confidence >= 0.7 else 'warning' if link.confidence >= 0.4 else 'secondary' }}">
                                     {{ (link.confidence * 100)|int }}% confidence
                                 </span>
-                                <span class="text-sm font-medium text-secondary">{{ link.source_type.value }} ↔ {{ link.target_type.value }}</span>
+                                <span class="text-sm font-medium text-secondary">{{ link.source_type.value }} ↔ {{
+                                    link.target_type.value }}</span>
                                 {% if link.user_decision %}
-                                <span class="badge badge-{{ 'success' if link.user_decision == 'accepted' else 'danger' }}">
+                                <span
+                                    class="badge badge-{{ 'success' if link.user_decision == 'accepted' else 'danger' }}">
                                     {{ link.user_decision | capitalize }}
                                 </span>
                                 {% else %}
@@ -103,9 +109,11 @@
                                 {% endif %}
                             </div>
                             <div class="mb-2 font-semibold">
-                                <span class="text-primary">{{ link.source_type | capitalize }} #{{ link.source_id }}</span>
+                                <span class="text-primary">{{ link.source_type | capitalize }} #{{ link.source_id
+                                    }}</span>
                                 →
-                                <span class="text-primary">{{ link.target_type | capitalize }} #{{ link.target_id }}</span>
+                                <span class="text-primary">{{ link.target_type | capitalize }} #{{ link.target_id
+                                    }}</span>
                             </div>
                             <p class="text-sm text-secondary">{{ link.evidence_text }}</p>
                         </div>
@@ -156,20 +164,24 @@
                 </div>
                 <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
                     <div class="text-sm text-secondary mb-1">Acceptance Rate</div>
-                    <div class="text-3xl font-bold text-success">{{ "%.0f"|format((accepted_links / total_links * 100) if total_links > 0 else 0) }}%</div>
+                    <div class="text-3xl font-bold text-success">{{ "%.0f"|format((accepted_links / total_links * 100)
+                        if total_links > 0 else 0) }}%</div>
                 </div>
             </div>
             <h4 class="font-semibold mb-3">Status Breakdown</h4>
             <div class="space-y-2">
-                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-success-bg, rgba(16, 185, 129, 0.1));">
+                <div class="flex justify-between items-center p-3 rounded"
+                    style="background: var(--color-success-bg, rgba(16, 185, 129, 0.1));">
                     <span>✅ Accepted</span>
                     <span class="badge badge-success">{{ accepted_links }}</span>
                 </div>
-                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-warning-bg, rgba(245, 158, 11, 0.1));">
+                <div class="flex justify-between items-center p-3 rounded"
+                    style="background: var(--color-warning-bg, rgba(245, 158, 11, 0.1));">
                     <span>⏳ Pending Review</span>
                     <span class="badge badge-warning">{{ pending_links }}</span>
                 </div>
-                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-bg-secondary);">
+                <div class="flex justify-between items-center p-3 rounded"
+                    style="background: var(--color-bg-secondary);">
                     <span>❌ Rejected</span>
                     <span class="badge badge-secondary">{{ rejected_links }}</span>
                 </div>
@@ -179,41 +191,122 @@
 </div>
 
 <script>
-function filterLinks() {
-    const type = document.getElementById('filter-type').value;
-    const status = document.getElementById('filter-status').value;
-    const confidence = parseInt(document.getElementById('filter-confidence').value);
-    
-    const links = document.querySelectorAll('.link-item');
-    
-    links.forEach(link => {
-        const linkType = link.dataset.type;
-        const linkStatus = link.dataset.status;
-        const linkConfidence = parseInt(link.dataset.confidence);
-        
-        let show = true;
-        
-        if (type && !linkType.includes(type)) show = false;
-        if (status && linkStatus !== status) show = false;
-        if (linkConfidence < confidence) show = false;
-        
-        link.style.display = show ? 'block' : 'none';
-    });
-}
+    function filterLinks() {
+        const type = document.getElementById('filter-type').value;
+        const status = document.getElementById('filter-status').value;
+        const confidence = parseInt(document.getElementById('filter-confidence').value);
 
-function filterByStatus(status) {
-    // Set the status filter dropdown
-    document.getElementById('filter-status').value = status;
-    // Clear type filter
-    document.getElementById('filter-type').value = '';
-    // Reset confidence
-    document.getElementById('filter-confidence').value = '0';
-    document.getElementById('confidence-value').textContent = '0%';
-    // Apply the filter
-    filterLinks();
-    // Show toast
-    showToast(`Showing ${status} links`, 'info');
-}
+        const links = document.querySelectorAll('.link-item');
+
+        links.forEach(link => {
+            const linkType = link.dataset.type;
+            const linkStatus = link.dataset.status;
+            const linkConfidence = parseInt(link.dataset.confidence);
+
+            let show = true;
+
+            if (type && !linkType.includes(type)) show = false;
+            if (status && linkStatus !== status) show = false;
+            if (linkConfidence < confidence) show = false;
+
+            link.style.display = show ? 'block' : 'none';
+        });
+    }
+
+    function filterByStatus(status) {
+        // Set the status filter dropdown
+        document.getElementById('filter-status').value = status;
+        // Clear type filter
+        document.getElementById('filter-type').value = '';
+        // Reset confidence
+        document.getElementById('filter-confidence').value = '0';
+        document.getElementById('confidence-value').textContent = '0%';
+        // Apply the filter
+        filterLinks();
+        // Show toast
+        showToast(`Showing ${status} links`, 'info');
+    }
+
+    function analyzeLinks() {
+        showToast('Analyzing relationships...', 'info');
+
+        fetch('/api/links/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showToast('Error: ' + data.error, 'error');
+                } else {
+                    const count = data.links_created || data.analyzed || 0;
+                    showToast(`Analysis complete! Found ${count} potential relationships.`, 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Analysis failed. Please try again.', 'error');
+            });
+    }
+
+    function acceptLink(linkId) {
+        updateLinkDecision(linkId, 'accepted');
+    }
+
+    function rejectLink(linkId) {
+        updateLinkDecision(linkId, 'rejected');
+    }
+
+    function updateLinkDecision(linkId, decision) {
+        showToast(`Updating link...`, 'info');
+
+        fetch(`/api/links/${linkId}/decision`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ decision: decision })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showToast('Error: ' + data.error, 'error');
+                } else {
+                    showToast(`Link ${decision}!`, 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Failed to update link.', 'error');
+            });
+    }
+
+    function unlinkRelationship(linkId) {
+        if (!confirm('Are you sure you want to unlink this relationship?')) return;
+
+        showToast('Unlinking...', 'info');
+
+        fetch(`/api/links/${linkId}`, {
+            method: 'DELETE'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showToast('Error: ' + data.error, 'error');
+                } else {
+                    showToast('Relationship unlinked!', 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Failed to unlink.', 'error');
+            });
+    }
 
 </script>
 {% endblock %}

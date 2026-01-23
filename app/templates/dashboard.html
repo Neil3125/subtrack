@@ -16,7 +16,8 @@
 
     <!-- Stats Grid with Enhanced Design - Clickable Cards -->
     <div class="grid grid-cols-5 mb-8">
-        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 0ms; cursor: pointer;" onclick="openModal('activeSubscriptionsModal')">
+        <div class="card card-hover stat-card animate-slide-in clickable-card"
+            style="animation-delay: 0ms; cursor: pointer;" onclick="openModal('activeSubscriptionsModal')">
             <div class="text-sm text-secondary mb-2">Active Subscriptions</div>
             <div class="text-3xl font-bold text-primary mb-2">{{ stats.total_active|default(0) }}</div>
             <div class="progress">
@@ -24,7 +25,8 @@
             </div>
             <div class="text-xs text-secondary mt-2">Click to view all →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 100ms; cursor: pointer;" onclick="openModal('monthlyCostModal')">
+        <div class="card card-hover stat-card animate-slide-in clickable-card"
+            style="animation-delay: 100ms; cursor: pointer;" onclick="openModal('monthlyCostModal')">
             <div class="text-sm text-secondary mb-2">Monthly Cost</div>
             <div class="text-3xl font-bold text-success mb-2">${{ "%.2f"|format(stats.monthly_cost|default(0)) }}</div>
             <div class="text-xs text-secondary">Total recurring expenses</div>
@@ -35,7 +37,9 @@
             <div class="text-3xl font-bold text-info mb-2">${{ "%.2f"|format(stats.annual_revenue|default(0)) }}</div>
             <div class="text-xs text-secondary">Projected yearly total</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 200ms; position: relative; cursor: pointer;" onclick="openModal('expiringSoonModal')">
+        <div class="card card-hover stat-card animate-slide-in clickable-card"
+            style="animation-delay: 200ms; position: relative; cursor: pointer;"
+            onclick="openModal('expiringSoonModal')">
             <div class="text-sm text-secondary mb-2">Expiring Soon</div>
             <div class="text-3xl font-bold text-warning mb-2">{{ stats.expiring_soon|default(0) }}</div>
             {% if stats.expiring_soon > 0 %}
@@ -43,7 +47,8 @@
             {% endif %}
             <div class="text-xs text-secondary">Click to filter →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 300ms; position: relative; cursor: pointer;" onclick="openModal('overdueModal')">
+        <div class="card card-hover stat-card animate-slide-in clickable-card"
+            style="animation-delay: 300ms; position: relative; cursor: pointer;" onclick="openModal('overdueModal')">
             <div class="text-sm text-secondary mb-2">Overdue</div>
             <div class="text-3xl font-bold text-danger mb-2">{{ stats.overdue|default(0) }}</div>
             {% if stats.overdue > 0 %}
@@ -119,11 +124,13 @@
             <div class="grid grid-cols-2 gap-4 mb-4" style="min-width: 300px;">
                 <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
                     <div class="text-sm text-secondary mb-1">Total Monthly Cost</div>
-                    <div class="text-2xl font-bold text-success">${{ "%.2f"|format(stats.monthly_cost|default(0)) }}</div>
+                    <div class="text-2xl font-bold text-success">${{ "%.2f"|format(stats.monthly_cost|default(0)) }}
+                    </div>
                 </div>
                 <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
                     <div class="text-sm text-secondary mb-1">Projected Annual Revenue</div>
-                    <div class="text-2xl font-bold text-info">${{ "%.2f"|format(stats.annual_revenue|default(0)) }}</div>
+                    <div class="text-2xl font-bold text-info">${{ "%.2f"|format(stats.annual_revenue|default(0)) }}
+                    </div>
                 </div>
             </div>
             <h4 class="font-semibold mb-3">By Billing Cycle</h4>
@@ -141,7 +148,8 @@
                     <tbody>
                         {% for sub in all_active %}
                         <tr>
-                            <td class="font-medium" style="word-break: break-word; max-width: 200px;">{{ sub.vendor_name }}</td>
+                            <td class="font-medium" style="word-break: break-word; max-width: 200px;">{{ sub.vendor_name
+                                }}</td>
                             <td style="white-space: nowrap;">${{ "%.2f"|format(sub.cost) }}</td>
                             <td><span class="badge badge-secondary">{{ sub.billing_cycle.value }}</span></td>
                             <td style="white-space: nowrap;">
@@ -188,9 +196,11 @@
                         <option value="999">90+ days</option>
                     </select>
                 </div>
-                <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-3); margin-bottom: 0; min-width: 150px;">
+                <div class="card"
+                    style="background: var(--color-bg-secondary); padding: var(--space-3); margin-bottom: 0; min-width: 150px;">
                     <div class="text-xs text-secondary">Showing</div>
-                    <div class="text-xl font-bold text-warning" id="expiring-visible-count">{{ expiring_soon|length if expiring_soon else 0 }}</div>
+                    <div class="text-xl font-bold text-warning" id="expiring-visible-count">{{ expiring_soon|length if
+                        expiring_soon else 0 }}</div>
                     <div class="text-xs text-secondary">subscriptions</div>
                 </div>
                 {% if expiring_soon %}
@@ -199,13 +209,14 @@
                 </button>
                 {% endif %}
             </div>
-            
+
             {% if expiring_soon %}
             <div class="info-box info-box-info mb-4" id="send-all-info">
-                <strong>💡 Tip:</strong> Click "Send All Renewal Notices" to send email reminders to all customers with expiring subscriptions shown below (only those with email addresses).
+                <strong>💡 Tip:</strong> Click "Send All Renewal Notices" to send email reminders to all customers with
+                expiring subscriptions shown below (only those with email addresses).
             </div>
             {% endif %}
-            
+
             <div id="expiring-results">
                 {% if expiring_soon %}
                 <div class="table-container" style="max-height: 400px; overflow-y: auto;">
@@ -213,7 +224,8 @@
                         <thead style="position: sticky; top: 0; background: var(--color-bg-card); z-index: 1;">
                             <tr>
                                 <th style="width: 30px;">
-                                    <input type="checkbox" id="select-all-expiring" onchange="toggleSelectAllExpiring()" checked>
+                                    <input type="checkbox" id="select-all-expiring" onchange="toggleSelectAllExpiring()"
+                                        checked>
                                 </th>
                                 <th>Vendor</th>
                                 <th>Customer</th>
@@ -225,9 +237,11 @@
                         </thead>
                         <tbody>
                             {% for sub in expiring_soon %}
-                            <tr class="expiring-row" data-days="{{ sub.days_until_renewal() }}" data-id="{{ sub.id }}" data-has-email="{{ 'true' if sub.customer.email else 'false' }}">
+                            <tr class="expiring-row" data-days="{{ sub.days_until_renewal() }}" data-id="{{ sub.id }}"
+                                data-has-email="{{ 'true' if sub.customer.email else 'false' }}">
                                 <td>
-                                    <input type="checkbox" class="expiring-checkbox" data-id="{{ sub.id }}" {{ 'checked' if sub.customer.email else 'disabled' }}>
+                                    <input type="checkbox" class="expiring-checkbox" data-id="{{ sub.id }}" {{ 'checked'
+                                        if sub.customer.email else 'disabled' }}>
                                 </td>
                                 <td class="font-medium">{{ sub.vendor_name }}</td>
                                 <td>{{ sub.customer.name }}</td>
@@ -242,9 +256,11 @@
                                 <td><span class="badge badge-warning">{{ sub.days_until_renewal() }}d</span></td>
                                 <td>
                                     <div class="flex gap-1">
-                                        <a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary" title="View">👁️</a>
+                                        <a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary"
+                                            title="View">👁️</a>
                                         {% if sub.customer.email %}
-                                        <button class="btn btn-sm btn-primary" onclick="sendRenewalNotice({{ sub.id }})" title="Send Email">📧</button>
+                                        <button class="btn btn-sm btn-primary" onclick="sendRenewalNotice({{ sub.id }})"
+                                            title="Send Email">📧</button>
                                         {% endif %}
                                     </div>
                                 </td>
@@ -295,7 +311,8 @@
                         <td><span class="badge badge-danger">{{ -sub.days_until_renewal() }} days</span></td>
                         <td>
                             <a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a>
-                            <button class="btn btn-sm btn-primary" onclick="renewSubscription({{ sub.id }})">Renew</button>
+                            <button class="btn btn-sm btn-primary"
+                                onclick="renewSubscription({{ sub.id }})">Renew</button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -309,136 +326,183 @@
 </div>
 
 <script>
-function filterExpiringSubscriptions() {
-    const days = parseInt(document.getElementById('expiring-days-filter').value);
-    const rows = document.querySelectorAll('.expiring-row');
-    let visibleCount = 0;
-    let withEmailCount = 0;
-    
-    rows.forEach(row => {
-        const rowDays = parseInt(row.dataset.days);
-        let show = false;
-        
-        if (days === 999) {
-            show = rowDays > 90;
-        } else {
-            show = rowDays <= days && rowDays >= 0;
-        }
-        
-        row.style.display = show ? '' : 'none';
-        if (show) {
-            visibleCount++;
-            if (row.dataset.hasEmail === 'true') {
-                withEmailCount++;
+    function filterExpiringSubscriptions() {
+        const days = parseInt(document.getElementById('expiring-days-filter').value);
+        const rows = document.querySelectorAll('.expiring-row');
+        let visibleCount = 0;
+        let withEmailCount = 0;
+
+        rows.forEach(row => {
+            const rowDays = parseInt(row.dataset.days);
+            let show = false;
+
+            if (days === 999) {
+                show = rowDays > 90;
+            } else {
+                show = rowDays <= days && rowDays >= 0;
             }
-        }
-    });
-    
-    document.getElementById('no-expiring-message').style.display = visibleCount === 0 ? 'block' : 'none';
-    
-    // Update visible count display
-    const visibleCountEl = document.getElementById('expiring-visible-count');
-    if (visibleCountEl) {
-        visibleCountEl.textContent = visibleCount;
-    }
-    
-    // Update selected count
-    const countEl = document.getElementById('selected-expiring-count');
-    if (countEl) {
-        countEl.textContent = withEmailCount;
-    }
-    
-    // Update send all button visibility
-    const sendAllBtn = document.getElementById('send-all-btn');
-    if (sendAllBtn) {
-        sendAllBtn.style.display = withEmailCount > 0 ? '' : 'none';
-    }
-}
 
-function toggleSelectAllExpiring() {
-    const selectAll = document.getElementById('select-all-expiring');
-    const checkboxes = document.querySelectorAll('.expiring-checkbox:not(:disabled)');
-    checkboxes.forEach(cb => {
-        const row = cb.closest('.expiring-row');
-        if (row && row.style.display !== 'none') {
-            cb.checked = selectAll.checked;
-        }
-    });
-    updateSelectedExpiringCount();
-}
+            row.style.display = show ? '' : 'none';
+            if (show) {
+                visibleCount++;
+                if (row.dataset.hasEmail === 'true') {
+                    withEmailCount++;
+                }
+            }
+        });
 
-function updateSelectedExpiringCount() {
-    const checkboxes = document.querySelectorAll('.expiring-checkbox:checked');
-    const visibleChecked = Array.from(checkboxes).filter(cb => {
-        const row = cb.closest('.expiring-row');
-        return row && row.style.display !== 'none';
-    });
-    
-    const countEl = document.getElementById('selected-expiring-count');
-    if (countEl) {
-        countEl.textContent = visibleChecked.length;
-    }
-}
+        document.getElementById('no-expiring-message').style.display = visibleCount === 0 ? 'block' : 'none';
 
-function sendAllExpiringNotices() {
-    const checkboxes = document.querySelectorAll('.expiring-checkbox:checked');
-    const visibleChecked = Array.from(checkboxes).filter(cb => {
-        const row = cb.closest('.expiring-row');
-        return row && row.style.display !== 'none';
-    });
-    
-    const subscriptionIds = visibleChecked.map(cb => parseInt(cb.dataset.id));
-    
-    if (subscriptionIds.length === 0) {
-        showToast('No subscriptions selected', 'warning');
-        return;
-    }
-    
-    if (!confirm(`Send renewal notices to ${subscriptionIds.length} customer(s)?`)) {
-        return;
-    }
-    
-    const btn = document.getElementById('send-all-btn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Sending...';
-    btn.disabled = true;
-    
-    fetch('/api/email/send-batch-notices', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ subscription_ids: subscriptionIds })
-    })
-    .then(response => response.json())
-    .then(data => {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        
-        if (data.success_count > 0) {
-            showToast(`Successfully sent ${data.success_count} renewal notice(s)`, 'success');
+        // Update visible count display
+        const visibleCountEl = document.getElementById('expiring-visible-count');
+        if (visibleCountEl) {
+            visibleCountEl.textContent = visibleCount;
         }
-        if (data.failure_count > 0) {
-            showToast(`Failed to send ${data.failure_count} notice(s)`, 'error');
-        }
-        if (data.success_count === 0 && data.failure_count === 0) {
-            showToast('No emails were sent', 'warning');
-        }
-    })
-    .catch(error => {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        showToast('Error sending notices: ' + error.message, 'error');
-        console.error('Error:', error);
-    });
-}
 
-// Add event listeners to checkboxes
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.expiring-checkbox').forEach(cb => {
-        cb.addEventListener('change', updateSelectedExpiringCount);
+        // Update selected count
+        const countEl = document.getElementById('selected-expiring-count');
+        if (countEl) {
+            countEl.textContent = withEmailCount;
+        }
+
+        // Update send all button visibility
+        const sendAllBtn = document.getElementById('send-all-btn');
+        if (sendAllBtn) {
+            sendAllBtn.style.display = withEmailCount > 0 ? '' : 'none';
+        }
+    }
+
+    function toggleSelectAllExpiring() {
+        const selectAll = document.getElementById('select-all-expiring');
+        const checkboxes = document.querySelectorAll('.expiring-checkbox:not(:disabled)');
+        checkboxes.forEach(cb => {
+            const row = cb.closest('.expiring-row');
+            if (row && row.style.display !== 'none') {
+                cb.checked = selectAll.checked;
+            }
+        });
+        updateSelectedExpiringCount();
+    }
+
+    function updateSelectedExpiringCount() {
+        const checkboxes = document.querySelectorAll('.expiring-checkbox:checked');
+        const visibleChecked = Array.from(checkboxes).filter(cb => {
+            const row = cb.closest('.expiring-row');
+            return row && row.style.display !== 'none';
+        });
+
+        const countEl = document.getElementById('selected-expiring-count');
+        if (countEl) {
+            countEl.textContent = visibleChecked.length;
+        }
+    }
+
+    function sendAllExpiringNotices() {
+        const checkboxes = document.querySelectorAll('.expiring-checkbox:checked');
+        const visibleChecked = Array.from(checkboxes).filter(cb => {
+            const row = cb.closest('.expiring-row');
+            return row && row.style.display !== 'none';
+        });
+
+        const subscriptionIds = visibleChecked.map(cb => parseInt(cb.dataset.id));
+
+        if (subscriptionIds.length === 0) {
+            showToast('No subscriptions selected', 'warning');
+            return;
+        }
+
+        if (!confirm(`Send renewal notices to ${subscriptionIds.length} customer(s)?`)) {
+            return;
+        }
+
+        const btn = document.getElementById('send-all-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '⏳ Sending...';
+        btn.disabled = true;
+
+        fetch('/api/email/send-batch-notices', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ subscription_ids: subscriptionIds })
+        })
+            .then(response => response.json())
+            .then(data => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                if (data.success_count > 0) {
+                    showToast(`Successfully sent ${data.success_count} renewal notice(s)`, 'success');
+                }
+                if (data.failure_count > 0) {
+                    showToast(`Failed to send ${data.failure_count} notice(s)`, 'error');
+                }
+                if (data.success_count === 0 && data.failure_count === 0) {
+                    showToast('No emails were sent', 'warning');
+                }
+            })
+            .catch(error => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast('Error sending notices: ' + error.message, 'error');
+                console.error('Error:', error);
+            });
+    }
+
+    // Add event listeners to checkboxes
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.expiring-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateSelectedExpiringCount);
+        });
     });
-});
+
+    function sendRenewalNotice(subscriptionId) {
+        showToast('Sending renewal notice...', 'info');
+
+        fetch(`/api/email/send-notice/${subscriptionId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showToast('Error: ' + data.error, 'error');
+                } else {
+                    showToast('Renewal notice sent successfully!', 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Failed to send notice', 'error');
+            });
+    }
+
+    function renewSubscription(subscriptionId) {
+        showToast('Renewing subscription...', 'info');
+
+        fetch(`/api/subscriptions/${subscriptionId}/renew`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showToast('Error: ' + data.error, 'error');
+                } else {
+                    showToast('Subscription renewed successfully!', 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Failed to renew subscription', 'error');
+            });
+    }
 </script>
 
 {% endblock %}
