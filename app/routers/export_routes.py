@@ -1,5 +1,5 @@
 """Export routes for generating reports."""
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, UploadFile, File
 from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta
 from collections import defaultdict
@@ -718,29 +718,57 @@ async def import_data_json(payload: dict, db: Session = Depends(get_db)):
               f"Customers: {len(payload.get('customers', []))}, "
               f"Subscriptions: {len(payload.get('subscriptions', []))}")
         
-        success = import_data_to_db(db, payload)
+        result = import_data_to_db(db, payload, return_details=True)
         
-        if success:
+        if result.get("success"):
             print(f"[ImportAPI] Import successful!")
             return {
                 "message": "Data imported successfully",
-                "imported": {
-                    "categories": len(payload.get("categories", [])),
-                    "groups": len(payload.get("groups", [])),
-                    "customers": len(payload.get("customers", [])),
-                    "subscriptions": len(payload.get("subscriptions", []))
-                }
+                "imported": result.get("imported", {}),
+                "warnings": result.get("warnings", [])
             }
-        else:
-            error_msg = "Import failed - the import function returned False. This usually means a database error occurred. Check the console for [DataPersistence] error messages."
-            print(f"[ImportAPI] {error_msg}")
-            return {"error": error_msg}
+        error_msg = result.get("error") or "Import failed - the import function returned False."
+        print(f"[ImportAPI] {error_msg}")
+        return {"error": error_msg, "warnings": result.get("warnings", [])}
     except Exception as e:
         error_msg = f"Import exception: {str(e)}"
         print(f"[ImportAPI] {error_msg}")
         print(f"[ImportAPI] Traceback:")
         traceback.print_exc()
         return {"error": error_msg}
+
+
+@router.post("/import/file")
+async def import_data_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Import data from an uploaded JSON file."""
+    from app.data_persistence import import_data_to_db
+    import json
+    import traceback
+    
+    try:
+        contents = await file.read()
+        payload = json.loads(contents.decode("utf-8"))
+    except Exception as e:
+        return {"error": f"Invalid JSON file: {str(e)}"}
+    
+    if not any(key in payload for key in ["categories", "customers", "subscriptions", "groups"]):
+        return {"error": "Invalid data format. Expected JSON with categories, customers, subscriptions, or groups."}
+    
+    try:
+        print(f"[ImportAPI] File upload import: {file.filename}")
+        result = import_data_to_db(db, payload, return_details=True)
+        if result.get("success"):
+            return {
+                "message": "Data imported successfully",
+                "imported": result.get("imported", {}),
+                "warnings": result.get("warnings", [])
+            }
+        error_msg = result.get("error") or "Import failed - the import function returned False."
+        return {"error": error_msg, "warnings": result.get("warnings", [])}
+    except Exception as e:
+        print(f"[ImportAPI] File import exception: {str(e)}")
+        traceback.print_exc()
+        return {"error": f"Import exception: {str(e)}"}
 
 
 @router.post("/clear-all-records")

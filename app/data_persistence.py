@@ -312,66 +312,115 @@ def get_data_as_base64(db: Session) -> str:
     return base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
 
 
-def import_data_to_db(db: Session, data: dict) -> bool:
-    """Import data from dictionary to database."""
+def import_data_to_db(db: Session, data: dict, return_details: bool = False):
+    """Import data from dictionary to database.
+
+    Args:
+        db: Database session
+        data: Parsed data dictionary
+        return_details: If True, return a dict with success, imported counts, warnings, and error
+    """
     global _importing
     
     from app.models import Category, Group, Customer, Subscription, Link
     from app.models.subscription import BillingCycle, SubscriptionStatus
     from app.models.saved_report import SavedReport
+    from sqlalchemy.exc import IntegrityError
     
     _importing = True
     
     try:
         # Import categories
+        imported_counts = {
+            "categories": 0,
+            "groups": 0,
+            "customers": 0,
+            "subscriptions": 0,
+            "links": 0,
+            "saved_reports": 0
+        }
+        warnings = []
+        
         for cat_data in data.get("categories", []):
             existing = db.query(Category).filter(Category.id == cat_data["id"]).first()
             if not existing:
-                cat = Category(
-                    id=cat_data["id"],
-                    name=cat_data["name"],
-                    description=cat_data.get("description")
-                )
-                db.add(cat)
+                try:
+                    cat = Category(
+                        id=cat_data["id"],
+                        name=cat_data["name"],
+                        description=cat_data.get("description")
+                    )
+                    db.add(cat)
+                    imported_counts["categories"] += 1
+                except IntegrityError as e:
+                    warnings.append(f"Category {cat_data.get('id')} skipped: {str(e)}")
+                    db.rollback()
         db.commit()
         
         # Import groups
         for group_data in data.get("groups", []):
             existing = db.query(Group).filter(Group.id == group_data["id"]).first()
             if not existing:
-                group = Group(
-                    id=group_data["id"],
-                    category_id=group_data["category_id"],
-                    name=group_data["name"],
-                    notes=group_data.get("notes")
-                )
-                db.add(group)
+                # Skip if referenced category missing
+                if group_data.get("category_id") and not db.query(Category).filter(Category.id == group_data["category_id"]).first():
+                    warnings.append(f"Group {group_data.get('id')} skipped: missing category {group_data.get('category_id')}")
+                    continue
+                try:
+                    group = Group(
+                        id=group_data["id"],
+                        category_id=group_data["category_id"],
+                        name=group_data["name"],
+                        notes=group_data.get("notes")
+                    )
+                    db.add(group)
+                    imported_counts["groups"] += 1
+                except IntegrityError as e:
+                    warnings.append(f"Group {group_data.get('id')} skipped: {str(e)}")
+                    db.rollback()
         db.commit()
         
         # Import customers
         for customer_data in data.get("customers", []):
             existing = db.query(Customer).filter(Customer.id == customer_data["id"]).first()
             if not existing:
-                customer = Customer(
-                    id=customer_data["id"],
-                    category_id=customer_data["category_id"],
-                    group_id=customer_data.get("group_id"),
-                    name=customer_data["name"],
-                    email=customer_data.get("email"),
-                    phone=customer_data.get("phone"),
-                    tags=customer_data.get("tags"),
-                    notes=customer_data.get("notes")
-                )
-                # Set country if available
-                if "country" in customer_data and hasattr(customer, 'country'):
-                    customer.country = customer_data["country"]
-                db.add(customer)
+                if customer_data.get("category_id") and not db.query(Category).filter(Category.id == customer_data["category_id"]).first():
+                    warnings.append(f"Customer {customer_data.get('id')} skipped: missing category {customer_data.get('category_id')}")
+                    continue
+                if customer_data.get("group_id") and not db.query(Group).filter(Group.id == customer_data.get("group_id")).first():
+                    warnings.append(f"Customer {customer_data.get('id')} skipped: missing group {customer_data.get('group_id')}")
+                    continue
+                try:
+                    customer = Customer(
+                        id=customer_data["id"],
+                        category_id=customer_data["category_id"],
+                        group_id=customer_data.get("group_id"),
+                        name=customer_data["name"],
+                        email=customer_data.get("email"),
+                        phone=customer_data.get("phone"),
+                        tags=customer_data.get("tags"),
+                        notes=customer_data.get("notes")
+                    )
+                    # Set country if available
+                    if "country" in customer_data and hasattr(customer, 'country'):
+                        customer.country = customer_data["country"]
+                    db.add(customer)
+                    imported_counts["customers"] += 1
+                except IntegrityError as e:
+                    warnings.append(f"Customer {customer_data.get('id')} skipped: {str(e)}")
+                    db.rollback()
         db.commit()
         
         # Import subscriptions
         for sub_data in data.get("subscriptions", []):
             existing = db.query(Subscription).filter(Subscription.id == sub_data["id"]).first()
             if not existing:
+                # Skip if referenced customer/category missing
+                if sub_data.get("customer_id") and not db.query(Customer).filter(Customer.id == sub_data["customer_id"]).first():
+                    warnings.append(f"Subscription {sub_data.get('id')} skipped: missing customer {sub_data.get('customer_id')}")
+                    continue
+                if sub_data.get("category_id") and not db.query(Category).filter(Category.id == sub_data["category_id"]).first():
+                    warnings.append(f"Subscription {sub_data.get('id')} skipped: missing category {sub_data.get('category_id')}")
+                    continue
                 # Normalize enum values (handle uppercase Postgres exports)
                 raw_billing_cycle = sub_data.get("billing_cycle", "monthly")
                 raw_status = sub_data.get("status", "active")
@@ -383,33 +432,38 @@ def import_data_to_db(db: Session, data: dict) -> bool:
                 try:
                     billing_cycle_enum = BillingCycle(billing_cycle_value)
                 except Exception:
-                    print(f"[DataPersistence] Invalid billing_cycle '{raw_billing_cycle}' for subscription {sub_data.get('id')}, defaulting to monthly")
+                    warnings.append(f"Subscription {sub_data.get('id')} invalid billing_cycle '{raw_billing_cycle}', defaulted to monthly")
                     billing_cycle_enum = BillingCycle.MONTHLY
                 
                 try:
                     status_enum = SubscriptionStatus(status_value)
                 except Exception:
-                    print(f"[DataPersistence] Invalid status '{raw_status}' for subscription {sub_data.get('id')}, defaulting to active")
+                    warnings.append(f"Subscription {sub_data.get('id')} invalid status '{raw_status}', defaulted to active")
                     status_enum = SubscriptionStatus.ACTIVE
                 
-                sub = Subscription(
-                    id=sub_data["id"],
-                    customer_id=sub_data["customer_id"],
-                    category_id=sub_data["category_id"],
-                    vendor_name=sub_data["vendor_name"],
-                    plan_name=sub_data.get("plan_name"),
-                    cost=sub_data.get("cost", 0),
-                    currency=sub_data.get("currency", "USD"),
-                    billing_cycle=billing_cycle_enum,
-                    start_date=datetime.fromisoformat(sub_data["start_date"]).date() if sub_data.get("start_date") else None,
-                    next_renewal_date=datetime.fromisoformat(sub_data["next_renewal_date"]).date() if sub_data.get("next_renewal_date") else None,
-                    status=status_enum,
-                    notes=sub_data.get("notes")
-                )
-                # Set country if available
-                if "country" in sub_data and hasattr(sub, 'country'):
-                    sub.country = sub_data["country"]
-                db.add(sub)
+                try:
+                    sub = Subscription(
+                        id=sub_data["id"],
+                        customer_id=sub_data["customer_id"],
+                        category_id=sub_data["category_id"],
+                        vendor_name=sub_data["vendor_name"],
+                        plan_name=sub_data.get("plan_name"),
+                        cost=sub_data.get("cost", 0),
+                        currency=sub_data.get("currency", "USD"),
+                        billing_cycle=billing_cycle_enum,
+                        start_date=datetime.fromisoformat(sub_data["start_date"]).date() if sub_data.get("start_date") else None,
+                        next_renewal_date=datetime.fromisoformat(sub_data["next_renewal_date"]).date() if sub_data.get("next_renewal_date") else None,
+                        status=status_enum,
+                        notes=sub_data.get("notes")
+                    )
+                    # Set country if available
+                    if "country" in sub_data and hasattr(sub, 'country'):
+                        sub.country = sub_data["country"]
+                    db.add(sub)
+                    imported_counts["subscriptions"] += 1
+                except IntegrityError as e:
+                    warnings.append(f"Subscription {sub_data.get('id')} skipped: {str(e)}")
+                    db.rollback()
         db.commit()
         
         # Import links
@@ -426,6 +480,10 @@ def import_data_to_db(db: Session, data: dict) -> bool:
                         notes=link_data.get("notes")
                     )
                     db.add(link)
+                    imported_counts["links"] += 1
+            except IntegrityError as e:
+                warnings.append(f"Link {link_data.get('id')} skipped: {str(e)}")
+                db.rollback()
             except Exception:
                 pass
         db.commit()
@@ -442,6 +500,10 @@ def import_data_to_db(db: Session, data: dict) -> bool:
                         filters=report_data.get("filters")
                     )
                     db.add(report)
+                    imported_counts["saved_reports"] += 1
+            except IntegrityError as e:
+                warnings.append(f"Saved report {report_data.get('id')} skipped: {str(e)}")
+                db.rollback()
             except Exception:
                 pass
         db.commit()
@@ -501,8 +563,22 @@ def import_data_to_db(db: Session, data: dict) -> bool:
         
         db.commit()
         
-        print(f"[DataPersistence] Imported data: {len(data.get('categories', []))} categories, "
-              f"{len(data.get('customers', []))} customers, {len(data.get('subscriptions', []))} subscriptions")
+        print(f"[DataPersistence] Imported data: {imported_counts['categories']} categories, "
+              f"{imported_counts['customers']} customers, {imported_counts['subscriptions']} subscriptions")
+        
+        if warnings:
+            print(f"[DataPersistence] Import warnings ({len(warnings)}):")
+            for warning in warnings[:10]:
+                print(f"  - {warning}")
+            if len(warnings) > 10:
+                print(f"  ...and {len(warnings) - 10} more")
+        
+        if return_details:
+            return {
+                "success": True,
+                "imported": imported_counts,
+                "warnings": warnings
+            }
         
         return True
         
@@ -513,6 +589,12 @@ def import_data_to_db(db: Session, data: dict) -> bool:
         print(f"[DataPersistence] Full traceback:")
         traceback.print_exc()
         db.rollback()
+        if return_details:
+            return {
+                "success": False,
+                "error": str(e),
+                "warnings": warnings if 'warnings' in locals() else []
+            }
         return False
     finally:
         _importing = False
