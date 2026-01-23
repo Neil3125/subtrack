@@ -1,0 +1,11 @@
+{
+  "theme": "dark",
+  "background_effects_enabled": true,
+  "reduce_motion": false,
+  "app_alpha": 0.9,
+  "tooltip_delay_ms": 300,
+  "toast_duration_ms": 3800,
+  "particle_density": 0.9999999999999999,
+  "particle_speed": 1.6,
+  "border_animation_enabled": true
+}

@@ -1,0 +1,39 @@
+
+
+
+
+also add multiple improvements to the query table at least 10 improvements
+
+
+To build the exe
+pyinstaller --onefile --windowed --icon=icon.ico log_check.py
+To compile the installer
+"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" setup.iss
+
+
+date fix for mobile app
+
+customer system page for mobile app
+can add or remove customers in that page and theres going to be a select customer button somewhere on the 
+page also make it so that the page is scrollable so you need to try and fit everything on a tiny page and stuff u can have some space where needed
+
+
+okay well i dont need you to nagivage back to the previous screen i just actually need that select button becuase it dosent do anything also i should be able to select a customer in the log submission page and when tht cusomter is selected i am able to see the customers name at the end of the log of which i selected them in.
+there was an error so try to actually do the edit on the logsubmission page
+
+Error while editing
+LogSubmission.js
+I've updated 
+CustomerManagement.js
+ to remove the automatic navigation back to the previous screen when selecting a customer. The "Select" button remains functional, allowing you to choose a customer without being redirected.
+
+Additionally, I've ensured that in 
+LogSubmission.js
+, the selected customer's name is displayed on the log submission page and included at the end of the log entry when you submit it. This way, you can see the customer's name associated with the log you've created.
+okay now find a way to store the customers in the customer management.js side of things where the logsubmission.js can pull the data of customers from it and then in the selecting customers button it will bring up a popup of the list of customers so i can select from
+
+
+Feedback submitted
+
+
+remove the select button from the customer page since it dosent really serve a purpose and there should be an option if i want to choose a customer if i wanted to and if i did choose a customer then when doing the log check and pressing subit log u would put the customers name in the log check so like yeah yk

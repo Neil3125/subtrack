@@ -1238,13 +1238,6 @@
                 closeFabMenu();
             }
         });
-
-        // Close FAB when a modal opens
-        const originalOpenModal = window.openModal;
-        window.openModal = function (modalId) {
-            closeFabMenu();
-            return originalOpenModal(modalId);
-        };
     </script>
 </body>
 

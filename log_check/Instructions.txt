@@ -1,0 +1,20 @@
+Instructions to set up and run the program:
+
+Install Python 3.8+ (recommended: 3.10 or 3.11, 64-bit).
+
+When installing python make sure pip/pyinstaller is enabled.
+
+Create a folder and choose the location of your choice for the program. (Saving to Desktop is recommended)
+
+Open cmd
+
+Install dependencies(if not working immediately) using the following commands
+
+
+pip install customtkinter
+pip install pyperclip
+
+
+You're done simply run the program.
+
+Drag the exe file to the taskbar for a shortcut

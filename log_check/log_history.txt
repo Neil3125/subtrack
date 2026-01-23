@@ -1,0 +1,12 @@
+[06/04/2025 02:58:44 PM] [6/4/2025][Start: 2:58 p.m][Service Check] Logged onto Servers. Checked system logs, DNS and DHCP entries, disk health and usage. Checked ESET logs. Checked volume shadow copies. [End: 3:28 p.m] [Duration 30 mins]
+
+
+[06/04/2025 02:58:50 PM] [6/4/2025][Start: 2:58 p.m][Backup Check] Logged onto Servers. Checked backup jobs. Checked data integrity and verified that all jobs finished successfully. [End: 3:28 p.m] [Duration 30 mins]
+
+
+[06/04/2025 03:02:15 PM] [6/4/2025][Start: 3:02 p.m][Service Check] Logged onto Servers. Checked system logs, DNS and DHCP entries, disk health and usage. Checked ESET logs. Checked volume shadow copies. @Customer:Boom@ [End: 3:32 p.m] [Duration 30 mins]
+ @Customer:Boom@
+
+[06/04/2025 03:02:33 PM] [6/4/2025][Start: 3:02 p.m][On-Site] Changed Backup Drive @Customer:Booma@ [End: 3:32 p.m] [Duration 30 mins]
+ @Customer:Booma@
+

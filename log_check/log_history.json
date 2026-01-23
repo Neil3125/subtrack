@@ -1,0 +1,30 @@
+[
+  {
+    "timestamp": "2025-05-30 2:08 PM",
+    "log_type": "s",
+    "message": "Logged onto Servers. Checked system logs, DNS and DHCP entries, disk health and usage. Checked ESET logs. Checked volume shadow copies.",
+    "duration": 15,
+    "file_path": "C:\\Users\\acsops\\a\\Desktop\\Logs\\log_entry_20250530_140819.txt"
+  },
+  {
+    "timestamp": "2025-05-30 2:08 PM",
+    "log_type": "b",
+    "message": "Logged onto Servers. Checked backup jobs. Checked data integrity and verified that all jobs finished successfully.",
+    "duration": 15,
+    "file_path": "C:\\Users\\acsops\\a\\Desktop\\Logs\\log_entry_20250530_140819.txt"
+  },
+  {
+    "timestamp": "2025-05-30 2:08 PM",
+    "log_type": "s",
+    "message": "Logged onto Servers. Checked system logs, DNS and DHCP entries, disk health and usage. Checked ESET logs. Checked volume shadow copies.",
+    "duration": 15,
+    "file_path": "C:\\Users\\acsops\\a\\Desktop\\Logs\\log_entry_20250530_140821.txt"
+  },
+  {
+    "timestamp": "2025-05-30 2:08 PM",
+    "log_type": "b",
+    "message": "Logged onto Servers. Checked backup jobs. Checked data integrity and verified that all jobs finished successfully.",
+    "duration": 15,
+    "file_path": "C:\\Users\\acsops\\a\\Desktop\\Logs\\log_entry_20250530_140821.txt"
+  }
+]
