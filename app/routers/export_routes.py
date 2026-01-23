@@ -1,7 +1,7 @@
 """Export routes for generating reports."""
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from collections import defaultdict
 from app.database import get_db
 from app.models import Subscription, Customer, Category
