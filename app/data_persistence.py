@@ -348,74 +348,82 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         }
         
         for cat_data in data.get("categories", []):
-            existing = db.query(Category).filter(Category.id == cat_data["id"]).first()
-            if existing:
-                id_map["categories"][cat_data["id"]] = existing.id
-                continue
-            # Check for unique name conflicts
-            existing_by_name = db.query(Category).filter(Category.name == cat_data.get("name")).first()
-            if existing_by_name:
-                id_map["categories"][cat_data["id"]] = existing_by_name.id
-                warnings.append(f"Category '{cat_data.get('name')}' already exists. Using existing category ID {existing_by_name.id}.")
-                continue
             try:
+                existing = db.query(Category).filter(Category.id == cat_data["id"]).first()
+                if existing:
+                    id_map["categories"][cat_data["id"]] = existing.id
+                    continue
+                # Check for unique name conflicts
+                existing_by_name = db.query(Category).filter(Category.name == cat_data.get("name")).first()
+                if existing_by_name:
+                    id_map["categories"][cat_data["id"]] = existing_by_name.id
+                    warnings.append(f"Category '{cat_data.get('name')}' already exists. Using existing category ID {existing_by_name.id}.")
+                    continue
+                # Create without explicit ID - let DB auto-generate
                 cat = Category(
-                    id=cat_data["id"],
                     name=cat_data["name"],
                     description=cat_data.get("description")
                 )
                 db.add(cat)
+                db.flush()  # Get the new ID
                 imported_counts["categories"] += 1
-                id_map["categories"][cat_data["id"]] = cat_data["id"]
+                id_map["categories"][cat_data["id"]] = cat.id
             except IntegrityError as e:
                 warnings.append(f"Category {cat_data.get('id')} skipped: {str(e)}")
+                db.rollback()
+            except Exception as e:
+                warnings.append(f"Category {cat_data.get('id')} error: {str(e)}")
                 db.rollback()
         db.commit()
         
         # Import groups
         for group_data in data.get("groups", []):
-            existing = db.query(Group).filter(Group.id == group_data["id"]).first()
-            if existing:
-                id_map["groups"][group_data["id"]] = existing.id
-                continue
-            # Skip if referenced category missing
-            category_id = group_data.get("category_id")
-            mapped_category_id = id_map["categories"].get(category_id, category_id)
-            if mapped_category_id and not db.query(Category).filter(Category.id == mapped_category_id).first():
-                warnings.append(f"Group {group_data.get('id')} skipped: missing category {mapped_category_id}")
-                continue
             try:
+                existing = db.query(Group).filter(Group.id == group_data["id"]).first()
+                if existing:
+                    id_map["groups"][group_data["id"]] = existing.id
+                    continue
+                # Skip if referenced category missing
+                category_id = group_data.get("category_id")
+                mapped_category_id = id_map["categories"].get(category_id, category_id)
+                if mapped_category_id and not db.query(Category).filter(Category.id == mapped_category_id).first():
+                    warnings.append(f"Group {group_data.get('id')} skipped: missing category {mapped_category_id}")
+                    continue
+                # Create without explicit ID
                 group = Group(
-                    id=group_data["id"],
                     category_id=mapped_category_id,
                     name=group_data["name"],
                     notes=group_data.get("notes")
                 )
                 db.add(group)
+                db.flush()
                 imported_counts["groups"] += 1
-                id_map["groups"][group_data["id"]] = group_data["id"]
+                id_map["groups"][group_data["id"]] = group.id
             except IntegrityError as e:
                 warnings.append(f"Group {group_data.get('id')} skipped: {str(e)}")
+                db.rollback()
+            except Exception as e:
+                warnings.append(f"Group {group_data.get('id')} error: {str(e)}")
                 db.rollback()
         db.commit()
         
         # Import customers
         for customer_data in data.get("customers", []):
-            existing = db.query(Customer).filter(Customer.id == customer_data["id"]).first()
-            if existing:
-                id_map["customers"][customer_data["id"]] = existing.id
-                continue
-            mapped_category_id = id_map["categories"].get(customer_data.get("category_id"), customer_data.get("category_id"))
-            mapped_group_id = id_map["groups"].get(customer_data.get("group_id"), customer_data.get("group_id"))
-            if mapped_category_id and not db.query(Category).filter(Category.id == mapped_category_id).first():
-                warnings.append(f"Customer {customer_data.get('id')} skipped: missing category {mapped_category_id}")
-                continue
-            if mapped_group_id and not db.query(Group).filter(Group.id == mapped_group_id).first():
-                warnings.append(f"Customer {customer_data.get('id')} skipped: missing group {mapped_group_id}")
-                continue
             try:
+                existing = db.query(Customer).filter(Customer.id == customer_data["id"]).first()
+                if existing:
+                    id_map["customers"][customer_data["id"]] = existing.id
+                    continue
+                mapped_category_id = id_map["categories"].get(customer_data.get("category_id"), customer_data.get("category_id"))
+                mapped_group_id = id_map["groups"].get(customer_data.get("group_id"), customer_data.get("group_id"))
+                if mapped_category_id and not db.query(Category).filter(Category.id == mapped_category_id).first():
+                    warnings.append(f"Customer {customer_data.get('id')} skipped: missing category {mapped_category_id}")
+                    continue
+                if mapped_group_id and not db.query(Group).filter(Group.id == mapped_group_id).first():
+                    warnings.append(f"Customer {customer_data.get('id')} skipped: missing group {mapped_group_id}")
+                    continue
+                # Create without explicit ID
                 customer = Customer(
-                    id=customer_data["id"],
                     category_id=mapped_category_id,
                     group_id=mapped_group_id,
                     name=customer_data["name"],
@@ -428,17 +436,23 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                 if "country" in customer_data and hasattr(customer, 'country'):
                     customer.country = customer_data["country"]
                 db.add(customer)
+                db.flush()
                 imported_counts["customers"] += 1
-                id_map["customers"][customer_data["id"]] = customer_data["id"]
+                id_map["customers"][customer_data["id"]] = customer.id
             except IntegrityError as e:
                 warnings.append(f"Customer {customer_data.get('id')} skipped: {str(e)}")
+                db.rollback()
+            except Exception as e:
+                warnings.append(f"Customer {customer_data.get('id')} error: {str(e)}")
                 db.rollback()
         db.commit()
         
         # Import subscriptions
         for sub_data in data.get("subscriptions", []):
-            existing = db.query(Subscription).filter(Subscription.id == sub_data["id"]).first()
-            if not existing:
+            try:
+                existing = db.query(Subscription).filter(Subscription.id == sub_data["id"]).first()
+                if existing:
+                    continue
                 # Skip if referenced customer/category missing
                 mapped_customer_id = id_map["customers"].get(sub_data.get("customer_id"), sub_data.get("customer_id"))
                 mapped_category_id = id_map["categories"].get(sub_data.get("category_id"), sub_data.get("category_id"))
@@ -468,29 +482,32 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                     warnings.append(f"Subscription {sub_data.get('id')} invalid status '{raw_status}', defaulted to active")
                     status_enum = SubscriptionStatus.ACTIVE
                 
-                try:
-                    sub = Subscription(
-                        id=sub_data["id"],
-                        customer_id=mapped_customer_id,
-                        category_id=mapped_category_id,
-                        vendor_name=sub_data["vendor_name"],
-                        plan_name=sub_data.get("plan_name"),
-                        cost=sub_data.get("cost", 0),
-                        currency=sub_data.get("currency", "USD"),
-                        billing_cycle=billing_cycle_enum,
-                        start_date=datetime.fromisoformat(sub_data["start_date"]).date() if sub_data.get("start_date") else None,
-                        next_renewal_date=datetime.fromisoformat(sub_data["next_renewal_date"]).date() if sub_data.get("next_renewal_date") else None,
-                        status=status_enum,
-                        notes=sub_data.get("notes")
-                    )
-                    # Set country if available
-                    if "country" in sub_data and hasattr(sub, 'country'):
-                        sub.country = sub_data["country"]
-                    db.add(sub)
-                    imported_counts["subscriptions"] += 1
-                except IntegrityError as e:
-                    warnings.append(f"Subscription {sub_data.get('id')} skipped: {str(e)}")
-                    db.rollback()
+                # Create without explicit ID
+                sub = Subscription(
+                    customer_id=mapped_customer_id,
+                    category_id=mapped_category_id,
+                    vendor_name=sub_data["vendor_name"],
+                    plan_name=sub_data.get("plan_name"),
+                    cost=sub_data.get("cost", 0),
+                    currency=sub_data.get("currency", "USD"),
+                    billing_cycle=billing_cycle_enum,
+                    start_date=datetime.fromisoformat(sub_data["start_date"]).date() if sub_data.get("start_date") else None,
+                    next_renewal_date=datetime.fromisoformat(sub_data["next_renewal_date"]).date() if sub_data.get("next_renewal_date") else None,
+                    status=status_enum,
+                    notes=sub_data.get("notes")
+                )
+                # Set country if available
+                if "country" in sub_data and hasattr(sub, 'country'):
+                    sub.country = sub_data["country"]
+                db.add(sub)
+                db.flush()
+                imported_counts["subscriptions"] += 1
+            except IntegrityError as e:
+                warnings.append(f"Subscription {sub_data.get('id')} skipped: {str(e)}")
+                db.rollback()
+            except Exception as e:
+                warnings.append(f"Subscription {sub_data.get('id')} error: {str(e)}")
+                db.rollback()
         db.commit()
         
         # Import links

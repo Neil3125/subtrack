@@ -1,0 +1,402 @@
+{
+    "exported_at": "2026-01-23T12:00:00.000000",
+    "categories": [
+        {
+            "id": 100,
+            "name": "Software Development Tools",
+            "description": "Tools for software development teams"
+        },
+        {
+            "id": 101,
+            "name": "Cloud Infrastructure",
+            "description": "Cloud hosting and infrastructure services"
+        },
+        {
+            "id": 102,
+            "name": "Cybersecurity",
+            "description": "Security tools and services"
+        },
+        {
+            "id": 103,
+            "name": "Communication & Collaboration",
+            "description": "Team communication and project management"
+        }
+    ],
+    "groups": [
+        {
+            "id": 100,
+            "category_id": 100,
+            "name": "Frontend Team",
+            "notes": "Tools used by the frontend development team"
+        },
+        {
+            "id": 101,
+            "category_id": 100,
+            "name": "Backend Team",
+            "notes": "Server-side development tools"
+        },
+        {
+            "id": 102,
+            "category_id": 101,
+            "name": "Production Servers",
+            "notes": "Production environment infrastructure"
+        },
+        {
+            "id": 103,
+            "category_id": 101,
+            "name": "Development Servers",
+            "notes": "Dev/staging environment"
+        },
+        {
+            "id": 104,
+            "category_id": 102,
+            "name": "Endpoint Protection",
+            "notes": "Antivirus and endpoint security"
+        },
+        {
+            "id": 105,
+            "category_id": 103,
+            "name": "Executive Team",
+            "notes": "Tools for leadership"
+        }
+    ],
+    "customers": [
+        {
+            "id": 100,
+            "category_id": 100,
+            "group_id": 100,
+            "name": "Acme Corporation",
+            "email": "contact@acmecorp.example.com",
+            "phone": "+1-555-0101",
+            "country": "United States",
+            "tags": "enterprise, tech",
+            "notes": "Large enterprise client"
+        },
+        {
+            "id": 101,
+            "category_id": 101,
+            "group_id": 102,
+            "name": "Global Industries Ltd",
+            "email": "support@globalindustries.example.com",
+            "phone": "+44-20-7123-4567",
+            "country": "United Kingdom",
+            "tags": "enterprise, manufacturing",
+            "notes": "UK-based manufacturing company"
+        },
+        {
+            "id": 102,
+            "category_id": 102,
+            "group_id": 104,
+            "name": "SecureNet Solutions",
+            "email": "info@securenet.example.com",
+            "phone": "+1-555-0202",
+            "country": "Canada",
+            "tags": "security, consulting",
+            "notes": "Security consulting firm"
+        },
+        {
+            "id": 103,
+            "category_id": 103,
+            "group_id": 105,
+            "name": "StartupXYZ",
+            "email": "hello@startupxyz.example.com",
+            "phone": "+1-555-0303",
+            "country": "United States",
+            "tags": "startup, tech",
+            "notes": "Fast-growing tech startup"
+        },
+        {
+            "id": 104,
+            "category_id": 100,
+            "group_id": 101,
+            "name": "DevOps Masters Inc",
+            "email": "team@devopsmasters.example.com",
+            "phone": "+1-555-0404",
+            "country": "Germany",
+            "tags": "devops, consulting",
+            "notes": "DevOps consulting and training"
+        }
+    ],
+    "subscriptions": [
+        {
+            "id": 100,
+            "customer_id": 100,
+            "category_id": 100,
+            "vendor_name": "GitHub",
+            "plan_name": "Enterprise Cloud",
+            "cost": 21.00,
+            "currency": "USD",
+            "billing_cycle": "monthly",
+            "start_date": "2025-01-15",
+            "next_renewal_date": "2026-02-15",
+            "status": "active",
+            "country": "United States",
+            "notes": "50 seats"
+        },
+        {
+            "id": 101,
+            "customer_id": 100,
+            "category_id": 101,
+            "vendor_name": "AWS",
+            "plan_name": "Business Support",
+            "cost": 500.00,
+            "currency": "USD",
+            "billing_cycle": "monthly",
+            "start_date": "2024-06-01",
+            "next_renewal_date": "2026-02-01",
+            "status": "active",
+            "country": "United States",
+            "notes": "Includes EC2, RDS, S3"
+        },
+        {
+            "id": 102,
+            "customer_id": 101,
+            "category_id": 101,
+            "vendor_name": "Microsoft Azure",
+            "plan_name": "Pay-As-You-Go",
+            "cost": 350.00,
+            "currency": "USD",
+            "billing_cycle": "monthly",
+            "start_date": "2025-03-01",
+            "next_renewal_date": "2026-02-01",
+            "status": "active",
+            "country": "United Kingdom",
+            "notes": "VMs and storage"
+        },
+        {
+            "id": 103,
+            "customer_id": 102,
+            "category_id": 102,
+            "vendor_name": "CrowdStrike",
+            "plan_name": "Falcon Pro",
+            "cost": 15.00,
+            "currency": "USD",
+            "billing_cycle": "monthly",
+            "start_date": "2025-01-01",
+            "next_renewal_date": "2026-01-01",
+            "status": "active",
+            "country": "Canada",
+            "notes": "Per endpoint pricing - 100 endpoints"
+        },
+        {
+            "id": 104,
+            "customer_id": 103,
+            "category_id": 103,
+            "vendor_name": "Slack",
+            "plan_name": "Pro",
+            "cost": 8.75,
+            "currency": "USD",
+            "billing_cycle": "monthly",
+            "start_date": "2025-02-01",
+            "next_renewal_date": "2026-03-01",
+            "status": "active",
+            "country": "United States",
+            "notes": "Per user - 25 users"
+        },
+        {
+            "id": 105,
+            "customer_id": 103,
+            "category_id": 100,
+            "vendor_name": "JetBrains",
+            "plan_name": "All Products Pack",
+            "cost": 649.00,
+            "currency": "USD",
+            "billing_cycle": "yearly",
+            "start_date": "2025-05-15",
+            "next_renewal_date": "2026-05-15",
+            "status": "active",
+            "country": "United States",
+            "notes": "10 licenses"
+        },
+        {
+            "id": 106,
+            "customer_id": 104,
+            "category_id": 100,
+            "vendor_name": "Atlassian Jira",
+            "plan_name": "Standard",
+            "cost": 7.75,
+            "currency": "USD",
+            "billing_cycle": "monthly",
+            "start_date": "2025-01-10",
+            "next_renewal_date": "2026-02-10",
+            "status": "active",
+            "country": "Germany",
+            "notes": "Per user - 30 users"
+        },
+        {
+            "id": 107,
+            "customer_id": 104,
+            "category_id": 101,
+            "vendor_name": "DigitalOcean",
+            "plan_name": "Team Plan",
+            "cost": 100.00,
+            "currency": "USD",
+            "billing_cycle": "monthly",
+            "start_date": "2025-04-01",
+            "next_renewal_date": "2026-02-01",
+            "status": "active",
+            "country": "Germany",
+            "notes": "Droplets and managed databases"
+        },
+        {
+            "id": 108,
+            "customer_id": 101,
+            "category_id": 102,
+            "vendor_name": "Palo Alto Networks",
+            "plan_name": "Prisma Cloud",
+            "cost": 200.00,
+            "currency": "USD",
+            "billing_cycle": "monthly",
+            "start_date": "2025-06-01",
+            "next_renewal_date": "2026-02-01",
+            "status": "active",
+            "country": "United Kingdom",
+            "notes": "Cloud security posture management"
+        },
+        {
+            "id": 109,
+            "customer_id": 100,
+            "category_id": 103,
+            "vendor_name": "Zoom",
+            "plan_name": "Business",
+            "cost": 19.99,
+            "currency": "USD",
+            "billing_cycle": "monthly",
+            "start_date": "2025-01-01",
+            "next_renewal_date": "2026-02-01",
+            "status": "active",
+            "country": "United States",
+            "notes": "50 hosts"
+        }
+    ],
+    "links": [],
+    "saved_reports": [],
+    "many_to_many": {
+        "subscription_categories": [
+            {
+                "subscription_id": 100,
+                "category_id": 100
+            },
+            {
+                "subscription_id": 101,
+                "category_id": 101
+            },
+            {
+                "subscription_id": 101,
+                "category_id": 100
+            },
+            {
+                "subscription_id": 102,
+                "category_id": 101
+            },
+            {
+                "subscription_id": 103,
+                "category_id": 102
+            },
+            {
+                "subscription_id": 104,
+                "category_id": 103
+            },
+            {
+                "subscription_id": 105,
+                "category_id": 100
+            },
+            {
+                "subscription_id": 106,
+                "category_id": 100
+            },
+            {
+                "subscription_id": 106,
+                "category_id": 103
+            },
+            {
+                "subscription_id": 107,
+                "category_id": 101
+            },
+            {
+                "subscription_id": 108,
+                "category_id": 102
+            },
+            {
+                "subscription_id": 108,
+                "category_id": 101
+            },
+            {
+                "subscription_id": 109,
+                "category_id": 103
+            }
+        ],
+        "customer_categories": [
+            {
+                "customer_id": 100,
+                "category_id": 100
+            },
+            {
+                "customer_id": 100,
+                "category_id": 101
+            },
+            {
+                "customer_id": 100,
+                "category_id": 103
+            },
+            {
+                "customer_id": 101,
+                "category_id": 101
+            },
+            {
+                "customer_id": 101,
+                "category_id": 102
+            },
+            {
+                "customer_id": 102,
+                "category_id": 102
+            },
+            {
+                "customer_id": 103,
+                "category_id": 103
+            },
+            {
+                "customer_id": 103,
+                "category_id": 100
+            },
+            {
+                "customer_id": 104,
+                "category_id": 100
+            },
+            {
+                "customer_id": 104,
+                "category_id": 101
+            }
+        ],
+        "customer_groups": [
+            {
+                "customer_id": 100,
+                "group_id": 100
+            },
+            {
+                "customer_id": 100,
+                "group_id": 101
+            },
+            {
+                "customer_id": 101,
+                "group_id": 102
+            },
+            {
+                "customer_id": 102,
+                "group_id": 104
+            },
+            {
+                "customer_id": 103,
+                "group_id": 105
+            },
+            {
+                "customer_id": 104,
+                "group_id": 101
+            },
+            {
+                "customer_id": 104,
+                "group_id": 103
+            }
+        ]
+    }
+}
