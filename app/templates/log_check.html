@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Log Check - SubTrack{% endblock %}
+{% block title %}Log Check Pro - SubTrack{% endblock %}
 
 {% block extra_head %}
 <!-- Flatpickr for date/time picking -->
@@ -8,291 +8,151 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script>
 
-<style>
-    /* Log Check specific styles */
-    .log-check-container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: var(--space-4);
-    }
+<!-- Pro Theme CSS -->
+<link rel="stylesheet" href="/static/css/log_check_pro.css">
 
-    .mode-switch {
-        background: var(--color-bg-secondary);
-        border-radius: var(--radius-lg);
-        padding: 4px;
-        display: inline-flex;
-        margin-bottom: var(--space-6);
-        border: 1px solid var(--color-border);
-    }
-
-    .mode-option {
-        padding: 8px 16px;
-        border-radius: var(--radius-md);
-        cursor: pointer;
-        font-weight: 500;
-        font-size: 14px;
-        transition: all 0.2s;
-        color: var(--color-text-secondary);
-    }
-
-    .mode-option.active {
-        background: var(--color-primary);
-        color: white;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-
-    .control-panel {
-        background: var(--color-bg-secondary);
-        border-radius: var(--radius-xl);
-        padding: var(--space-6);
-        margin-bottom: var(--space-6);
-        border: 1px solid var(--color-border);
-    }
-
-    .btn-check {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 12px 24px;
-        border-radius: var(--radius-lg);
-        font-weight: 600;
-        transition: all 0.2s;
-        border: none;
-        color: white;
-        cursor: pointer;
-        width: 100%;
-        font-size: 1rem;
-    }
-
-    .btn-check:hover {
-        transform: translateY(-2px);
-        filter: brightness(1.1);
-    }
-
-    .btn-service {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        height: 64px;
-    }
-
-    .btn-backup {
-        background: linear-gradient(135deg, #10b981, #059669);
-        height: 64px;
-    }
-
-    .btn-onsite {
-        background: linear-gradient(135deg, #f59e42, #ea580c);
-        height: 56px;
-    }
-
-    .btn-custom {
-        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-        height: 56px;
-    }
-
-    .log-preview-box {
-        background: var(--color-bg-tertiary, #181b20);
-        color: #e0e7ef;
-        font-family: 'Consolas', 'Monaco', monospace;
-        padding: var(--space-4);
-        border-radius: var(--radius-lg);
-        min-height: 100px;
-        width: 100%;
-        border: 1px solid var(--color-border);
-        margin-bottom: var(--space-4);
-        resize: none;
-        line-height: 1.5;
-    }
-
-    .clock-display {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--color-text-primary);
-        text-align: center;
-        margin-bottom: var(--space-2);
-        font-variant-numeric: tabular-nums;
-    }
-
-    .date-display {
-        text-align: center;
-        color: var(--color-text-secondary);
-        margin-bottom: var(--space-8);
-        font-size: 1.1rem;
-    }
-
-    .manual-time-row {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 8px;
-        margin-top: 4px;
-    }
-
-    .status-toast {
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        background: var(--color-bg-secondary);
-        color: var(--color-text-primary);
-        padding: 12px 24px;
-        border-radius: var(--radius-lg);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        border-left: 4px solid var(--color-primary);
-        transform: translateY(100px);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .status-toast.show {
-        transform: translateY(0);
-    }
-
-    /* Input simplification styles */
-    .simple-time-input {
-        text-align: center;
-        font-size: 1.25rem;
-        font-family: monospace;
-        letter-spacing: 1px;
-    }
-</style>
+<script>
+    // Apply Pro Theme class to body
+    document.body.classList.add('log-check-pro');
+</script>
 {% endblock %}
 
 {% block content %}
-<div class="log-check-container">
-    <div class="header-flex mb-6">
-        <div>
-            <h1 class="page-title">Log Check Pro</h1>
-            <p class="text-secondary">Generate and track system maintenance logs</p>
-        </div>
-        <div>
-            <a href="/log-check/history" class="btn btn-secondary">
-                <span>📚</span> View History
-            </a>
-        </div>
-    </div>
+<div class="pro-container animate-enter">
 
-    <!-- Clock -->
-    <div class="clock-section">
-        <div class="clock-display" id="clock">00:00:00</div>
-        <div class="date-display" id="date">Loading date...</div>
-    </div>
+    <!-- Header -->
+    <header class="pro-header">
+        <h1 class="pro-title">Log Check Pro</h1>
+        <p class="pro-subtitle">System Maintenance & Tracking Console</p>
+    </header>
 
-    <!-- Controls -->
-    <div class="control-panel">
-        <!-- Mode Switch -->
-        <div class="flex justify-center mb-6">
-            <div class="mode-switch">
-                <div class="mode-option active" onclick="setMode('automatic')" id="mode-auto">Automatic Mode</div>
-                <div class="mode-option" onclick="setMode('manual')" id="mode-manual">Manual Mode</div>
+    <!-- Main Glass Card -->
+    <div class="glass-card">
+
+        <!-- Clock Centerpiece -->
+        <div class="clock-wrapper">
+            <div class="pro-clock" id="clock">00:00:00</div>
+            <div class="pro-date" id="date">Loading date...</div>
+        </div>
+
+        <!-- Mode Switcher -->
+        <div style="text-align: center;">
+            <div class="toggle-wrapper">
+                <div class="toggle-option active" onclick="setMode('automatic')" id="mode-auto">Automatic</div>
+                <div class="toggle-option" onclick="setMode('manual')" id="mode-manual">Manual</div>
             </div>
         </div>
 
-        <!-- Automatic Mode Controls -->
-        <div id="controls-auto">
-            <div class="form-group mb-6 text-center">
-                <label class="form-label mb-2">Duration</label>
-                <div class="flex gap-4 justify-center items-center">
-                    <div class="flex items-center gap-2">
-                        <input type="number" id="duration-hours" class="form-input w-24 text-center text-lg" value="0"
-                            min="0">
-                        <span class="text-secondary font-medium">hr</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <input type="number" id="duration-minutes" class="form-input w-24 text-center text-lg"
-                            value="30" min="0" step="5">
-                        <span class="text-secondary font-medium">min</span>
-                    </div>
-                </div>
+        <!-- Automatic Controls -->
+        <div id="controls-auto" class="pro-input-group">
+            <span class="pro-label">Duration</span>
+            <div class="flex items-center gap-2">
+                <input type="number" id="duration-hours" class="pro-input" value="0" min="0">
+                <span class="pro-label" style="font-size: 0.8rem;">HR</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="number" id="duration-minutes" class="pro-input" value="30" min="0" step="5">
+                <span class="pro-label" style="font-size: 0.8rem;">MIN</span>
             </div>
         </div>
 
-        <!-- Manual Mode Controls -->
-        <div id="controls-manual" style="display: none;">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <!-- Start Time -->
-                <div class="form-group">
-                    <label class="form-label text-center">Start Time</label>
-                    <input type="text" class="form-input simple-time-input" id="start-time" placeholder="10:00 AM"
-                        onblur="formatTimeInput(this)">
-                    <p class="text-xs text-secondary mt-1 text-center">Try: "1030", "2pm", "14:00"</p>
-                </div>
-
-                <!-- End Time -->
-                <div class="form-group">
-                    <label class="form-label text-center">End Time</label>
-                    <input type="text" class="form-input simple-time-input" id="end-time" placeholder="11:30 AM"
-                        onblur="formatTimeInput(this)">
-                    <p class="text-xs text-secondary mt-1 text-center">Calculates duration automatically</p>
-                </div>
+        <!-- Manual Controls -->
+        <div id="controls-manual" class="pro-input-group" style="display: none; flex-wrap: wrap;">
+            <div class="flex flex-col items-center">
+                <span class="pro-label mb-2">Start</span>
+                <input type="text" id="start-time" class="pro-input" placeholder="10:00" onblur="formatTimeInput(this)"
+                    style="width: 120px;">
             </div>
-
-            <div class="form-group mb-6">
-                <label class="form-label text-center">Date</label>
-                <input type="text" class="form-input text-center" id="log-date" placeholder="Today">
+            <div class="flex flex-col items-center">
+                <span class="pro-label mb-2">End</span>
+                <input type="text" id="end-time" class="pro-input" placeholder="12:00" onblur="formatTimeInput(this)"
+                    style="width: 120px;">
+            </div>
+            <div class="flex flex-col items-center">
+                <span class="pro-label mb-2">Date</span>
+                <input type="text" id="log-date" class="pro-input" placeholder="Today"
+                    style="width: 160px; font-size: 1.2rem;">
             </div>
         </div>
 
-        <!-- Check Buttons -->
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <button class="btn-check btn-service" onclick="generateLog('service')">
-                <span>🔧</span> Service Check
-            </button>
-            <button class="btn-check btn-backup" onclick="generateLog('backup')">
-                <span>💾</span> Backup Check
-            </button>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <button class="btn-check btn-onsite" onclick="openOnSiteModal()">
-                <span>🚗</span> On-Site
-            </button>
-            <button class="btn-check btn-custom" onclick="openCustomModal()">
-                <span>📝</span> Custom
-            </button>
-        </div>
-    </div>
+        <!-- Action Grid -->
+        <div class="action-grid">
+            <!-- Service Check -->
+            <div class="action-card card-service" onclick="generateLog('service')">
+                <div class="action-icon">🔧</div>
+                <div class="action-label">Service Check</div>
+                <div class="text-xs text-secondary">Routine Maintenance</div>
+            </div>
 
-    <!-- Log Preview -->
-    <div class="form-group">
-        <label class="form-label flex justify-between">
-            <span>Log Preview</span>
-            <span class="text-xs text-secondary" id="char-count">0 chars</span>
-        </label>
-        <textarea id="log-preview" class="log-preview-box" readonly>Log preview will appear here...</textarea>
-        <div class="flex justify-end gap-2">
-            <button class="btn btn-secondary btn-sm" id="btn-copy" data-clipboard-target="#log-preview">
-                <span>📋</span> Copy to Clipboard
-            </button>
+            <!-- Backup Check -->
+            <div class="action-card card-backup" onclick="generateLog('backup')">
+                <div class="action-icon">💾</div>
+                <div class="action-label">Backup Check</div>
+                <div class="text-xs text-secondary">Data Integrity Verification</div>
+            </div>
+
+            <!-- On-Site -->
+            <div class="action-card card-onsite" onclick="openOnSiteModal()">
+                <div class="action-icon">🚗</div>
+                <div class="action-label">On-Site</div>
+                <div class="text-xs text-secondary">Field Support Visit</div>
+            </div>
+
+            <!-- Custom -->
+            <div class="action-card card-custom" onclick="openCustomModal()">
+                <div class="action-icon">📝</div>
+                <div class="action-label">Custom Entry</div>
+                <div class="text-xs text-secondary">Specific Log Details</div>
+            </div>
         </div>
+
+        <!-- Preview Area -->
+        <div class="mt-8">
+            <div class="flex justify-between items-end mb-2">
+                <span class="pro-label">Log Preview</span>
+                <span class="text-xs text-secondary" id="char-count">0 chars</span>
+            </div>
+            <textarea id="log-preview" class="pro-preview" readonly>Ready to generate log...</textarea>
+
+            <div class="pro-footer">
+                <a href="/log-check/history" class="btn btn-secondary btn-sm"
+                    style="background: rgba(255,255,255,0.1); border: none;">
+                    📚 History
+                </a>
+                <button class="btn btn-primary" id="btn-copy" data-clipboard-target="#log-preview">
+                    📋 Copy to Clipboard
+                </button>
+            </div>
+        </div>
+
     </div>
 </div>
 
+<!-- Modals (Re-using standard styles but wrapped slightly for theme consistency) -->
 <!-- Custom Check Modal -->
 <div id="customCheckModal" class="modal" style="display: none;">
-    <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-content glass-card" style="max-width: 500px; padding: 24px; background: #1e293b;">
         <div class="modal-header">
-            <h2 class="modal-title">Custom Check</h2>
-            <button class="modal-close" onclick="closeModal('customCheckModal')">×</button>
+            <h2 class="modal-title text-white">Custom Check</h2>
+            <button class="modal-close text-white" onclick="closeModal('customCheckModal')">×</button>
         </div>
         <div class="modal-body">
             <div class="form-group mb-4">
-                <label class="form-label">Category</label>
+                <label class="form-label text-gray-300">Category</label>
                 <div class="flex gap-2">
-                    <select class="form-select flex-1" id="custom-category">
+                    <select class="form-select flex-1 bg-gray-800 text-white border-gray-600" id="custom-category">
                         <option value="Custom Check">Custom Check</option>
                         {% for cat in check_categories %}
                         <option value="{{ cat.name }}">{{ cat.name }}</option>
                         {% endfor %}
                     </select>
-                    <button class="btn btn-secondary" onclick="promptNewCategory()" title="Add Category">+</button>
+                    <button class="btn btn-secondary" onclick="promptNewCategory()">+</button>
                 </div>
-                <p class="text-xs text-secondary mt-1">Categories are saved to your account.</p>
             </div>
             <div class="form-group">
-                <label class="form-label">Log Message</label>
-                <textarea class="form-textarea" id="custom-message" rows="4"
-                    placeholder="Enter log details..."></textarea>
+                <label class="form-label text-gray-300">Log Message</label>
+                <textarea class="form-textarea bg-gray-800 text-white border-gray-600" id="custom-message"
+                    rows="4"></textarea>
             </div>
         </div>
         <div class="modal-footer">
@@ -304,22 +164,22 @@
 
 <!-- On-Site Modal -->
 <div id="onSiteModal" class="modal" style="display: none;">
-    <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-content glass-card" style="max-width: 500px; padding: 24px; background: #1e293b;">
         <div class="modal-header">
-            <h2 class="modal-title">On-Site Check</h2>
-            <button class="modal-close" onclick="closeModal('onSiteModal')">×</button>
+            <h2 class="modal-title text-white">On-Site Check</h2>
+            <button class="modal-close text-white" onclick="closeModal('onSiteModal')">×</button>
         </div>
         <div class="modal-body">
-            <p class="mb-4 text-secondary">Select activity performed:</p>
             <div class="grid gap-3">
                 {% for option in onsite_options %}
-                <button class="card p-3 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                <button
+                    class="card p-3 text-left hover:bg-gray-700 transition-colors bg-gray-800 text-white border-gray-600"
                     onclick="submitOnSite('{{ option }}')">
                     {{ option }}
                 </button>
                 {% endfor %}
                 <button
-                    class="card p-3 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-bold text-primary"
+                    class="card p-3 text-left hover:bg-gray-700 transition-colors font-bold text-blue-400 bg-gray-800 border-gray-600"
                     onclick="submitOnSite('On-site support provided.')">
                     Default (Support Provided)
                 </button>
@@ -353,31 +213,33 @@
         currentMode = mode;
         document.getElementById('mode-auto').classList.toggle('active', mode === 'automatic');
         document.getElementById('mode-manual').classList.toggle('active', mode === 'manual');
+        document.getElementById('controls-auto').style.display = mode === 'automatic' ? 'flex' : 'none';
 
-        document.getElementById('controls-auto').style.display = mode === 'automatic' ? 'block' : 'none';
-        document.getElementById('controls-manual').style.display = mode === 'manual' ? 'block' : 'none';
-
+        // Manual controls layout is tricky, use flex/none
+        const manualControls = document.getElementById('controls-manual');
         if (mode === 'manual') {
+            manualControls.style.display = 'flex';
             initManualInputs();
+        } else {
+            manualControls.style.display = 'none';
         }
     }
 
     function initManualInputs() {
-        flatpickr("#log-date", {
-            dateFormat: "m/d/Y",
-            defaultDate: "today"
-        });
+        if (!document.getElementById('log-date')._flatpickr) {
+            flatpickr("#log-date", {
+                dateFormat: "m/d/Y",
+                defaultDate: "today",
+                theme: "dark"
+            });
+        }
     }
 
     // --- Smart Time Formatting ---
-    // User types "130" -> "1:30" visually
     function formatTimeInput(input) {
         let val = input.value.trim();
         if (!val) return;
-
-        // Simple logic to add colon if missing (e.g. 130 -> 1:30)
         if (val.length >= 3 && val.length <= 4 && !val.includes(':') && /^\d+$/.test(val)) {
-            // "130" -> "1:30"
             if (val.length == 3) {
                 input.value = val.substring(0, 1) + ":" + val.substring(1);
             } else {
@@ -388,36 +250,23 @@
 
     // --- Log Generation ---
     async function generateLog(type) {
-        const payload = {
-            check_type: type,
-            mode: currentMode
-        };
+        const payload = { check_type: type, mode: currentMode };
 
         if (currentMode === 'automatic') {
             payload.hours = parseInt(document.getElementById('duration-hours').value) || 0;
             payload.minutes = parseInt(document.getElementById('duration-minutes').value) || 0;
         } else {
-            // Manual mode logic
             const startTime = document.getElementById('start-time').value;
             const endTime = document.getElementById('end-time').value;
-
-            if (!startTime || !endTime) {
-                showToast("Please enter start and end times", "error");
-                return;
-            }
-
-            // Send raw values, backend will parse flexible formats
+            if (!startTime || !endTime) { showToast("Enter start/end times", "error"); return; }
             payload.start_time = startTime;
             payload.end_time = endTime;
             payload.date_str = document.getElementById('log-date').value;
         }
 
-        // Custom/OnSite specific
         if (type === 'custom') {
             payload.message = document.getElementById('custom-message').value;
             payload.category_name = document.getElementById('custom-category').value;
-        } else if (type === 'onsite') {
-            // Handled by specific function
         }
 
         try {
@@ -426,124 +275,90 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-
-            if (!response.ok) throw new Error((await response.json()).detail);
-
             const data = await response.json();
-            document.getElementById('log-preview').value = data.full_entry;
-            showToast("Log generated successfully!");
 
+            // Simulating typing effect for preview? No, just set it.
+            const preview = document.getElementById('log-preview');
+            preview.value = data.full_entry;
+            // Flash effect
+            preview.style.borderColor = 'var(--color-accent-green)';
+            setTimeout(() => preview.style.borderColor = 'var(--color-glass-border)', 300);
+
+            showToast("Log generated successfully!");
             if (type === 'custom') closeModal('customCheckModal');
             if (type === 'onsite') closeModal('onSiteModal');
-
-        } catch (error) {
-            showToast(error.message || "Error generating log", "error");
-        }
-    }
-
-    // --- Custom Check Logic ---
-    function openCustomModal() {
-        document.getElementById('customCheckModal').style.display = 'flex';
-        document.getElementById('custom-message').value = '';
-    }
-
-    async function submitCustomCheck() {
-        await generateLog('custom');
-    }
-
-    async function promptNewCategory() {
-        const name = prompt("Enter new category name:");
-        if (name) {
-            try {
-                const res = await fetch('/api/log-check/categories', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: name })
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    const select = document.getElementById('custom-category');
-                    const option = new Option(data.name, data.name);
-                    select.add(option);
-                    select.value = data.name;
-                    showToast("Category added!");
-                } else {
-                    const err = await res.json();
-                    showToast(err.detail, "error");
-                }
-            } catch (e) {
-                console.error(e);
-                showToast("Failed to add category", "error");
-            }
-        }
-    }
-
-    // --- On-Site Logic ---
-    function openOnSiteModal() {
-        document.getElementById('onSiteModal').style.display = 'flex';
-    }
-
-    async function submitOnSite(message) {
-        // Reuse generate log but inject message
-        const payload = {
-            check_type: 'onsite',
-            mode: currentMode,
-            message: message
-        };
-
-        // Add time data (duplication from generateLog but needed since we bypass it)
-        if (currentMode === 'automatic') {
-            payload.hours = parseInt(document.getElementById('duration-hours').value) || 0;
-            payload.minutes = parseInt(document.getElementById('duration-minutes').value) || 0;
-        } else {
-            const startTime = document.getElementById('start-time').value;
-            const endTime = document.getElementById('end-time').value;
-            if (!startTime || !endTime) {
-                showToast("Please enter start and end times", "error");
-                return;
-            }
-            payload.start_time = startTime;
-            payload.end_time = endTime;
-            payload.date_str = document.getElementById('log-date').value;
-        }
-
-        try {
-            const response = await fetch('/api/log-check/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await response.json();
-            document.getElementById('log-preview').value = data.full_entry;
-            showToast("On-Site log generated!");
-            closeModal('onSiteModal');
         } catch (e) {
             showToast("Error generating log", "error");
         }
     }
 
-    // --- Toast & Copy ---
-    const clipboard = new ClipboardJS('#btn-copy');
-    clipboard.on('success', function (e) {
+    // --- Custom & OnSite Logic ---
+    function openCustomModal() { document.getElementById('customCheckModal').style.display = 'flex'; }
+    function openOnSiteModal() { document.getElementById('onSiteModal').style.display = 'flex'; }
+    async function submitCustomCheck() { await generateLog('custom'); }
+
+    async function promptNewCategory() {
+        const name = prompt("New Category Name:");
+        if (name) {
+            try {
+                const res = await fetch('/api/log-check/categories', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const sel = document.getElementById('custom-category');
+                    sel.add(new Option(data.name, data.name));
+                    sel.value = data.name;
+                    showToast("Category added!");
+                }
+            } catch (e) { }
+        }
+    }
+
+    async function submitOnSite(msg) {
+        // Reuse generateLog logic but inject message via special handling or just construct payload similarly
+        // Since generateLog uses DOM for times, we can just call API directly here to be cleaner
+        const payload = { check_type: 'onsite', mode: currentMode, message: msg };
+
+        if (currentMode === 'automatic') {
+            payload.hours = parseInt(document.getElementById('duration-hours').value) || 0;
+            payload.minutes = parseInt(document.getElementById('duration-minutes').value) || 0;
+        } else {
+            payload.start_time = document.getElementById('start-time').value;
+            payload.end_time = document.getElementById('end-time').value;
+            payload.date_str = document.getElementById('log-date').value;
+            if (!payload.start_time || !payload.end_time) { showToast("Enter times", "error"); return; }
+        }
+
+        try {
+            const res = await fetch('/api/log-check/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            document.getElementById('log-preview').value = data.full_entry;
+            showToast("On-Site log generated!");
+            closeModal('onSiteModal');
+        } catch (e) { }
+    }
+
+    // --- Utilities ---
+    new ClipboardJS('#btn-copy').on('success', (e) => {
         showToast("Copied to clipboard!");
         e.clearSelection();
     });
 
-    function showToast(message, type = 'success') {
+    function showToast(msg, type = 'success') {
         const toast = document.getElementById('status-toast');
-        const msgEl = document.getElementById('toast-message');
-
-        msgEl.textContent = message;
-        toast.style.borderLeftColor = type === 'error' ? 'var(--color-danger)' : 'var(--color-primary)';
+        document.getElementById('toast-message').textContent = msg;
+        toast.style.borderLeftColor = type === 'error' ? '#ef4444' : '#10b981';
         toast.classList.add('show');
-
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
+        setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Auto-update character count
     document.getElementById('log-preview').addEventListener('input', function () {
         document.getElementById('char-count').textContent = this.value.length + " chars";
     });
