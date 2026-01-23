@@ -7,7 +7,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 from app.config import settings
 from app.routers import categories, groups, customers, subscriptions, ai_routes, search, search_routes
-from app.routers import web_routes, export_routes, auth_routes, users, saved_reports_routes, email_routes
+from app.routers import web_routes, export_routes, auth_routes, users, saved_reports_routes, email_routes, log_check_routes
 from app.routers import activity_routes
 from app.routers.auth_routes import get_session
 
@@ -16,6 +16,9 @@ from app.routers.auth_routes import get_session
 async def lifespan(app: FastAPI):
     """Application lifespan - runs on startup and shutdown."""
     # Startup: Initialize data persistence (restore data if DB is empty)
+    from app.database import engine, Base
+    Base.metadata.create_all(bind=engine)
+    
     from app.data_persistence import init_data_persistence
     print("[Startup] Initializing data persistence...")
     init_data_persistence()
@@ -110,6 +113,7 @@ app.include_router(search_routes.router, tags=["search-html"])
 app.include_router(export_routes.router, prefix="/api", tags=["exports"])
 app.include_router(saved_reports_routes.router, prefix="/api", tags=["saved-reports"])
 app.include_router(email_routes.router, prefix="/api/email", tags=["email"])
+app.include_router(log_check_routes.router, tags=["log-check"])
 app.include_router(activity_routes.router, tags=["activity"])
 
 

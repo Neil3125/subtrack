@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Log History - SubTrack{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6" style="max-width: 1000px;">
+    <div class="header-flex mb-6">
+        <div>
+            <h1 class="page-title">Log History</h1>
+            <p class="text-secondary">View and manage past maintenance logs</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="/log-check" class="btn btn-primary">
+                <span>➕</span> New Log
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card p-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="form-group mb-0">
+                <input type="text" class="form-input" id="search-input" placeholder="Search logs..."
+                    onkeyup="filterLogs()">
+            </div>
+            <div class="form-group mb-0">
+                <select class="form-select" id="filter-type" onchange="filterLogs()">
+                    <option value="">All Types</option>
+                    <option value="service">Service Check</option>
+                    <option value="backup">Backup Check</option>
+                    <option value="onsite">On-Site</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+            <!-- Placeholder for Customer Filter (not fully implemented in backend yet for basic filtering) -->
+        </div>
+    </div>
+
+    <!-- Log List -->
+    <div class="flex flex-col gap-4" id="log-list">
+        {% for log in logs %}
+        <div class="card p-0 log-item overflow-hidden" data-type="{{ log.check_type }}"
+            data-text="{{ log.full_entry|lower }}">
+            <div class="p-4 border-b border-border flex justify-between items-center bg-bg-secondary">
+                <div class="flex items-center gap-3">
+                    <span class="badge 
+                        {% if log.check_type == 'service' %}badge-blue
+                        {% elif log.check_type == 'backup' %}badge-green
+                        {% elif log.check_type == 'onsite' %}badge-orange
+                        {% else %}badge-purple{% endif %}">
+                        {{ log.check_type|title }}
+                    </span>
+                    <span class="text-sm font-mono text-secondary">{{ log.date_str }}</span>
+                    {% if log.customer %}
+                    <span class="text-sm font-medium text-primary">👤 {{ log.customer.name }}</span>
+                    {% endif %}
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn btn-sm btn-ghost" onclick="copyLog('{{ log.full_entry|escapejs }}')">
+                        📋 Copy
+                    </button>
+                    <button class="btn btn-sm btn-ghost text-danger" onclick="deleteLog({{ log.id }}, this)">
+                        🗑️ Delete
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 font-mono text-sm whitespace-pre-wrap leading-relaxed">{{ log.full_entry }}</div>
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-secondary">
+            <div class="text-4xl mb-3">📭</div>
+            <p>No log entries found.</p>
+            <a href="/log-check" class="btn btn-link mt-2">Create your first log</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function filterLogs() {
+        const search = document.getElementById('search-input').value.toLowerCase();
+        const type = document.getElementById('filter-type').value;
+        const items = document.querySelectorAll('.log-item');
+
+        items.forEach(item => {
+            const text = item.getAttribute('data-text');
+            const itemType = item.getAttribute('data-type');
+
+            const matchSearch = text.includes(search);
+            const matchType = !type || itemType === type;
+
+            item.style.display = matchSearch && matchType ? 'block' : 'none';
+        });
+    }
+
+    async function deleteLog(id, btn) {
+        if (!confirm('Are you sure you want to delete this log entry?')) return;
+
+        try {
+            const res = await fetch(`/api/log-check/logs/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                const card = btn.closest('.log-item');
+                card.style.opacity = '0';
+                setTimeout(() => card.remove(), 300);
+            } else {
+                alert('Failed to delete log');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error deleting log');
+        }
+    }
+
+    function copyLog(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Log copied to clipboard!');
+        });
+    }
+</script>
+{% endblock %}

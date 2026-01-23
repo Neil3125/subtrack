@@ -1,0 +1,588 @@
+{% extends "base.html" %}
+
+{% block title %}Log Check - SubTrack{% endblock %}
+
+{% block extra_head %}
+<!-- Flatpickr for date/time picking -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script>
+
+<style>
+    /* Log Check specific styles */
+    .log-check-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: var(--space-4);
+    }
+
+    .mode-switch {
+        background: var(--color-bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: 4px;
+        display: inline-flex;
+        margin-bottom: var(--space-6);
+        border: 1px solid var(--color-border);
+    }
+
+    .mode-option {
+        padding: 8px 16px;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 14px;
+        transition: all 0.2s;
+        color: var(--color-text-secondary);
+    }
+
+    .mode-option.active {
+        background: var(--color-primary);
+        color: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .control-panel {
+        background: var(--color-bg-secondary);
+        border-radius: var(--radius-xl);
+        padding: var(--space-6);
+        margin-bottom: var(--space-6);
+        border: 1px solid var(--color-border);
+    }
+
+    .btn-check {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 24px;
+        border-radius: var(--radius-lg);
+        font-weight: 600;
+        transition: all 0.2s;
+        border: none;
+        color: white;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .btn-check:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.1);
+    }
+
+    .btn-service {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    }
+
+    .btn-backup {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .btn-onsite {
+        background: linear-gradient(135deg, #f59e42, #ea580c);
+    }
+
+    .btn-custom {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+
+    .log-preview-box {
+        background: var(--color-bg-tertiary, #181b20);
+        color: #e0e7ef;
+        font-family: 'Consolas', 'Monaco', monospace;
+        padding: var(--space-4);
+        border-radius: var(--radius-lg);
+        min-height: 100px;
+        width: 100%;
+        border: 1px solid var(--color-border);
+        margin-bottom: var(--space-4);
+        resize: none;
+        line-height: 1.5;
+    }
+
+    .clock-display {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+        text-align: center;
+        margin-bottom: var(--space-2);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .date-display {
+        text-align: center;
+        color: var(--color-text-secondary);
+        margin-bottom: var(--space-8);
+        font-size: 1.1rem;
+    }
+
+    .manual-time-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .time-input-group {
+        display: flex;
+        align-items: center;
+        background: var(--color-bg);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: 4px 8px;
+    }
+
+    .time-input {
+        border: none;
+        background: transparent;
+        width: 60px;
+        text-align: center;
+        font-size: 16px;
+        color: var(--color-text-primary);
+    }
+
+    .time-period {
+        border: none;
+        background: transparent;
+        color: var(--color-text-secondary);
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .status-toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: var(--color-bg-secondary);
+        color: var(--color-text-primary);
+        padding: 12px 24px;
+        border-radius: var(--radius-lg);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-left: 4px solid var(--color-primary);
+        transform: translateY(100px);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .status-toast.show {
+        transform: translateY(0);
+    }
+
+    /* Modal styles overrides for dark mode */
+    [data-theme="dark"] .flatpickr-calendar {
+        background: #1f2937;
+        border-color: #374151;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] .flatpickr-day {
+        color: #e5e7eb;
+    }
+
+    [data-theme="dark"] .flatpickr-day:hover {
+        background: #374151;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="log-check-container">
+    <div class="header-flex mb-6">
+        <div>
+            <h1 class="page-title">Log Check Pro</h1>
+            <p class="text-secondary">Generate and track system maintenance logs</p>
+        </div>
+        <div>
+            <a href="/log-check/history" class="btn btn-secondary">
+                <span>📚</span> View History
+            </a>
+        </div>
+    </div>
+
+    <!-- Clock -->
+    <div class="clock-section">
+        <div class="clock-display" id="clock">00:00:00</div>
+        <div class="date-display" id="date">Loading date...</div>
+    </div>
+
+    <!-- Controls -->
+    <div class="control-panel">
+        <!-- Mode Switch -->
+        <div class="flex justify-center mb-6">
+            <div class="mode-switch">
+                <div class="mode-option active" onclick="setMode('automatic')" id="mode-auto">Automatic Mode</div>
+                <div class="mode-option" onclick="setMode('manual')" id="mode-manual">Manual Mode</div>
+            </div>
+        </div>
+
+        <!-- Automatic Mode Controls -->
+        <div id="controls-auto">
+            <div class="form-group mb-4">
+                <label class="form-label">Duration</label>
+                <div class="flex gap-4">
+                    <select class="form-select w-32" id="duration-hours">
+                        {% for i in range(13) %}
+                        <option value="{{ i }}" {% if i==0 %}selected{% endif %}>{{ i }} hr</option>
+                        {% endfor %}
+                    </select>
+                    <select class="form-select w-32" id="duration-minutes">
+                        {% for m in [15, 30, 45, 60, 90, 120] %}
+                        <option value="{{ m }}" {% if m==30 %}selected{% endif %}>{{ m }} min</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Mode Controls -->
+        <div id="controls-manual" style="display: none;">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                <div class="form-group">
+                    <label class="form-label">Start Time</label>
+                    <div class="manual-time-row">
+                        <div class="time-input-group">
+                            <input type="text" class="time-input flatpickr-time" id="start-time" placeholder="HH:MM">
+                        </div>
+                        <select class="form-select w-20" id="start-period">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">End Time</label>
+                    <div class="manual-time-row">
+                        <div class="time-input-group">
+                            <input type="text" class="time-input flatpickr-time" id="end-time" placeholder="HH:MM">
+                        </div>
+                        <select class="form-select w-20" id="end-period">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group mb-4">
+                <label class="form-label">Date</label>
+                <input type="text" class="form-input" id="log-date" placeholder="MM/DD/YYYY">
+            </div>
+        </div>
+
+        <!-- Customer Selector -->
+        <div class="form-group mb-6">
+            <label class="form-label">Customer (Optional)</label>
+            <select class="form-select" id="customer-select">
+                <option value="">No Customer Selected</option>
+                {% for customer in customers %}
+                <option value="{{ customer.id }}">{{ customer.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button class="btn-check btn-service" onclick="generateLog('service')">
+                <span>🔧</span> Service
+            </button>
+            <button class="btn-check btn-backup" onclick="generateLog('backup')">
+                <span>💾</span> Backup
+            </button>
+            <button class="btn-check btn-onsite" onclick="openOnSiteModal()">
+                <span>🚗</span> On-Site
+            </button>
+            <button class="btn-check btn-custom" onclick="openCustomModal()">
+                <span>📝</span> Custom
+            </button>
+        </div>
+    </div>
+
+    <!-- Log Preview -->
+    <div class="form-group">
+        <label class="form-label flex justify-between">
+            <span>Log Preview</span>
+            <span class="text-xs text-secondary" id="char-count">0 chars</span>
+        </label>
+        <textarea id="log-preview" class="log-preview-box" readonly>Log preview will appear here...</textarea>
+        <div class="flex justify-end gap-2">
+            <button class="btn btn-secondary btn-sm" id="btn-copy" data-clipboard-target="#log-preview">
+                <span>📋</span> Copy to Clipboard
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Check Modal -->
+<div id="customCheckModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2 class="modal-title">Custom Check</h2>
+            <button class="modal-close" onclick="closeModal('customCheckModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group mb-4">
+                <label class="form-label">Category</label>
+                <div class="flex gap-2">
+                    <select class="form-select" id="custom-category">
+                        <option value="Custom Check">Custom Check</option>
+                        {% for cat in check_categories %}
+                        <option value="{{ cat.name }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-secondary" onclick="promptNewCategory()" title="Add Category">+</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Log Message</label>
+                <textarea class="form-textarea" id="custom-message" rows="4"
+                    placeholder="Enter log details..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('customCheckModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="submitCustomCheck()">Generate Log</button>
+        </div>
+    </div>
+</div>
+
+<!-- On-Site Modal -->
+<div id="onSiteModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2 class="modal-title">On-Site Check</h2>
+            <button class="modal-close" onclick="closeModal('onSiteModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <p class="mb-4 text-secondary">Select activity performed:</p>
+            <div class="grid gap-3">
+                {% for option in onsite_options %}
+                <button class="card p-3 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    onclick="submitOnSite('{{ option }}')">
+                    {{ option }}
+                </button>
+                {% endfor %}
+                <button
+                    class="card p-3 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-bold text-primary"
+                    onclick="submitOnSite('On-site support provided.')">
+                    Default (Support Provided)
+                </button>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('onSiteModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Status Toast -->
+<div id="status-toast" class="status-toast">
+    <span class="text-xl">✅</span>
+    <span id="toast-message">Action successful</span>
+</div>
+
+<script>
+    // --- Clock ---
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('clock').textContent = now.toLocaleTimeString();
+        document.getElementById('date').textContent = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // --- Mode Switching ---
+    let currentMode = 'automatic';
+    function setMode(mode) {
+        currentMode = mode;
+        document.getElementById('mode-auto').classList.toggle('active', mode === 'automatic');
+        document.getElementById('mode-manual').classList.toggle('active', mode === 'manual');
+
+        document.getElementById('controls-auto').style.display = mode === 'automatic' ? 'block' : 'none';
+        document.getElementById('controls-manual').style.display = mode === 'manual' ? 'block' : 'none';
+
+        if (mode === 'manual') {
+            // Initialize flatpickr if not already
+            initManualInputs();
+        }
+    }
+
+    function initManualInputs() {
+        flatpickr("#log-date", {
+            dateFormat: "m/d/Y",
+            defaultDate: "today"
+        });
+
+        flatpickr(".flatpickr-time", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "h:i K", // Formats to 12h AM/PM but we only want hour:min here, period handles separate
+            dateFormat: "H:i", // Use 24h internal, parse manually
+            time_24hr: true
+        });
+    }
+
+    // --- Log Generation ---
+    async function generateLog(type) {
+        const payload = {
+            check_type: type,
+            mode: currentMode,
+            customer_id: document.getElementById('customer-select').value || null
+        };
+
+        if (currentMode === 'automatic') {
+            payload.hours = parseInt(document.getElementById('duration-hours').value);
+            payload.minutes = parseInt(document.getElementById('duration-minutes').value);
+        } else {
+            // Manual mode logic
+            const startTime = document.getElementById('start-time').value;
+            const endTime = document.getElementById('end-time').value;
+
+            if (!startTime || !endTime) {
+                showToast("Please enter start and end times", "error");
+                return;
+            }
+
+            payload.start_time = startTime;
+            payload.start_period = document.getElementById('start-period').value;
+            payload.end_time = endTime;
+            payload.end_period = document.getElementById('end-period').value;
+            payload.date_str = document.getElementById('log-date').value;
+        }
+
+        // Custom/OnSite specific
+        if (type === 'custom') {
+            payload.message = document.getElementById('custom-message').value;
+            payload.category_name = document.getElementById('custom-category').value;
+        } else if (type === 'onsite') {
+            // Handled by specific function
+        }
+
+        try {
+            const response = await fetch('/api/log-check/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error((await response.json()).detail);
+
+            const data = await response.json();
+            document.getElementById('log-preview').value = data.full_entry;
+            showToast("Log generated successfully!");
+
+            if (type === 'custom') closeModal('customCheckModal');
+            if (type === 'onsite') closeModal('onSiteModal');
+
+        } catch (error) {
+            showToast(error.message, "error");
+        }
+    }
+
+    // --- Custom Check Logic ---
+    function openCustomModal() {
+        document.getElementById('customCheckModal').style.display = 'flex';
+        document.getElementById('custom-message').value = '';
+    }
+
+    async function submitCustomCheck() {
+        await generateLog('custom');
+    }
+
+    async function promptNewCategory() {
+        const name = prompt("Enter new category name:");
+        if (name) {
+            try {
+                const res = await fetch('/api/log-check/categories', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const select = document.getElementById('custom-category');
+                    const option = new Option(data.name, data.name);
+                    select.add(option);
+                    select.value = data.name;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }
+
+    // --- On-Site Logic ---
+    function openOnSiteModal() {
+        document.getElementById('onSiteModal').style.display = 'flex';
+    }
+
+    async function submitOnSite(message) {
+        // Reuse generate log but inject message
+        const payload = {
+            check_type: 'onsite',
+            mode: currentMode,
+            message: message,
+            customer_id: document.getElementById('customer-select').value || null
+        };
+
+        // Add time data (duplication from generateLog but needed since we bypass it)
+        if (currentMode === 'automatic') {
+            payload.hours = parseInt(document.getElementById('duration-hours').value);
+            payload.minutes = parseInt(document.getElementById('duration-minutes').value);
+        } else {
+            const startTime = document.getElementById('start-time').value;
+            const endTime = document.getElementById('end-time').value;
+            if (!startTime || !endTime) {
+                showToast("Please enter start and end times", "error");
+                return;
+            }
+            payload.start_time = startTime;
+            payload.start_period = document.getElementById('start-period').value;
+            payload.end_time = endTime;
+            payload.end_period = document.getElementById('end-period').value;
+            payload.date_str = document.getElementById('log-date').value;
+        }
+
+        try {
+            const response = await fetch('/api/log-check/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            document.getElementById('log-preview').value = data.full_entry;
+            showToast("On-Site log generated!");
+            closeModal('onSiteModal');
+        } catch (e) {
+            showToast("Error generating log", "error");
+        }
+    }
+
+    // --- Toast & Copy ---
+    const clipboard = new ClipboardJS('#btn-copy');
+    clipboard.on('success', function (e) {
+        showToast("Copied to clipboard!");
+        e.clearSelection();
+    });
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('status-toast');
+        const msgEl = document.getElementById('toast-message');
+
+        msgEl.textContent = message;
+        toast.style.borderLeftColor = type === 'error' ? 'var(--color-danger)' : 'var(--color-primary)';
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    // Auto-update character count
+    document.getElementById('log-preview').addEventListener('input', function () {
+        document.getElementById('char-count').textContent = this.value.length + " chars";
+    });
+</script>
+{% endblock %}
