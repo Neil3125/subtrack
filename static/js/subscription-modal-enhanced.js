@@ -902,6 +902,23 @@ window.saveEnhancedSubscription = function (formData, itemId = null) {
   // Handle cost
   if (formData.cost) formData.cost = parseFloat(formData.cost);
 
+  // Handle customer_id (ensure integer)
+  if (formData.customer_id) {
+    if (typeof formData.customer_id === 'string') {
+      // Remove any non-numeric chars just in case, though basic parsing works
+      const parsed = parseInt(formData.customer_id, 10);
+      if (!isNaN(parsed)) {
+        formData.customer_id = parsed;
+      } else {
+        // Leave as is, let backend error or handle validation
+      }
+    }
+    // If number, it's fine
+  } else if (!formData.customer_id && subscriptionModalState.selectedCustomerId) {
+    // Fallback to state if form field empty
+    formData.customer_id = parseInt(subscriptionModalState.selectedCustomerId, 10);
+  }
+
   // Make the API request
   fetch(url, {
     method: method,
@@ -919,7 +936,10 @@ window.saveEnhancedSubscription = function (formData, itemId = null) {
               errorMsg = err.detail;
             } else if (Array.isArray(err.detail)) {
               // Handle FastAPIs validation error array
-              errorMsg = err.detail.map(e => `${e.loc.join('.')}: ${e.msg}`).join('\n');
+              errorMsg = err.detail.map(e => {
+                const field = e.loc[e.loc.length - 1]; // get the field name
+                return `${field}: ${e.msg}`;
+              }).join('\n');
             } else if (typeof err.detail === 'object') {
               errorMsg = JSON.stringify(err.detail);
             }
