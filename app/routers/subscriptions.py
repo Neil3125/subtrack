@@ -285,3 +285,49 @@ def renew_subscription(subscription_id: int, background_tasks: BackgroundTasks, 
         "message": "Subscription renewed",
         "next_renewal_date": new_date.isoformat()
     }
+@router.get("/templates/all", response_model=List[dict])
+def get_subscription_templates(db: Session = Depends(get_db)):
+    """Get a list of unique subscription templates (vendor/plan combinations) from history."""
+    # This query groups by vendor and plan to get unique combinations
+    # We select the most recent cost/currency for each combo
+    # Note: This is an approximation using a simple query for sqlite compatibility
+    # For robust production use, execute a proper SQL group by
+    from sqlalchemy import text
+    
+    # Raw SQL for better compatibility and group by control
+    sql = """
+    SELECT vendor_name, plan_name, cost, currency, count(*) as usage_count
+    FROM subscriptions 
+    WHERE vendor_name IS NOT NULL AND vendor_name != ''
+    GROUP BY vendor_name, plan_name, cost, currency
+    ORDER BY usage_count DESC
+    LIMIT 20
+    """
+    
+    try:
+        results = db.execute(text(sql)).fetchall()
+        templates = []
+        seen_combos = set()
+        
+        for row in results:
+            vendor = row[0]
+            plan = row[1]
+            cost = row[2]
+            currency = row[3]
+            
+            # Create unique key to avoid near-duplicates
+            key = f"{vendor}|{plan}"
+            if key not in seen_combos:
+                templates.append({
+                    "vendor_name": vendor,
+                    "plan_name": plan,
+                    "cost": cost,
+                    "currency": currency,
+                    "label": f"{vendor} {f'- {plan}' if plan else ''} ({currency} {cost})"
+                })
+                seen_combos.add(key)
+                
+        return templates
+    except Exception as e:
+        print(f"Error fetching templates: {e}")
+        return []

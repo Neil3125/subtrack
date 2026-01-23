@@ -593,7 +593,22 @@
             style="max-width: 720px; max-height: 90vh; display: flex; flex-direction: column;">
             <div class="modal-header modal-header-improved">
                 <h2 class="modal-title modal-title-improved">Create Subscription</h2>
-                <p class="modal-subtitle modal-subtitle-improved">Subscriptions are organized by category</p>
+                <div class="flex items-center gap-2">
+                    <div class="dropdown" style="position: relative;">
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="toggleTemplateDropdown()"
+                            style="display: flex; align-items: center; gap: 4px;">
+                            <span>⚡</span> Templates <span style="font-size: 10px;">▼</span>
+                        </button>
+                        <div id="subscription-templates-dropdown" class="dropdown-menu"
+                            style="display: none; position: absolute; right: 0; top: 100%; width: 280px; max-height: 300px; overflow-y: auto; z-index: 50; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid var(--color-border);">
+                            <div class="p-2 text-xs text-secondary border-b border-border">Select a past subscription to
+                                auto-fill</div>
+                            <div id="subscription-templates-list">
+                                <div class="p-3 text-center text-sm text-secondary">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <button class="modal-close modal-close-improved" onclick="closeModal('subscriptionModal')">×</button>
             </div>
             <form onsubmit="handleFormSubmit(event, saveEnhancedSubscription)" id="subscription-form">
