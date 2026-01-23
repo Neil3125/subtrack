@@ -28,9 +28,5 @@ class LogEntry(Base):
     # Full formatted log entry
     full_entry = Column(Text, nullable=False)
     
-    # Optional customer association
-    customer_id = Column(Integer, ForeignKey("customers.id", ondelete="SET NULL"), nullable=True)
-    customer = relationship("Customer", backref="log_entries")
-    
     def __repr__(self):
         return f"<LogEntry(id={self.id}, check_type='{self.check_type}', date='{self.date_str}')>"

@@ -9,9 +9,11 @@ from typing import Optional, List
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.models import Category, Customer
+from app.models import Category
 from app.models.log_entry import LogEntry
 from app.models.check_category import CheckCategory
+from app.models.user import User
+from app.routers.auth_routes import get_current_user, require_auth
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -36,14 +38,11 @@ class LogGenerateRequest(BaseModel):
     mode: str = "automatic"  # 'automatic' or 'manual'
     hours: int = 0
     minutes: int = 30
-    start_time: Optional[str] = None  # For manual mode: "HH:MM"
-    start_period: Optional[str] = None  # "AM" or "PM"
-    end_time: Optional[str] = None
-    end_period: Optional[str] = None
-    date_str: Optional[str] = None  # "MM/DD/YYYY"
+    start_time: Optional[str] = None  # Formatted as "H:MM AM/PM" or just "HH:MM"
+    end_time: Optional[str] = None    # Formatted as "H:MM AM/PM" or just "HH:MM"
+    date_str: Optional[str] = None    # "MM/DD/YYYY"
     category_name: Optional[str] = None  # For custom checks
     message: Optional[str] = None  # For custom checks
-    customer_id: Optional[int] = None
 
 
 class CategoryRequest(BaseModel):
@@ -68,6 +67,54 @@ def format_time(dt: datetime) -> str:
     minute = dt.minute
     period = "a.m" if dt.hour < 12 else "p.m"
     return f"{hour}:{minute:02d} {period}"
+
+
+def parse_human_time(time_str: str) -> tuple[int, int]:
+    """
+    Parse a user entered time string into (hour_24, minute).
+    Supports: "10:30 PM", "1030", "14:00", "2pm"
+    """
+    if not time_str:
+        raise ValueError("Time string is empty")
+    
+    clean = time_str.lower().strip()
+    is_pm = "pm" in clean or "p.m" in clean
+    is_am = "am" in clean or "a.m" in clean
+    
+    # Remove am/pm for parsing numbers
+    clean = clean.replace("pm", "").replace("p.m", "").replace("am", "").replace("a.m", "").strip()
+    
+    if ":" in clean:
+        parts = clean.split(":")
+        hour = int(parts[0])
+        minute = int(parts[1]) if len(parts) > 1 else 0
+    elif len(clean) >= 3 and clean.isdigit():
+        # "1030" -> 10:30, "130" -> 1:30
+        minute = int(clean[-2:])
+        hour = int(clean[:-2])
+    elif clean.isdigit():
+        # "10" -> 10:00
+        hour = int(clean)
+        minute = 0
+    else:
+        raise ValueError("Invalid time format")
+        
+    # Handle AM/PM logic
+    if is_pm and hour < 12:
+        hour += 12
+    if is_am and hour == 12:
+        hour = 0
+        
+    if hour > 23 or minute > 59:
+        raise ValueError("Invalid time value")
+        
+    return hour, minute
+
+
+def format_time_str(hour: int, minute: int) -> str:
+    """Format 24h hour/minute to display string e.g. '2:30 p.m'."""
+    dt = datetime.now().replace(hour=hour, minute=minute)
+    return format_time(dt)
 
 
 def generate_log_entry(
@@ -98,80 +145,72 @@ def generate_log_entry(
 # ==================== WEB ROUTES ====================
 
 @router.get("/log-check", response_class=HTMLResponse)
-async def log_check_page(request: Request, db: Session = Depends(get_db)):
+async def log_check_page(request: Request, db: Session = Depends(get_db), user: User = Depends(require_auth)):
     """Render main log check page."""
-    categories = db.query(Category).all()
-    customers = db.query(Customer).order_by(Customer.name).all()
-    check_categories = db.query(CheckCategory).order_by(CheckCategory.name).all()
+    # Get user-specific categories
+    check_categories = db.query(CheckCategory).filter(
+        (CheckCategory.user_id == user.id) | (CheckCategory.user_id.is_(None))
+    ).order_by(CheckCategory.name).all()
     
     # Get recent logs for preview
     recent_logs = db.query(LogEntry).order_by(desc(LogEntry.created_at)).limit(5).all()
     
     return templates.TemplateResponse("log_check.html", {
         "request": request,
-        "categories": categories,
-        "customers": customers,
         "check_categories": check_categories,
         "recent_logs": recent_logs,
-        "onsite_options": ONSITE_OPTIONS
+        "onsite_options": ONSITE_OPTIONS,
+        "user": user
     })
 
 
 @router.get("/log-check/history", response_class=HTMLResponse)
 async def log_history_page(request: Request, db: Session = Depends(get_db)):
     """Render log history page."""
-    categories = db.query(Category).all()
     logs = db.query(LogEntry).order_by(desc(LogEntry.created_at)).all()
-    check_categories = db.query(CheckCategory).order_by(CheckCategory.name).all()
+    
+    # Need to fetch categories for filtering dropdown in history if needed
+    categories = db.query(CheckCategory).all()
     
     return templates.TemplateResponse("log_history.html", {
         "request": request,
-        "categories": categories,
         "logs": logs,
-        "check_categories": check_categories
+        "check_categories": categories
     })
 
 
 # ==================== API ROUTES ====================
 
 @router.post("/api/log-check/generate")
-async def generate_log(request: LogGenerateRequest, db: Session = Depends(get_db)):
+async def generate_log(
+    request: LogGenerateRequest, 
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user) # Optional auth for API
+):
     """Generate and save a log entry."""
     now = datetime.now()
-    
+    date_str = request.date_str or format_date(now)
+
     if request.mode == "manual":
-        # Parse manual times
-        if not all([request.start_time, request.start_period, request.end_time, request.end_period]):
-            raise HTTPException(status_code=400, detail="Manual mode requires start and end times")
-        
-        date_str = request.date_str or format_date(now)
-        start_time_str = f"{request.start_time} {request.start_period.lower().replace('am', 'a.m').replace('pm', 'p.m')}"
-        end_time_str = f"{request.end_time} {request.end_period.lower().replace('am', 'a.m').replace('pm', 'p.m')}"
-        
-        # Calculate duration
+        # Parse flexible manual times
         try:
-            start_parts = request.start_time.split(":")
-            end_parts = request.end_time.split(":")
-            start_hour = int(start_parts[0])
-            start_min = int(start_parts[1]) if len(start_parts) > 1 else 0
-            end_hour = int(end_parts[0])
-            end_min = int(end_parts[1]) if len(end_parts) > 1 else 0
+            start_h, start_m = parse_human_time(request.start_time)
+            end_h, end_m = parse_human_time(request.end_time)
             
-            # Convert to 24-hour for calculation
-            if request.start_period.upper() == "PM" and start_hour != 12:
-                start_hour += 12
-            elif request.start_period.upper() == "AM" and start_hour == 12:
-                start_hour = 0
-            if request.end_period.upper() == "PM" and end_hour != 12:
-                end_hour += 12
-            elif request.end_period.upper() == "AM" and end_hour == 12:
-                end_hour = 0
+            start_time_str = format_time_str(start_h, start_m)
+            end_time_str = format_time_str(end_h, end_m)
             
-            duration_minutes = (end_hour * 60 + end_min) - (start_hour * 60 + start_min)
+            # Calculate duration
+            start_total = start_h * 60 + start_m
+            end_total = end_h * 60 + end_m
+            
+            duration_minutes = end_total - start_total
             if duration_minutes <= 0:
+                # Handle overnight or error - for now assume error
                 raise HTTPException(status_code=400, detail="End time must be after start time")
-        except (ValueError, IndexError):
-            raise HTTPException(status_code=400, detail="Invalid time format")
+                
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
     else:
         # Automatic mode
         total_minutes = request.hours * 60 + request.minutes
@@ -180,7 +219,10 @@ async def generate_log(request: LogGenerateRequest, db: Session = Depends(get_db
         start_dt = now
         end_dt = now + timedelta(minutes=total_minutes)
         
-        date_str = format_date(start_dt)
+        # Override date if provided, otherwise use today
+        if request.date_str:
+             date_str = request.date_str
+        
         start_time_str = format_time(start_dt)
         end_time_str = format_time(end_dt)
     
@@ -214,8 +256,7 @@ async def generate_log(request: LogGenerateRequest, db: Session = Depends(get_db
         check_type=request.check_type,
         category_name=request.category_name,
         message=message,
-        full_entry=full_entry,
-        customer_id=request.customer_id if request.customer_id else None
+        full_entry=full_entry
     )
     
     db.add(log_entry)
@@ -234,7 +275,6 @@ async def generate_log(request: LogGenerateRequest, db: Session = Depends(get_db
 async def get_logs(
     search: Optional[str] = None,
     check_type: Optional[str] = None,
-    customer_id: Optional[int] = None,
     limit: int = 50,
     offset: int = 0,
     db: Session = Depends(get_db)
@@ -246,8 +286,6 @@ async def get_logs(
         query = query.filter(LogEntry.full_entry.ilike(f"%{search}%"))
     if check_type:
         query = query.filter(LogEntry.check_type == check_type)
-    if customer_id:
-        query = query.filter(LogEntry.customer_id == customer_id)
     
     total = query.count()
     logs = query.order_by(desc(LogEntry.created_at)).offset(offset).limit(limit).all()
@@ -262,7 +300,6 @@ async def get_logs(
                 "check_type": log.check_type,
                 "category_name": log.category_name,
                 "full_entry": log.full_entry,
-                "customer_id": log.customer_id,
                 "duration_minutes": log.duration_minutes
             }
             for log in logs
@@ -299,9 +336,18 @@ async def delete_log(log_id: int, db: Session = Depends(get_db)):
 # ==================== CATEGORY API ====================
 
 @router.get("/api/log-check/categories")
-async def get_check_categories(db: Session = Depends(get_db)):
-    """Get all check categories."""
-    cats = db.query(CheckCategory).order_by(CheckCategory.name).all()
+async def get_check_categories(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Get check categories for current user."""
+    query = db.query(CheckCategory)
+    
+    if user:
+        # Show global (null user_id) and user specific
+        query = query.filter((CheckCategory.user_id == user.id) | (CheckCategory.user_id.is_(None)))
+    else:
+        # Only show global if no user
+        query = query.filter(CheckCategory.user_id.is_(None))
+        
+    cats = query.order_by(CheckCategory.name).all()
     return {
         "categories": [
             {"id": c.id, "name": c.name, "description": c.description}
@@ -311,13 +357,26 @@ async def get_check_categories(db: Session = Depends(get_db)):
 
 
 @router.post("/api/log-check/categories")
-async def create_check_category(request: CategoryRequest, db: Session = Depends(get_db)):
-    """Create a new check category."""
-    existing = db.query(CheckCategory).filter(CheckCategory.name == request.name).first()
+async def create_check_category(
+    request: CategoryRequest, 
+    db: Session = Depends(get_db),
+    user: User = Depends(require_auth)
+):
+    """Create a new check category for the current user."""
+    # Check if category already exists for this user
+    existing = db.query(CheckCategory).filter(
+        CheckCategory.name == request.name,
+        CheckCategory.user_id == user.id
+    ).first()
+    
     if existing:
         raise HTTPException(status_code=400, detail="Category already exists")
     
-    cat = CheckCategory(name=request.name, description=request.description)
+    cat = CheckCategory(
+        name=request.name, 
+        description=request.description,
+        user_id=user.id
+    )
     db.add(cat)
     db.commit()
     db.refresh(cat)
@@ -325,26 +384,20 @@ async def create_check_category(request: CategoryRequest, db: Session = Depends(
     return {"success": True, "id": cat.id, "name": cat.name}
 
 
-@router.put("/api/log-check/categories/{category_id}")
-async def update_check_category(category_id: int, request: CategoryRequest, db: Session = Depends(get_db)):
-    """Update a check category."""
-    cat = db.query(CheckCategory).filter(CheckCategory.id == category_id).first()
-    if not cat:
-        raise HTTPException(status_code=404, detail="Category not found")
-    
-    cat.name = request.name
-    cat.description = request.description
-    db.commit()
-    
-    return {"success": True, "message": "Category updated"}
-
-
 @router.delete("/api/log-check/categories/{category_id}")
-async def delete_check_category(category_id: int, db: Session = Depends(get_db)):
+async def delete_check_category(
+    category_id: int, 
+    db: Session = Depends(get_db),
+    user: User = Depends(require_auth)
+):
     """Delete a check category."""
     cat = db.query(CheckCategory).filter(CheckCategory.id == category_id).first()
     if not cat:
         raise HTTPException(status_code=404, detail="Category not found")
+        
+    # Security check: only allow deleting own categories
+    if cat.user_id and cat.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this category")
     
     db.delete(cat)
     db.commit()

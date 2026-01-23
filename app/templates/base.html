@@ -156,6 +156,18 @@
     <div class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar">
+            <div class="sidebar-section mb-6">
+                <h3 class="sidebar-title">Applications</h3>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-nav-item">
+                        <a href="/log-check"
+                            class="sidebar-nav-link {% if '/log-check' in request.path %}active{% endif %}">
+                            ✅ Log Check
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
             <div class="sidebar-section">
                 <h3 class="sidebar-title">Navigation</h3>
                 <ul class="sidebar-nav">
@@ -205,12 +217,7 @@
                             ⚙️ Settings
                         </a>
                     </li>
-                    <li class="sidebar-nav-item">
-                        <a href="/log-check"
-                            class="sidebar-nav-link {% if '/log-check' in request.path %}active{% endif %}">
-                            ✅ Log Check
-                        </a>
-                    </li>
+
                     <li class="sidebar-nav-item">
                         <a href="/users" class="sidebar-nav-link {% if '/users' in request.path %}active{% endif %}">
                             👥 Users

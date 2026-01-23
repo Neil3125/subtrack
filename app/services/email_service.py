@@ -20,13 +20,9 @@ class EmailService:
     
     def _get_config(self):
         """Get MailerSend configuration from environment (fresh read each time)."""
-        # Default credentials provided by user
-        default_key = "mlsn.ec5b0707109673163437e38aaebe41504c86c86c0327261eeab53e51acbb338d"
-        default_email = "MS_6gokxf@acsinc.bb"
-        
         return {
-            "api_key": os.environ.get("MAILERSEND_API_KEY", default_key),
-            "from_email": os.environ.get("MAILERSEND_FROM_EMAIL", default_email),
+            "api_key": os.environ.get("MAILERSEND_API_KEY"),
+            "from_email": os.environ.get("MAILERSEND_FROM_EMAIL"),
             "from_name": os.environ.get("MAILERSEND_FROM_NAME", "SubTrack Notifications")
         }
     

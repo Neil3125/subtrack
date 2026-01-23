@@ -62,6 +62,7 @@
         color: white;
         cursor: pointer;
         width: 100%;
+        font-size: 1rem;
     }
 
     .btn-check:hover {
@@ -71,18 +72,22 @@
 
     .btn-service {
         background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        height: 64px;
     }
 
     .btn-backup {
         background: linear-gradient(135deg, #10b981, #059669);
+        height: 64px;
     }
 
     .btn-onsite {
         background: linear-gradient(135deg, #f59e42, #ea580c);
+        height: 56px;
     }
 
     .btn-custom {
         background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        height: 56px;
     }
 
     .log-preview-box {
@@ -116,38 +121,10 @@
     }
 
     .manual-time-row {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        margin-bottom: 16px;
-        flex-wrap: wrap;
-    }
-
-    .time-input-group {
-        display: flex;
-        align-items: center;
-        background: var(--color-bg);
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-md);
-        padding: 4px 8px;
-    }
-
-    .time-input {
-        border: none;
-        background: transparent;
-        width: 60px;
-        text-align: center;
-        font-size: 16px;
-        color: var(--color-text-primary);
-    }
-
-    .time-period {
-        border: none;
-        background: transparent;
-        color: var(--color-text-secondary);
-        font-weight: 600;
-        font-size: 14px;
-        cursor: pointer;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-top: 4px;
     }
 
     .status-toast {
@@ -172,19 +149,12 @@
         transform: translateY(0);
     }
 
-    /* Modal styles overrides for dark mode */
-    [data-theme="dark"] .flatpickr-calendar {
-        background: #1f2937;
-        border-color: #374151;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-
-    [data-theme="dark"] .flatpickr-day {
-        color: #e5e7eb;
-    }
-
-    [data-theme="dark"] .flatpickr-day:hover {
-        background: #374151;
+    /* Input simplification styles */
+    .simple-time-input {
+        text-align: center;
+        font-size: 1.25rem;
+        font-family: monospace;
+        letter-spacing: 1px;
     }
 </style>
 {% endblock %}
@@ -221,76 +191,59 @@
 
         <!-- Automatic Mode Controls -->
         <div id="controls-auto">
-            <div class="form-group mb-4">
-                <label class="form-label">Duration</label>
-                <div class="flex gap-4">
-                    <select class="form-select w-32" id="duration-hours">
-                        {% for i in range(13) %}
-                        <option value="{{ i }}" {% if i==0 %}selected{% endif %}>{{ i }} hr</option>
-                        {% endfor %}
-                    </select>
-                    <select class="form-select w-32" id="duration-minutes">
-                        {% for m in [15, 30, 45, 60, 90, 120] %}
-                        <option value="{{ m }}" {% if m==30 %}selected{% endif %}>{{ m }} min</option>
-                        {% endfor %}
-                    </select>
+            <div class="form-group mb-6 text-center">
+                <label class="form-label mb-2">Duration</label>
+                <div class="flex gap-4 justify-center items-center">
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="duration-hours" class="form-input w-24 text-center text-lg" value="0"
+                            min="0">
+                        <span class="text-secondary font-medium">hr</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="duration-minutes" class="form-input w-24 text-center text-lg"
+                            value="30" min="0" step="5">
+                        <span class="text-secondary font-medium">min</span>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Manual Mode Controls -->
         <div id="controls-manual" style="display: none;">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Start Time -->
                 <div class="form-group">
-                    <label class="form-label">Start Time</label>
-                    <div class="manual-time-row">
-                        <div class="time-input-group">
-                            <input type="text" class="time-input flatpickr-time" id="start-time" placeholder="HH:MM">
-                        </div>
-                        <select class="form-select w-20" id="start-period">
-                            <option value="AM">AM</option>
-                            <option value="PM">PM</option>
-                        </select>
-                    </div>
+                    <label class="form-label text-center">Start Time</label>
+                    <input type="text" class="form-input simple-time-input" id="start-time" placeholder="10:00 AM"
+                        onblur="formatTimeInput(this)">
+                    <p class="text-xs text-secondary mt-1 text-center">Try: "1030", "2pm", "14:00"</p>
                 </div>
+
+                <!-- End Time -->
                 <div class="form-group">
-                    <label class="form-label">End Time</label>
-                    <div class="manual-time-row">
-                        <div class="time-input-group">
-                            <input type="text" class="time-input flatpickr-time" id="end-time" placeholder="HH:MM">
-                        </div>
-                        <select class="form-select w-20" id="end-period">
-                            <option value="AM">AM</option>
-                            <option value="PM">PM</option>
-                        </select>
-                    </div>
+                    <label class="form-label text-center">End Time</label>
+                    <input type="text" class="form-input simple-time-input" id="end-time" placeholder="11:30 AM"
+                        onblur="formatTimeInput(this)">
+                    <p class="text-xs text-secondary mt-1 text-center">Calculates duration automatically</p>
                 </div>
             </div>
-            <div class="form-group mb-4">
-                <label class="form-label">Date</label>
-                <input type="text" class="form-input" id="log-date" placeholder="MM/DD/YYYY">
+
+            <div class="form-group mb-6">
+                <label class="form-label text-center">Date</label>
+                <input type="text" class="form-input text-center" id="log-date" placeholder="Today">
             </div>
         </div>
 
-        <!-- Customer Selector -->
-        <div class="form-group mb-6">
-            <label class="form-label">Customer (Optional)</label>
-            <select class="form-select" id="customer-select">
-                <option value="">No Customer Selected</option>
-                {% for customer in customers %}
-                <option value="{{ customer.id }}">{{ customer.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Check Buttons -->
+        <div class="grid grid-cols-2 gap-4 mb-4">
             <button class="btn-check btn-service" onclick="generateLog('service')">
-                <span>🔧</span> Service
+                <span>🔧</span> Service Check
             </button>
             <button class="btn-check btn-backup" onclick="generateLog('backup')">
-                <span>💾</span> Backup
+                <span>💾</span> Backup Check
             </button>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
             <button class="btn-check btn-onsite" onclick="openOnSiteModal()">
                 <span>🚗</span> On-Site
             </button>
@@ -326,7 +279,7 @@
             <div class="form-group mb-4">
                 <label class="form-label">Category</label>
                 <div class="flex gap-2">
-                    <select class="form-select" id="custom-category">
+                    <select class="form-select flex-1" id="custom-category">
                         <option value="Custom Check">Custom Check</option>
                         {% for cat in check_categories %}
                         <option value="{{ cat.name }}">{{ cat.name }}</option>
@@ -334,6 +287,7 @@
                     </select>
                     <button class="btn btn-secondary" onclick="promptNewCategory()" title="Add Category">+</button>
                 </div>
+                <p class="text-xs text-secondary mt-1">Categories are saved to your account.</p>
             </div>
             <div class="form-group">
                 <label class="form-label">Log Message</label>
@@ -404,7 +358,6 @@
         document.getElementById('controls-manual').style.display = mode === 'manual' ? 'block' : 'none';
 
         if (mode === 'manual') {
-            // Initialize flatpickr if not already
             initManualInputs();
         }
     }
@@ -414,27 +367,35 @@
             dateFormat: "m/d/Y",
             defaultDate: "today"
         });
+    }
 
-        flatpickr(".flatpickr-time", {
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: "h:i K", // Formats to 12h AM/PM but we only want hour:min here, period handles separate
-            dateFormat: "H:i", // Use 24h internal, parse manually
-            time_24hr: true
-        });
+    // --- Smart Time Formatting ---
+    // User types "130" -> "1:30" visually
+    function formatTimeInput(input) {
+        let val = input.value.trim();
+        if (!val) return;
+
+        // Simple logic to add colon if missing (e.g. 130 -> 1:30)
+        if (val.length >= 3 && val.length <= 4 && !val.includes(':') && /^\d+$/.test(val)) {
+            // "130" -> "1:30"
+            if (val.length == 3) {
+                input.value = val.substring(0, 1) + ":" + val.substring(1);
+            } else {
+                input.value = val.substring(0, 2) + ":" + val.substring(2);
+            }
+        }
     }
 
     // --- Log Generation ---
     async function generateLog(type) {
         const payload = {
             check_type: type,
-            mode: currentMode,
-            customer_id: document.getElementById('customer-select').value || null
+            mode: currentMode
         };
 
         if (currentMode === 'automatic') {
-            payload.hours = parseInt(document.getElementById('duration-hours').value);
-            payload.minutes = parseInt(document.getElementById('duration-minutes').value);
+            payload.hours = parseInt(document.getElementById('duration-hours').value) || 0;
+            payload.minutes = parseInt(document.getElementById('duration-minutes').value) || 0;
         } else {
             // Manual mode logic
             const startTime = document.getElementById('start-time').value;
@@ -445,10 +406,9 @@
                 return;
             }
 
+            // Send raw values, backend will parse flexible formats
             payload.start_time = startTime;
-            payload.start_period = document.getElementById('start-period').value;
             payload.end_time = endTime;
-            payload.end_period = document.getElementById('end-period').value;
             payload.date_str = document.getElementById('log-date').value;
         }
 
@@ -477,7 +437,7 @@
             if (type === 'onsite') closeModal('onSiteModal');
 
         } catch (error) {
-            showToast(error.message, "error");
+            showToast(error.message || "Error generating log", "error");
         }
     }
 
@@ -500,15 +460,21 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: name })
                 });
+
                 if (res.ok) {
                     const data = await res.json();
                     const select = document.getElementById('custom-category');
                     const option = new Option(data.name, data.name);
                     select.add(option);
                     select.value = data.name;
+                    showToast("Category added!");
+                } else {
+                    const err = await res.json();
+                    showToast(err.detail, "error");
                 }
             } catch (e) {
                 console.error(e);
+                showToast("Failed to add category", "error");
             }
         }
     }
@@ -523,14 +489,13 @@
         const payload = {
             check_type: 'onsite',
             mode: currentMode,
-            message: message,
-            customer_id: document.getElementById('customer-select').value || null
+            message: message
         };
 
         // Add time data (duplication from generateLog but needed since we bypass it)
         if (currentMode === 'automatic') {
-            payload.hours = parseInt(document.getElementById('duration-hours').value);
-            payload.minutes = parseInt(document.getElementById('duration-minutes').value);
+            payload.hours = parseInt(document.getElementById('duration-hours').value) || 0;
+            payload.minutes = parseInt(document.getElementById('duration-minutes').value) || 0;
         } else {
             const startTime = document.getElementById('start-time').value;
             const endTime = document.getElementById('end-time').value;
@@ -539,9 +504,7 @@
                 return;
             }
             payload.start_time = startTime;
-            payload.start_period = document.getElementById('start-period').value;
             payload.end_time = endTime;
-            payload.end_period = document.getElementById('end-period').value;
             payload.date_str = document.getElementById('log-date').value;
         }
 
