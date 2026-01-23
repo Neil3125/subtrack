@@ -54,7 +54,12 @@ def export_all_data(db: Session) -> dict:
         "customers": [],
         "subscriptions": [],
         "links": [],
-        "saved_reports": []
+        "saved_reports": [],
+        "many_to_many": {
+            "subscription_categories": [],
+            "customer_categories": [],
+            "customer_groups": []
+        }
     }
     
     # Export categories
@@ -174,6 +179,40 @@ def export_all_data(db: Session) -> dict:
     except Exception:
         # SavedReport table might not exist
         pass
+    
+    # Export many-to-many relationships
+    try:
+        # Subscription-Category relationships
+        rows = db.execute(text("SELECT subscription_id, category_id FROM subscription_categories")).fetchall()
+        for row in rows:
+            data["many_to_many"]["subscription_categories"].append({
+                "subscription_id": row[0],
+                "category_id": row[1]
+            })
+    except Exception as e:
+        print(f"[DataPersistence] subscription_categories table may not exist: {e}")
+    
+    try:
+        # Customer-Category relationships
+        rows = db.execute(text("SELECT customer_id, category_id FROM customer_categories")).fetchall()
+        for row in rows:
+            data["many_to_many"]["customer_categories"].append({
+                "customer_id": row[0],
+                "category_id": row[1]
+            })
+    except Exception as e:
+        print(f"[DataPersistence] customer_categories table may not exist: {e}")
+    
+    try:
+        # Customer-Group relationships
+        rows = db.execute(text("SELECT customer_id, group_id FROM customer_groups")).fetchall()
+        for row in rows:
+            data["many_to_many"]["customer_groups"].append({
+                "customer_id": row[0],
+                "group_id": row[1]
+            })
+    except Exception as e:
+        print(f"[DataPersistence] customer_groups table may not exist: {e}")
     
     return data
 
@@ -385,6 +424,61 @@ def import_data_to_db(db: Session, data: dict) -> bool:
                     db.add(report)
             except Exception:
                 pass
+        db.commit()
+        
+        # Import many-to-many relationships
+        from sqlalchemy import text
+        many_to_many = data.get("many_to_many", {})
+        
+        # Import subscription-category relationships
+        try:
+            for rel in many_to_many.get("subscription_categories", []):
+                # Check if relationship already exists
+                existing = db.execute(
+                    text("SELECT 1 FROM subscription_categories WHERE subscription_id = :sub_id AND category_id = :cat_id"),
+                    {"sub_id": rel["subscription_id"], "cat_id": rel["category_id"]}
+                ).fetchone()
+                
+                if not existing:
+                    db.execute(
+                        text("INSERT INTO subscription_categories (subscription_id, category_id) VALUES (:sub_id, :cat_id)"),
+                        {"sub_id": rel["subscription_id"], "cat_id": rel["category_id"]}
+                    )
+        except Exception as e:
+            print(f"[DataPersistence] Error importing subscription_categories: {e}")
+        
+        # Import customer-category relationships
+        try:
+            for rel in many_to_many.get("customer_categories", []):
+                existing = db.execute(
+                    text("SELECT 1 FROM customer_categories WHERE customer_id = :cust_id AND category_id = :cat_id"),
+                    {"cust_id": rel["customer_id"], "cat_id": rel["category_id"]}
+                ).fetchone()
+                
+                if not existing:
+                    db.execute(
+                        text("INSERT INTO customer_categories (customer_id, category_id) VALUES (:cust_id, :cat_id)"),
+                        {"cust_id": rel["customer_id"], "cat_id": rel["category_id"]}
+                    )
+        except Exception as e:
+            print(f"[DataPersistence] Error importing customer_categories: {e}")
+        
+        # Import customer-group relationships
+        try:
+            for rel in many_to_many.get("customer_groups", []):
+                existing = db.execute(
+                    text("SELECT 1 FROM customer_groups WHERE customer_id = :cust_id AND group_id = :grp_id"),
+                    {"cust_id": rel["customer_id"], "grp_id": rel["group_id"]}
+                ).fetchone()
+                
+                if not existing:
+                    db.execute(
+                        text("INSERT INTO customer_groups (customer_id, group_id) VALUES (:cust_id, :grp_id)"),
+                        {"cust_id": rel["customer_id"], "grp_id": rel["group_id"]}
+                    )
+        except Exception as e:
+            print(f"[DataPersistence] Error importing customer_groups: {e}")
+        
         db.commit()
         
         print(f"[DataPersistence] Imported data: {len(data.get('categories', []))} categories, "

@@ -581,11 +581,30 @@ async def export_country_revenue_excel(db: Session = Depends(get_db)):
 
 # ==================== Data Persistence Endpoints ====================
 
+@router.get("/export")
+async def export_all_data_endpoint(db: Session = Depends(get_db)):
+    """
+    Export all data as JSON for backup purposes.
+    This is the main export endpoint used by the settings page.
+    """
+    from app.data_persistence import export_all_data
+    import json
+    
+    data = export_all_data(db)
+    json_str = json.dumps(data, indent=2, default=str)
+    
+    return Response(
+        content=json_str,
+        media_type="application/json",
+        headers={"Content-Disposition": f"attachment; filename=subtrack_backup_{date.today().isoformat()}.json"}
+    )
+
+
 @router.get("/export/data-backup")
 async def export_data_backup(db: Session = Depends(get_db)):
     """
     Export all data as JSON for backup purposes.
-    This can be used to manually backup your data.
+    Alias for /api/export endpoint.
     """
     from app.data_persistence import export_all_data
     import json
@@ -710,3 +729,119 @@ async def import_data_json(payload: dict, db: Session = Depends(get_db)):
             return {"error": "Import failed - check server logs for details"}
     except Exception as e:
         return {"error": f"Import failed: {str(e)}"}
+
+
+@router.post("/clear-all-records")
+async def clear_all_records(db: Session = Depends(get_db)):
+    """
+    Clear all records from the database.
+    
+    WARNING: This will delete ALL data including:
+    - All subscriptions
+    - All customers
+    - All groups
+    - All categories
+    - All links
+    - All saved reports
+    
+    This action cannot be undone. Make sure to export your data first!
+    """
+    from app.models import Category, Group, Customer, Subscription, Link
+    from app.models.saved_report import SavedReport
+    from app.models.activity_log import ActivityLog
+    from app.models.renewal_notice import RenewalNotice
+    
+    try:
+        # Count records before deletion
+        counts = {
+            "subscriptions": db.query(Subscription).count(),
+            "customers": db.query(Customer).count(),
+            "groups": db.query(Group).count(),
+            "categories": db.query(Category).count(),
+            "links": 0,
+            "saved_reports": 0,
+            "activity_logs": 0,
+            "renewal_notices": 0
+        }
+        
+        # Try to count optional tables
+        try:
+            counts["links"] = db.query(Link).count()
+        except Exception:
+            pass
+        
+        try:
+            counts["saved_reports"] = db.query(SavedReport).count()
+        except Exception:
+            pass
+            
+        try:
+            counts["activity_logs"] = db.query(ActivityLog).count()
+        except Exception:
+            pass
+            
+        try:
+            counts["renewal_notices"] = db.query(RenewalNotice).count()
+        except Exception:
+            pass
+        
+        # Delete in correct order (respecting foreign keys)
+        # Delete renewal notices first
+        try:
+            db.query(RenewalNotice).delete()
+        except Exception:
+            pass
+        
+        # Delete activity logs
+        try:
+            db.query(ActivityLog).delete()
+        except Exception:
+            pass
+        
+        # Delete saved reports
+        try:
+            db.query(SavedReport).delete()
+        except Exception:
+            pass
+        
+        # Delete links
+        try:
+            db.query(Link).delete()
+        except Exception:
+            pass
+        
+        # Delete subscriptions (has foreign keys to customers and categories)
+        db.query(Subscription).delete()
+        
+        # Delete customers (has foreign keys to groups and categories)
+        db.query(Customer).delete()
+        
+        # Delete groups (has foreign key to categories)
+        db.query(Group).delete()
+        
+        # Delete categories (no foreign keys)
+        db.query(Category).delete()
+        
+        # Commit all deletions
+        db.commit()
+        
+        # Clear the auto-save file
+        from app.data_persistence import save_data_to_file
+        save_data_to_file({
+            "exported_at": datetime.now().isoformat(),
+            "categories": [],
+            "groups": [],
+            "customers": [],
+            "subscriptions": [],
+            "links": [],
+            "saved_reports": []
+        })
+        
+        return {
+            "message": "All records cleared successfully",
+            "deleted": counts
+        }
+        
+    except Exception as e:
+        db.rollback()
+        return {"error": f"Failed to clear records: {str(e)}"}

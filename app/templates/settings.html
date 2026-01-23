@@ -189,23 +189,42 @@
                     </label>
                 </div>
 
-                <div class="flex gap-3 mb-4">
-                    <button class="btn btn-secondary" onclick="exportData()">
-                        📥 Export Data
-                    </button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">
-                        📤 Import Data
-                    </button>
-                    <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importData(this.files[0])">
+                <div class="mb-4">
+                    <div class="text-sm font-medium mb-2">Backup & Restore</div>
+                    <div class="flex gap-3 flex-wrap">
+                        <button class="btn btn-primary" onclick="exportData()">
+                            📥 Export Data
+                        </button>
+                        <button class="btn btn-primary" onclick="document.getElementById('import-file').click()">
+                            📤 Import Data
+                        </button>
+                        <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importData(this.files[0])">
+                    </div>
+                    <div class="text-xs text-secondary mt-2">
+                        💡 Tip: Always export your data before clearing records or making major changes
+                    </div>
                 </div>
 
-                <div class="flex gap-3">
-                    <button class="btn btn-warning" onclick="clearCache()">
-                        🗑️ Clear Cache
+                <div class="mb-4">
+                    <div class="text-sm font-medium mb-2">Cache & Settings</div>
+                    <div class="flex gap-3 flex-wrap">
+                        <button class="btn btn-warning" onclick="clearCache()">
+                            🗑️ Clear Cache
+                        </button>
+                        <button class="btn btn-warning" onclick="resetSettings()">
+                            🔄 Reset Settings
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-0">
+                    <div class="text-sm font-medium mb-2" style="color: var(--color-danger);">⚠️ Danger Zone</div>
+                    <button class="btn btn-danger" onclick="confirmClearAllRecords()">
+                        🗑️ Clear All Records
                     </button>
-                    <button class="btn btn-danger" onclick="resetSettings()">
-                        ⚠️ Reset Settings
-                    </button>
+                    <div class="text-xs text-secondary mt-2">
+                        ⚠️ This will permanently delete all categories, customers, subscriptions, and groups. Export your data first!
+                    </div>
                 </div>
             </div>
         </div>
@@ -480,29 +499,42 @@ window.toggleTheme = function() {
 function exportData() {
     showToast('Exporting data...', 'info');
     fetch('/api/export')
-        .then(response => response.blob())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Export failed');
+            }
+            return response.blob();
+        })
         .then(blob => {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `subtrack_export_${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `subtrack_backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
             a.click();
-            showToast('Data exported successfully', 'success');
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            showToast('✅ Data exported successfully!', 'success');
         })
         .catch(error => {
-            showToast('Export failed', 'error');
+            console.error('Export error:', error);
+            showToast('❌ Export failed. Please try again.', 'error');
         });
 }
 
 async function importData(file) {
     if (!file) return;
     
+    // Reset the file input
+    const fileInput = document.getElementById('import-file');
+    
     // Confirm before importing
-    if (!confirm('Import data from this file? This will ADD new records to your database. Existing records with the same IDs will NOT be overwritten.')) {
+    if (!confirm('⚠️ Import data from this file?\n\nThis will ADD new records to your database.\nExisting records with the same IDs will NOT be overwritten.\n\nContinue?')) {
+        fileInput.value = '';
         return;
     }
     
-    showToast('Reading file...', 'info');
+    showToast('📖 Reading file...', 'info');
     
     const reader = new FileReader();
     reader.onload = async function(e) {
@@ -511,11 +543,12 @@ async function importData(file) {
             
             // Validate the data structure
             if (!data.categories && !data.customers && !data.subscriptions && !data.groups) {
-                showToast('Invalid file format. Expected SubTrack backup JSON.', 'error');
+                showToast('❌ Invalid file format. Expected SubTrack backup JSON.', 'error');
+                fileInput.value = '';
                 return;
             }
             
-            showToast('Importing data...', 'info');
+            showToast('📥 Importing data...', 'info');
             
             // Send to import endpoint
             const response = await fetch('/api/import/data', {
@@ -529,11 +562,11 @@ async function importData(file) {
             const result = await response.json();
             
             if (result.error) {
-                showToast(result.error, 'error');
+                showToast('❌ ' + result.error, 'error');
             } else {
                 const imported = result.imported;
                 showToast(
-                    `Imported: ${imported.categories} categories, ${imported.groups} groups, ${imported.customers} customers, ${imported.subscriptions} subscriptions`,
+                    `✅ Import successful!\n${imported.categories} categories, ${imported.groups} groups, ${imported.customers} customers, ${imported.subscriptions} subscriptions`,
                     'success'
                 );
                 // Reload page after short delay to show new data
@@ -541,20 +574,28 @@ async function importData(file) {
                     if (confirm('Import complete! Reload page to see imported data?')) {
                         window.location.reload();
                     }
-                }, 1000);
+                }, 1500);
             }
         } catch (error) {
             console.error('Import error:', error);
-            showToast('Invalid file format or import failed', 'error');
+            showToast('❌ Invalid file format or import failed', 'error');
+        } finally {
+            fileInput.value = '';
         }
     };
+    
+    reader.onerror = function() {
+        showToast('❌ Failed to read file', 'error');
+        fileInput.value = '';
+    };
+    
     reader.readAsText(file);
 }
 
 function clearCache() {
     if (confirm('Clear all cached data? This will not delete your subscriptions.')) {
         localStorage.removeItem('subtrack_cache');
-        showToast('Cache cleared', 'success');
+        showToast('✅ Cache cleared', 'success');
     }
 }
 
@@ -562,6 +603,89 @@ function resetSettings() {
     if (confirm('Reset all settings to default? This cannot be undone.')) {
         localStorage.removeItem('subtrack_settings');
         location.reload();
+    }
+}
+
+async function confirmClearAllRecords() {
+    // First confirmation
+    const firstConfirm = confirm(
+        '⚠️ WARNING: Clear All Records?\n\n' +
+        'This will PERMANENTLY DELETE:\n' +
+        '• All categories\n' +
+        '• All groups\n' +
+        '• All customers\n' +
+        '• All subscriptions\n' +
+        '• All links\n' +
+        '• All saved reports\n' +
+        '• All activity logs\n\n' +
+        'This action CANNOT be undone!\n\n' +
+        'Have you exported your data?\n\n' +
+        'Click OK to continue or Cancel to abort.'
+    );
+    
+    if (!firstConfirm) {
+        showToast('Operation cancelled', 'info');
+        return;
+    }
+    
+    // Second confirmation - make them type
+    const confirmation = prompt(
+        'To confirm, please type "DELETE ALL" (in capital letters):'
+    );
+    
+    if (confirmation !== 'DELETE ALL') {
+        showToast('❌ Confirmation text did not match. Operation cancelled.', 'warning');
+        return;
+    }
+    
+    // Final confirmation
+    const finalConfirm = confirm(
+        '⚠️ FINAL WARNING!\n\n' +
+        'This is your last chance to cancel.\n\n' +
+        'All data will be permanently deleted.\n\n' +
+        'Are you absolutely sure?'
+    );
+    
+    if (!finalConfirm) {
+        showToast('Operation cancelled', 'info');
+        return;
+    }
+    
+    // Proceed with deletion
+    showToast('🗑️ Clearing all records...', 'info');
+    
+    try {
+        const response = await fetch('/api/clear-all-records', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.error) {
+            showToast('❌ Error: ' + result.error, 'error');
+        } else {
+            const deleted = result.deleted;
+            showToast(
+                `✅ All records cleared!\n\n` +
+                `Deleted:\n` +
+                `${deleted.categories} categories\n` +
+                `${deleted.groups} groups\n` +
+                `${deleted.customers} customers\n` +
+                `${deleted.subscriptions} subscriptions`,
+                'success'
+            );
+            
+            // Reload after short delay
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+        }
+    } catch (error) {
+        console.error('Clear records error:', error);
+        showToast('❌ Failed to clear records. Please try again.', 'error');
     }
 }
 
