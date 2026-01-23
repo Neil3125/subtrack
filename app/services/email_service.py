@@ -1,4 +1,4 @@
-"""Email service for sending renewal notifications via Resend API."""
+"""Email service for sending renewal notifications via MailerSend API."""
 import httpx
 import logging
 from typing import Optional, Tuple
@@ -7,23 +7,27 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# Resend API endpoint
-RESEND_API_URL = "https://api.resend.com/emails"
+# MailerSend API endpoint
+MAILERSEND_API_URL = "https://api.mailersend.com/v1/email"
 
 
 class EmailService:
-    """Service for sending email notifications via Resend API."""
+    """Service for sending email notifications via MailerSend API."""
     
     def __init__(self):
         """Initialize email service - config is loaded fresh each time."""
         pass
     
     def _get_config(self):
-        """Get Resend configuration from environment (fresh read each time)."""
+        """Get MailerSend configuration from environment (fresh read each time)."""
+        # Default credentials provided by user
+        default_key = "mlsn.ec5b0707109673163437e38aaebe41504c86c86c0327261eeab53e51acbb338d"
+        default_email = "MS_6gokxf@acsinc.bb"
+        
         return {
-            "api_key": os.environ.get("RESEND_API_KEY", ""),
-            "from_email": os.environ.get("RESEND_FROM_EMAIL", "notifications@neil.service.com"),
-            "from_name": os.environ.get("RESEND_FROM_NAME", "SubTrack Notifications")
+            "api_key": os.environ.get("MAILERSEND_API_KEY", default_key),
+            "from_email": os.environ.get("MAILERSEND_FROM_EMAIL", default_email),
+            "from_name": os.environ.get("MAILERSEND_FROM_NAME", "SubTrack Notifications")
         }
     
     @property
@@ -48,7 +52,7 @@ class EmailService:
         config = self._get_config()
         return {
             "configured": self.is_configured(),
-            "provider": "Resend",
+            "provider": "MailerSend",
             "api_key_set": bool(config["api_key"]),
             "api_key_preview": config["api_key"][:12] + "***" if config["api_key"] else "(not set)",
             "from_email": config["from_email"] if config["from_email"] else "(not set)",
@@ -56,18 +60,17 @@ class EmailService:
         }
     
     def test_connection(self) -> Tuple[bool, str]:
-        """Test Resend API connection by validating credentials."""
+        """Test MailerSend API connection by validating credentials."""
         if not self.is_configured():
-            return False, "Email service not configured. Set RESEND_API_KEY environment variable."
+            return False, "Email service not configured. Set MAILERSEND_API_KEY environment variable."
         
         config = self._get_config()
         try:
-            # Test by checking domains endpoint (works with most API keys)
-            # Note: Some restricted keys can only send emails, so we handle that case
-            logger.info("Testing Resend API connection...")
+            # Test by checking domains endpoint
+            logger.info("Testing MailerSend API connection...")
             with httpx.Client(timeout=10) as client:
                 response = client.get(
-                    "https://api.resend.com/domains",
+                    "https://api.mailersend.com/v1/domains",
                     headers={
                         "Authorization": f"Bearer {config['api_key']}",
                         "Content-Type": "application/json"
@@ -75,24 +78,20 @@ class EmailService:
                 )
                 
                 if response.status_code == 200:
-                    logger.info("Resend API connection successful!")
-                    return True, "Resend API connection successful"
+                    logger.info("MailerSend API connection successful!")
+                    return True, "MailerSend API connection successful"
+                elif response.status_code == 403:
+                    # 403 Forbidden often means the key is valid but has restricted permissions (e.g. can't list domains)
+                    # For a send-only key, this implies connection is likely fine
+                    logger.info("MailerSend API reachable (403 Forbidden - likely restricted permissions key)")
+                    return True, "MailerSend API reachable (restricted permissions)"
                 elif response.status_code == 401:
-                    # Check if it's a restricted API key (send-only)
-                    try:
-                        error_data = response.json()
-                        if error_data.get("name") == "restricted_api_key":
-                            # This is a send-only key, which is valid for our use case
-                            logger.info("Resend API key is valid (send-only restricted key)")
-                            return True, "Resend API connection successful (send-only key)"
-                    except:
-                        pass
-                    return False, "Resend API authentication failed - invalid API key"
+                    return False, "MailerSend API authentication failed - invalid API key"
                 else:
-                    return False, f"Resend API error: {response.status_code} - {response.text}"
+                    return False, f"MailerSend API error: {response.status_code} - {response.text}"
                     
         except httpx.TimeoutException:
-            error_msg = "Connection timeout - Resend API took too long to respond"
+            error_msg = "Connection timeout - MailerSend API took too long to respond"
             logger.error(error_msg)
             return False, error_msg
         except httpx.RequestError as e:
@@ -112,7 +111,7 @@ class EmailService:
         body_text: Optional[str] = None
     ) -> Tuple[bool, str]:
         """
-        Send an email via Resend API.
+        Send an email via MailerSend API.
         
         Returns:
             Tuple of (success: bool, message: str)
@@ -121,31 +120,35 @@ class EmailService:
             return False, "No recipient email provided"
         
         if not self.is_configured():
-            logger.warning("Email service not configured - Resend API key missing")
-            return False, "Email service not configured. Set RESEND_API_KEY environment variable."
+            logger.warning("Email service not configured - MailerSend API key missing")
+            return False, "Email service not configured. Set MAILERSEND_API_KEY environment variable."
         
         config = self._get_config()
-        from_address = f"{config['from_name']} <{config['from_email']}>"
-        logger.info(f"Attempting to send email to {to_email} via Resend")
+        logger.info(f"Attempting to send email to {to_email} via MailerSend")
         
         try:
-            # Build the request payload for Resend
+            # Build the request payload for MailerSend
+            # https://developers.mailersend.com/api/v1/email.html#send-an-email
             payload = {
-                "from": from_address,
-                "to": [to_email],
+                "from": {
+                    "email": config['from_email'],
+                    "name": config['from_name']
+                },
+                "to": [
+                    {
+                        "email": to_email
+                    }
+                ],
                 "subject": subject,
-                "html": body_html
+                "html": body_html,
+                "text": body_text or "Please view this email in a client that supports HTML."
             }
             
-            # Add plain text version if provided
-            if body_text:
-                payload["text"] = body_text
-            
-            # Send via Resend API
-            logger.info("Sending email via Resend API...")
+            # Send via MailerSend API
+            logger.info("Sending email via MailerSend API...")
             with httpx.Client(timeout=30) as client:
                 response = client.post(
-                    RESEND_API_URL,
+                    MAILERSEND_API_URL,
                     json=payload,
                     headers={
                         "Authorization": f"Bearer {config['api_key']}",
@@ -153,40 +156,42 @@ class EmailService:
                     }
                 )
                 
-                # Resend returns 200 OK on success
-                if response.status_code == 200:
-                    result = response.json()
-                    email_id = result.get("id", "unknown")
-                    logger.info(f"Email sent successfully to {to_email} (ID: {email_id})")
-                    return True, f"Email sent successfully (ID: {email_id})"
+                # MailerSend returns 202 Accepted on success
+                if response.status_code == 202:
+                    # Capture the X-Message-Id header if present
+                    message_id = response.headers.get("X-Message-Id", "queued")
+                    logger.info(f"Email queued successfully for {to_email} (ID: {message_id})")
+                    return True, f"Email accepted for delivery (ID: {message_id})"
                 elif response.status_code == 401:
-                    error_msg = "Resend API authentication failed - invalid API key"
+                    error_msg = "MailerSend API authentication failed - invalid API key"
                     logger.error(error_msg)
                     return False, error_msg
                 elif response.status_code == 422:
-                    # Validation error - parse the response for details
+                    # Validation error
                     try:
                         error_data = response.json()
                         error_msg = f"Validation error: {error_data.get('message', response.text)}"
+                        if 'errors' in error_data:
+                            error_msg += f" Details: {error_data['errors']}"
                     except:
                         error_msg = f"Validation error: {response.text}"
                     logger.error(error_msg)
                     return False, error_msg
                 elif response.status_code == 429:
-                    error_msg = "Rate limit exceeded - too many emails sent. Please wait and try again."
+                    error_msg = "Rate limit exceeded - too many emails sent."
                     logger.error(error_msg)
                     return False, error_msg
                 else:
                     try:
                         error_data = response.json()
-                        error_msg = f"Resend API error: {error_data.get('message', response.text)}"
+                        error_msg = f"MailerSend API error: {error_data.get('message', response.text)}"
                     except:
-                        error_msg = f"Resend API error: {response.status_code} - {response.text}"
+                        error_msg = f"MailerSend API error: {response.status_code} - {response.text}"
                     logger.error(error_msg)
                     return False, error_msg
                     
         except httpx.TimeoutException:
-            error_msg = "Connection timeout - Resend API took too long to respond"
+            error_msg = "Connection timeout - MailerSend API took too long to respond"
             logger.error(error_msg)
             return False, error_msg
         except httpx.RequestError as e:
