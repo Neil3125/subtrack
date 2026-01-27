@@ -98,6 +98,8 @@ def list_subscriptions(
     customer_id: Optional[int] = None,
     category_id: Optional[int] = None,
     status: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
     db: Session = Depends(get_db)
 ):
     """List all subscriptions, with optional filters."""
@@ -109,6 +111,12 @@ def list_subscriptions(
         query = query.filter(Subscription.category_id == category_id)
     if status:
         query = query.filter(Subscription.status == status)
+    
+    # Date range filtering for calendar
+    if start_date:
+        query = query.filter(Subscription.next_renewal_date >= start_date)
+    if end_date:
+        query = query.filter(Subscription.next_renewal_date <= end_date)
 
     subs = query.all()
     # Attach category_ids for response serialization

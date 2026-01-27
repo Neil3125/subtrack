@@ -177,6 +177,12 @@
                         </a>
                     </li>
                     <li class="sidebar-nav-item">
+                        <a href="/calendar"
+                            class="sidebar-nav-link {% if '/calendar' in request.path %}active{% endif %}">
+                            📅 Calendar
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
                         <a href="/categories"
                             class="sidebar-nav-link {% if '/categories' in request.path and '/customers' not in request.path %}active{% endif %}">
                             📁 Categories

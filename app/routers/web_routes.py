@@ -547,6 +547,17 @@ async def users_page(request: Request, db: Session = Depends(get_db)):
 # AI dashboard removed - AI chat features have been disabled
 
 
+@router.get("/calendar", response_class=HTMLResponse)
+async def calendar_page(request: Request, db: Session = Depends(get_db)):
+    """Calendar view page."""
+    categories = db.query(Category).all()
+    
+    return templates.TemplateResponse("calendar.html", {
+        "request": request,
+        "categories": categories
+    })
+
+
 @router.get("/activity", response_class=HTMLResponse)
 async def activity_page(
     request: Request,
