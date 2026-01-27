@@ -10,9 +10,9 @@
     <script>
         // Load theme IMMEDIATELY before any rendering
         (function () {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            const savedVisualTheme = localStorage.getItem('visual-theme') || 'default';
-            document.documentElement.setAttribute('data-theme', savedVisualTheme !== 'default' ? savedVisualTheme : savedTheme);
+            // Force Dark Mode
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
         })();
     </script>
 
@@ -91,34 +91,11 @@
         </div>
 
         <div class="navbar-actions">
-            <button class="btn btn-secondary btn-sm" onclick="toggleTheme()">
-                <span id="theme-icon">🌙</span>
-            </button>
-            <div class="dropdown">
-                <button class="btn btn-secondary btn-sm" data-tooltip-bottom="Visual Themes">
-                    🎨
-                </button>
-                <div class="dropdown-menu">
-                    <button onclick="setVisualTheme('default')" class="dropdown-item">
-                        <span>🌊</span> Ocean (Default)
-                    </button>
-                    <button onclick="setVisualTheme('sunset')" class="dropdown-item">
-                        <span>🌅</span> Sunset
-                    </button>
-                    <button onclick="setVisualTheme('midnight')" class="dropdown-item">
-                        <span>🌙</span> Midnight
-                    </button>
-                    <button onclick="setVisualTheme('forest')" class="dropdown-item">
-                        <span>🌲</span> Forest
-                    </button>
-                    <button onclick="setVisualTheme('candy')" class="dropdown-item">
-                        <span>🍭</span> Candy
-                    </button>
-                    <button onclick="setVisualTheme('aurora')" class="dropdown-item">
-                        <span>✨</span> Aurora
-                    </button>
-                </div>
-            </div>
+            {% if current_user %}
+            <span class="text-secondary text-sm mr-4 font-light">Hello, {{ current_user.name or current_user.username
+                }}</span>
+            {% endif %}
+
             <div class="dropdown">
                 <button class="btn btn-secondary btn-sm" data-tooltip-bottom="Settings & More">
                     ⚙️
@@ -163,6 +140,12 @@
                         <a href="/log-check"
                             class="sidebar-nav-link {% if '/log-check' in request.path %}active{% endif %}">
                             ✅ Log Check
+                        </a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="/calendar"
+                            class="sidebar-nav-link {% if '/calendar' in request.path %}active{% endif %}">
+                            📅 Calendar
                         </a>
                     </li>
                 </ul>

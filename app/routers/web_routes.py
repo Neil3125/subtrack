@@ -17,6 +17,7 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request, db: Session = Depends(get_db)):
     """Render dashboard."""
+    current_user = get_current_user(request, db)
     # Get categories for sidebar
     categories = db.query(Category).all()
     
@@ -82,7 +83,8 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
         "expiring_soon": expiring_soon,
         "overdue": overdue,
         "all_active": all_active,
-        "insights": None
+        "insights": None,
+        "current_user": current_user
     })
 
 
@@ -550,11 +552,13 @@ async def users_page(request: Request, db: Session = Depends(get_db)):
 @router.get("/calendar", response_class=HTMLResponse)
 async def calendar_page(request: Request, db: Session = Depends(get_db)):
     """Calendar view page."""
+    current_user = get_current_user(request, db)
     categories = db.query(Category).all()
     
     return templates.TemplateResponse("calendar.html", {
         "request": request,
-        "categories": categories
+        "categories": categories,
+        "current_user": current_user
     })
 
 

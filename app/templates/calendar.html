@@ -7,11 +7,11 @@
         <div class="header-left">
             <h1 id="currentMonthYear">January 2026</h1>
             <div class="calendar-controls">
-                <button id="prevMonth" class="btn btn-icon" title="Previous Month">
+                <button id="prevMonth" class="btn-icon-cal" title="Previous Month">
                     <i class="fas fa-chevron-left"></i>
                 </button>
                 <button id="todayBtn" class="btn btn-sm btn-outline">Today</button>
-                <button id="nextMonth" class="btn btn-icon" title="Next Month">
+                <button id="nextMonth" class="btn-icon-cal" title="Next Month">
                     <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
@@ -77,14 +77,17 @@
         --text-primary: #323338;
         --text-secondary: #676879;
         --primary-color: #0073ea;
-        --event-bg-renewal: #e2f7e7;
-        /* Light green */
-        --event-text-renewal: #007f36;
-        /* Dark green */
-        --event-bg-expiration: #ffe6e6;
-        /* Light red */
-        --event-text-expiration: #d93025;
-        /* Dark red */
+        --btn-hover-bg: #dcdfec;
+    }
+
+    [data-theme="dark"] {
+        --grid-border: #24262b;
+        --cell-bg: #111111;
+        --cell-hover: #1f2125;
+        --text-primary: #e6e6e6;
+        --text-secondary: #b0b1b8;
+        --primary-color: #579dff;
+        --btn-hover-bg: #2c2e33;
     }
 
     .calendar-container {
@@ -93,7 +96,7 @@
         height: calc(100vh - 80px);
         /* Adjust based on navbar height */
         padding: 24px;
-        background-color: #f7f9fa;
+        background-color: var(--color-bg);
         overflow: hidden;
     }
 
@@ -102,6 +105,8 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 24px;
+        border-bottom: 1px solid transparent;
+        /* Alignment fix */
     }
 
     .header-left {
@@ -115,41 +120,41 @@
         font-weight: 600;
         color: var(--text-primary);
         margin: 0;
-        min-width: 200px;
+        min-width: 220px;
+        line-height: 1;
+        /* Fix vertical alignment */
     }
 
     .calendar-controls {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 12px;
+    }
+
+    .btn-icon-cal {
+        background: transparent;
+        border: 1px solid var(--grid-border);
+        color: var(--text-primary);
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-icon-cal:hover {
+        background-color: var(--btn-hover-bg);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
     }
 
     .header-right {
         display: flex;
         align-items: center;
         gap: 16px;
-    }
-
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 14px;
-        color: var(--text-secondary);
-    }
-
-    .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-    }
-
-    .dot.renewal {
-        background-color: var(--event-text-renewal);
-    }
-
-    .dot.expiration {
-        background-color: var(--event-text-expiration);
     }
 
     /* Grid Header */
@@ -166,6 +171,7 @@
         color: var(--text-secondary);
         font-size: 14px;
         text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     /* Grid Body */
@@ -179,7 +185,7 @@
         /* Gap color */
         gap: 1px;
         border: 1px solid var(--grid-border);
-        border-radius: 0 0 8px 8px;
+        border-radius: 0 0 12px 12px;
         overflow-y: auto;
     }
 
@@ -192,19 +198,29 @@
         display: flex;
         flex-direction: column;
         gap: 4px;
+        position: relative;
     }
 
     .calendar-cell:hover {
         background-color: var(--cell-hover);
+        z-index: 1;
     }
 
     .calendar-cell.other-month {
-        background-color: #fcfcfd;
-        color: #cecece;
+        background-color: var(--color-bg-secondary, #fafafa);
+        opacity: 0.5;
+    }
+
+    [data-theme="dark"] .calendar-cell.other-month {
+        background-color: #000000;
     }
 
     .calendar-cell.today {
-        background-color: #f0f7ff;
+        background-color: rgba(0, 115, 234, 0.05);
+    }
+
+    [data-theme="dark"] .calendar-cell.today {
+        background-color: rgba(87, 157, 255, 0.1);
     }
 
     .cell-date {
@@ -212,8 +228,8 @@
         font-size: 14px;
         margin-bottom: 4px;
         color: var(--text-secondary);
-        width: 24px;
-        height: 24px;
+        width: 26px;
+        height: 26px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -223,40 +239,133 @@
     .calendar-cell.today .cell-date {
         background-color: var(--primary-color);
         color: white;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
-    /* Events Pills */
+    /* Events Pills & Pastel Colors */
     .event-pill {
         display: flex;
         align-items: center;
-        padding: 4px 8px;
-        border-radius: 4px;
+        padding: 6px 8px;
+        border-radius: 6px;
         font-size: 12px;
-        font-weight: 500;
-        margin-bottom: 2px;
+        font-weight: 600;
+        margin-bottom: 3px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        transition: transform 0.1s;
+        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        border-left: 3px solid transparent;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Subtle Pastel Themes */
+    .pill-color-0 {
+        background: #e8ecfc;
+        color: #3b5fc0;
+        border-color: #3b5fc0;
+    }
+
+    /* Blue/Purple */
+    .pill-color-1 {
+        background: #e2f7e7;
+        color: #007f36;
+        border-color: #007f36;
+    }
+
+    /* Green */
+    .pill-color-2 {
+        background: #fff0db;
+        color: #c07b00;
+        border-color: #c07b00;
+    }
+
+    /* Orange */
+    .pill-color-3 {
+        background: #ffe6e6;
+        color: #d93025;
+        border-color: #d93025;
+    }
+
+    /* Red */
+    .pill-color-4 {
+        background: #f3e5f5;
+        color: #8e24aa;
+        border-color: #8e24aa;
+    }
+
+    /* Purple */
+    .pill-color-5 {
+        background: #e0f7fa;
+        color: #00838f;
+        border-color: #00838f;
+    }
+
+    /* Cyan */
+
+    /* Dark Mode Pill Overrides (Slightly darker backgrounds, lighter text) */
+    [data-theme="dark"] .pill-color-0 {
+        background: rgba(59, 95, 192, 0.2);
+        color: #8faefc;
+    }
+
+    [data-theme="dark"] .pill-color-1 {
+        background: rgba(0, 127, 54, 0.2);
+        color: #66e3a0;
+    }
+
+    [data-theme="dark"] .pill-color-2 {
+        background: rgba(192, 123, 0, 0.2);
+        color: #ffca6e;
+    }
+
+    [data-theme="dark"] .pill-color-3 {
+        background: rgba(217, 48, 37, 0.2);
+        color: #fa8e87;
+    }
+
+    [data-theme="dark"] .pill-color-4 {
+        background: rgba(142, 36, 170, 0.2);
+        color: #e1bee7;
+    }
+
+    [data-theme="dark"] .pill-color-5 {
+        background: rgba(0, 131, 143, 0.2);
+        color: #80deea;
     }
 
     .event-pill:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        position: relative;
     }
 
-    .event-pill.renewal {
-        background-color: var(--event-bg-renewal);
-        color: var(--event-text-renewal);
-        border-left: 3px solid var(--event-text-renewal);
+    /* Modal Tweaks - Side Drawer / Centered Card */
+    #dayModal .modal-content {
+        max-width: 400px;
+        border-radius: 16px;
+        border: 1px solid var(--grid-border);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        padding: 0;
+        overflow: hidden;
     }
 
-    .event-pill-icon {
-        margin-right: 4px;
-        opacity: 0.7;
+    .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--grid-border);
+        background: var(--color-bg-secondary, #fafafa);
     }
 
-    /* Modal Tweaks */
+    [data-theme="dark"] .modal-header {
+        background: #1a1c20;
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
     .day-events-list {
         display: flex;
         flex-direction: column;
@@ -266,17 +375,26 @@
     }
 
     .event-item-card {
-        padding: 12px;
+        padding: 16px;
         border: 1px solid var(--grid-border);
-        border-radius: 8px;
+        border-radius: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        background: var(--cell-bg);
+        transition: transform 0.2s;
+    }
+
+    .event-item-card:hover {
+        border-color: var(--primary-color);
+        background-color: var(--cell-hover);
     }
 
     .event-item-info h4 {
-        margin: 0 0 4px 0;
+        margin: 0 0 6px 0;
         font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
     }
 
     .event-item-meta {
@@ -402,7 +520,9 @@
                 // Render Pills
                 daysEvents.forEach(sub => {
                     const pill = document.createElement('div');
-                    pill.className = 'event-pill renewal'; // Default to renewal style for now
+                    // Pastel Color Logic: Use category_id or hash of name
+                    const colorIndex = (sub.category_id || 0) % 6;
+                    pill.className = `event-pill pill-color-${colorIndex}`;
 
                     // Add icon if available (todo: map categories to icons)
 
