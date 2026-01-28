@@ -3,16 +3,23 @@
 {% block content %}
 <div class="calendar-container">
     <!-- Calendar Header -->
-    <div class="calendar-header">
+    <div class="calendar-header" style="padding: 20px 0;"> <!-- Increased padding -->
         <div class="header-left">
             <h1 id="currentMonthYear">January 2026</h1>
             <div class="calendar-controls">
-                <button id="prevMonth" class="btn-icon-cal" title="Previous Month">
-                    <i class="fas fa-chevron-left"></i>
+                <button id="prevMonth" class="btn btn-icon-cal" title="Previous Month">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6" />
+                    </svg>
                 </button>
-                <button id="todayBtn" class="btn btn-sm btn-outline">Today</button>
-                <button id="nextMonth" class="btn-icon-cal" title="Next Month">
-                    <i class="fas fa-chevron-right"></i>
+                <button id="todayBtn" class="btn btn-sm"
+                    style="background: var(--color-bg-tertiary); font-weight: 600;">Today</button>
+                <button id="nextMonth" class="btn btn-icon-cal" title="Next Month">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m9 18 6-6-6-6" />
+                    </svg>
                 </button>
             </div>
         </div>
@@ -21,9 +28,6 @@
             <div class="legend-item">
                 <span class="dot renewal"></span> Renewal
             </div>
-            <!-- <div class="legend-item">
-                <span class="dot expiration"></span> Expiration
-            </div> -->
             <button id="addSubscriptionBtn" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Add Subscription
             </button>
@@ -47,19 +51,34 @@
     </div>
 </div>
 
-<!-- Day Detail Modal -->
-<div id="dayModal" class="modal">
-    <div class="modal-content small-modal">
-        <div class="modal-header">
-            <h2 id="modalDateTitle">Date</h2>
-            <button class="close-modal">&times;</button>
+<!-- Day Detail Modal (Day Summary Card) -->
+<div id="dayModal" class="modal" style="align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div class="modal-content"
+        style="max-width: 480px; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+        <div class="modal-header"
+            style="display: flex; justify-content: space-between; align-items: center; padding: 24px; background: var(--color-bg-secondary); border-bottom: 1px solid var(--color-border);">
+            <div>
+                <h2 id="modalDateTitle" style="margin: 0; font-size: 1.25rem;">Date</h2>
+                <span id="modalDaySubtitle" style="color: var(--text-secondary); font-size: 0.875rem;">Summary</span>
+            </div>
+            <button class="close-modal"
+                style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
         </div>
-        <div class="modal-body">
-            <div id="dayEventsList" class="day-events-list">
+        <div class="modal-body" style="padding: 0; max-height: 50vh; overflow-y: auto;">
+            <div id="dayEventsList" class="day-events-list" style="padding: 24px; gap: 16px;">
                 <!-- Events populated here -->
             </div>
-            <button id="addEventOnDayBtn" class="btn btn-outline btn-full-width mt-4">
-                <i class="fas fa-plus"></i> Add Subscription for this Date
+            <div id="emptyStateMessage" style="display: none; padding: 40px 20px; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">✨</div>
+                <h3 style="font-size: 1rem; color: var(--text-primary); margin-bottom: 8px;">You're all clear today!
+                </h3>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">No subscriptions renewing on this day.</p>
+            </div>
+        </div>
+        <div class="modal-footer"
+            style="padding: 16px 24px; border-top: 1px solid var(--color-border); background: var(--color-bg);">
+            <button id="addEventOnDayBtn" class="btn btn-primary btn-full-width" style="width: 100%;">
+                <i class="fas fa-plus"></i> Add New Subscription
             </button>
         </div>
     </div>
@@ -547,34 +566,86 @@
         function openDayModal(date, events) {
             const dateStr = date.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
             modalDateTitle.textContent = dateStr;
+            const daySubtitle = document.getElementById('modalDaySubtitle');
+            if (daySubtitle) daySubtitle.textContent = `${events.length} Subscription${events.length !== 1 ? 's' : ''}`;
+
             dayEventsList.innerHTML = '';
+            const emptyState = document.getElementById('emptyStateMessage');
 
             if (events.length === 0) {
-                dayEventsList.innerHTML = '<p class="text-secondary text-center">No subscriptions renewing on this day.</p>';
+                dayEventsList.style.display = 'none';
+                if (emptyState) emptyState.style.display = 'block';
             } else {
+                dayEventsList.style.display = 'flex'; // Flex column
+                dayEventsList.style.flexDirection = 'column';
+                if (emptyState) emptyState.style.display = 'none';
+
                 events.forEach(sub => {
                     const el = document.createElement('div');
                     el.className = 'event-item-card';
+                    // Inline styles for the card
+                    el.style.display = 'flex';
+                    el.style.justifyContent = 'space-between';
+                    el.style.alignItems = 'center';
+                    el.style.padding = '16px';
+                    el.style.background = 'var(--color-bg)';
+                    el.style.border = '1px solid var(--color-border)';
+                    el.style.borderRadius = '12px';
+                    el.style.marginBottom = '0'; // Controlled by gap
+
+                    // Logo Placeholder (Gradient Circle)
+                    const logoColor = `var(--pill-color-${(sub.category_id || 0) % 6}, #7A9BFF)`;
+                    const logoBg = `rgba(122, 155, 255, 0.12)`; // Fallback or dynamic
+
                     el.innerHTML = `
-                        <div class="event-item-info">
-                            <h4>${sub.vendor_name}</h4>
-                            <div class="event-item-meta">
-                                ${sub.currency} ${sub.cost} • ${sub.billing_cycle}
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--color-bg-tertiary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                                📝
+                            </div>
+                            <div>
+                                <h4 style="margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-primary);">${sub.vendor_name}</h4>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 2px;">
+                                    ${sub.currency} ${sub.cost} • ${sub.billing_cycle}
+                                </div>
                             </div>
                         </div>
-                        <button class="btn btn-sm btn-outline edit-sub-btn" data-id="${sub.id}">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-icon-only btn-sm btn-outline edit-sub-btn" data-id="${sub.id}" title="Edit" style="border: 1px solid var(--color-border); color: var(--text-secondary);">
+                                <i class="fas fa-pencil-alt">✏️</i>
+                            </button>
+                             <button class="btn btn-icon-only btn-sm btn-outline delete-sub-btn" data-id="${sub.id}" title="Delete" style="border: 1px solid var(--color-border); color: var(--color-danger);">
+                                <i class="fas fa-trash">🗑️</i>
+                            </button>
+                        </div>
                     `;
                     dayEventsList.appendChild(el);
 
-                    // attach edit handler
+                    // Attach edit handler
                     el.querySelector('.edit-sub-btn').addEventListener('click', (e) => {
                         e.stopPropagation();
-                        // Call global edit function (assuming it exists in base.js or similar)
                         if (typeof openEditModal === 'function') {
                             openEditModal(sub.id);
                             dayModal.style.display = 'none';
+                        }
+                    });
+
+                    // Attach delete handler (Mock or Real)
+                    el.querySelector('.delete-sub-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (confirm('Are you sure you want to delete this subscription?')) {
+                            // Call delete API
+                            fetch(`/api/subscriptions/${sub.id}`, { method: 'DELETE' })
+                                .then(res => {
+                                    if (res.ok) {
+                                        el.remove();
+                                        // Update summary count if needed, or close if empty
+                                        fetchEventsAndRender(); // Refresh grid
+                                        if (dayEventsList.children.length === 0) {
+                                            dayEventsList.style.display = 'none';
+                                            if (emptyState) emptyState.style.display = 'block';
+                                        }
+                                    }
+                                });
                         }
                     });
                 });
@@ -586,23 +657,17 @@
                     openModal('subscriptionModal');
                     dayModal.style.display = 'none';
 
-                    // Pre-fill date logic
-                    // We need to find the next renewal date input in the modal
-                    // Since the current subscription modal doesn't have a visible "Next Renewal" field (it calculates it),
-                    // we might need to adjust this or inject a hidden field/override.
-                    // For now, we will just open the modal.
-                    // Ideally: document.querySelector('[name="next_renewal_date"]').value = date.toISOString().split('T')[0];
-                    // But looking at base.html, there is no direct date input for next_renewal, it is derived from start_date/billing_cycle?
-                    // Or maybe it's not shown. 
-                    // Let's at least set the start_date to this day if it exists.
-                    const startDateInput = document.querySelector('[name="start_date"]');
-                    if (startDateInput) {
-                        startDateInput.value = date.toISOString().split('T')[0];
-                    }
+                    // Attempt to pre-fill date
+                    setTimeout(() => {
+                        const startDateInput = document.querySelector('[name="start_date"]');
+                        if (startDateInput) {
+                            startDateInput.value = date.toISOString().split('T')[0];
+                        }
+                    }, 100);
                 }
             };
 
-            dayModal.style.display = 'block';
+            dayModal.style.display = 'flex'; // Changed to flex for centering
         }
 
         // Modal Close Logic

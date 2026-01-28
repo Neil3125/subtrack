@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -8,9 +8,8 @@
 
     <!-- Prevent FOUC (Flash of Unstyled Content) and dark mode flash -->
     <script>
-        // Load theme IMMEDIATELY before any rendering
+        // Force Dark Mode
         (function () {
-            // Force Dark Mode
             document.documentElement.setAttribute('data-theme', 'dark');
             localStorage.setItem('theme', 'dark');
         })();
@@ -92,8 +91,9 @@
 
         <div class="navbar-actions">
             {% if current_user %}
-            <span class="text-secondary text-sm mr-4 font-light">Hello, {{ current_user.name or current_user.username
-                }}</span>
+            <span class="text-secondary text-sm mr-4 font-light"
+                style="font-weight: 300; color: var(--text-secondary);">Hello, {{ current_user.name or
+                current_user.username }}</span>
             {% endif %}
 
             <div class="dropdown">
@@ -158,13 +158,7 @@
                         <a href="/" class="sidebar-nav-link {% if request.path == '/' %}active{% endif %}">
                             📊 Dashboard
                         </a>
-                    </li>
-                    <li class="sidebar-nav-item">
-                        <a href="/calendar"
-                            class="sidebar-nav-link {% if '/calendar' in request.path %}active{% endif %}">
-                            📅 Calendar
-                        </a>
-                    </li>
+                    </li>{% if 1 == 0 %}{# Removed Calendar from here #}{% endif %}
                     <li class="sidebar-nav-item">
                         <a href="/categories"
                             class="sidebar-nav-link {% if '/categories' in request.path and '/customers' not in request.path %}active{% endif %}">
