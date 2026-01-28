@@ -29,52 +29,49 @@
             <span>Total:</span>
             <span id="monthTotalAmount" style="color: var(--text-primary);">$0.00</span>
         </div>
-    </div>
+        <div class="header-right">
+            <!-- Search & Filter Bar -->
+            <div class="calendar-toolbar"
+                style="display: flex; gap: 12px; align-items: center; background: var(--color-bg-secondary); padding: 6px; border-radius: 12px; border: 1px solid var(--grid-border);">
+                <!-- Search -->
+                <div class="search-wrapper" style="position: relative;">
+                    <span
+                        style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 14px;">🔍</span>
+                    <input type="text" id="calendarSearch" placeholder="Search..."
+                        style="padding: 8px 8px 8px 32px; border: 1px solid transparent; border-radius: 8px; font-size: 14px; background: var(--color-bg); width: 140px; transition: width 0.2s;">
+                </div>
 
-    <div class="header-right">
-        <!-- Search & Filter Bar -->
-        <div class="calendar-toolbar"
-            style="display: flex; gap: 12px; align-items: center; background: var(--color-bg-secondary); padding: 6px; border-radius: 12px; border: 1px solid var(--grid-border);">
-            <!-- Search -->
-            <div class="search-wrapper" style="position: relative;">
-                <span
-                    style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 14px;">🔍</span>
-                <input type="text" id="calendarSearch" placeholder="Search..."
-                    style="padding: 8px 8px 8px 32px; border: 1px solid transparent; border-radius: 8px; font-size: 14px; background: var(--color-bg); width: 140px; transition: width 0.2s;">
-            </div>
+                <!-- Category Filter -->
+                <select id="calendarCategoryFilter"
+                    style="padding: 8px; border-radius: 8px; border: 1px solid transparent; background: var(--color-bg); font-size: 14px; cursor: pointer; color: var(--text-primary); max-width: 140px;">
+                    <option value="all">All Categories</option>
+                    <!-- Populated by JS -->
+                </select>
 
-            <!-- Category Filter -->
-            <select id="calendarCategoryFilter"
-                style="padding: 8px; border-radius: 8px; border: 1px solid transparent; background: var(--color-bg); font-size: 14px; cursor: pointer; color: var(--text-primary); max-width: 140px;">
-                <option value="all">All Categories</option>
-                <!-- Populated by JS -->
-            </select>
+                <div style="width: 1px; height: 20px; background: var(--grid-border);"></div>
 
-            <div style="width: 1px; height: 20px; background: var(--grid-border);"></div>
+                <!-- Jump to Date -->
+                <div style="position: relative;">
+                    <button id="jumpToDateBtn" title="Jump to Date"
+                        style="width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--color-bg); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
+                        📅
+                    </button>
+                    <input type="date" id="jumpDateInput"
+                        style="position: absolute; top: 0; left: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;">
+                </div>
 
-
-
-            <!-- Jump to Date -->
-            <div style="position: relative;">
-                <button id="jumpToDateBtn" title="Jump to Date"
+                <!-- Export -->
+                <button id="exportCalendarBtn" title="Export View"
                     style="width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--color-bg); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
-                    📅
+                    📥
                 </button>
-                <input type="date" id="jumpDateInput"
-                    style="position: absolute; top: 0; left: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;">
             </div>
 
-            <!-- Export -->
-            <button id="exportCalendarBtn" title="Export View"
-                style="width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--color-bg); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
-                📥
+            <button id="addSubscriptionBtn" class="btn btn-primary"
+                style="margin-left: 12px; box-shadow: 0 4px 12px rgba(91, 127, 255, 0.3);">
+                <span class="btn-icon">+</span> <span class="btn-text">Add New</span>
             </button>
         </div>
-
-        <button id="addSubscriptionBtn" class="btn btn-primary"
-            style="margin-left: 12px; box-shadow: 0 4px 12px rgba(91, 127, 255, 0.3);">
-            <span class="btn-icon">+</span> <span class="btn-text">Add New</span>
-        </button>
     </div>
 </div>
 
@@ -168,8 +165,8 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 24px;
-        padding: 24px 0;
-        /* Verified padding increase */
+        padding: 12px 0;
+        /* Tightened padding */
         border-bottom: 1px solid transparent;
     }
 
