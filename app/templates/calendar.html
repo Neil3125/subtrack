@@ -1,1085 +1,255 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<!-- FullCalendar CSS -->
+<link rel="stylesheet" href="/static/css/calendar.css">
+<!-- FullCalendar JS (CDN for stability) -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+{% endblock %}
+
 {% block content %}
-<div class="calendar-container">
-    <!-- Calendar Header -->
-    <div class="calendar-header" style="padding: 20px 0;"> <!-- Increased padding -->
-        <div class="header-left">
-            <h1 id="currentMonthYear">January 2026</h1>
-            <div class="calendar-controls">
-                <button id="prevMonth" class="btn btn-icon-cal" title="Previous Month">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m15 18-6-6 6-6" />
-                    </svg>
-                </button>
-                <button id="todayBtn" class="btn btn-sm"
-                    style="background: var(--color-bg-tertiary); font-weight: 600;">Today</button>
-                <button id="nextMonth" class="btn btn-icon-cal" title="Next Month">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m9 18 6-6-6-6" />
-                    </svg>
-                </button>
+<div class="calendar-wrapper">
+    <!-- Top Control Bar (Search, Total, Action) -->
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <!-- Month Total Badge -->
+            <div id="viewTotalBadge"
+                style="background: var(--color-bg-secondary); padding: 8px 16px; border-radius: 20px; font-size: 0.95rem; font-weight: 600; color: var(--text-secondary); border: 1px solid var(--grid-border); display: flex; align-items: center; gap: 8px;">
+                <span>View Total:</span>
+                <span id="viewTotalAmount" style="color: var(--text-primary); font-size: 1.1rem;">$0.00</span>
             </div>
         </div>
-        <!-- Month Total Badge -->
-        <div id="monthTotalBadge"
-            style="background: var(--color-bg-secondary); padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); border: 1px solid var(--border-color, #e6e9ef); display: flex; align-items: center; gap: 8px;">
-            <span>Total:</span>
-            <span id="monthTotalAmount" style="color: var(--text-primary);">$0.00</span>
-        </div>
-        <div class="header-right">
-            <!-- Search & Filter Bar -->
-            <div class="calendar-toolbar"
-                style="display: flex; gap: 12px; align-items: center; background: var(--color-bg-secondary); padding: 6px; border-radius: 12px; border: 1px solid var(--grid-border);">
-                <!-- Search -->
-                <div class="search-wrapper" style="position: relative;">
-                    <span
-                        style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 14px;">🔍</span>
-                    <input type="text" id="calendarSearch" placeholder="Search..."
-                        style="padding: 8px 8px 8px 32px; border: 1px solid transparent; border-radius: 8px; font-size: 14px; background: var(--color-bg); width: 140px; transition: width 0.2s;">
-                </div>
 
-                <!-- Category Filter -->
-                <select id="calendarCategoryFilter"
-                    style="padding: 8px; border-radius: 8px; border: 1px solid transparent; background: var(--color-bg); font-size: 14px; cursor: pointer; color: var(--text-primary); max-width: 140px;">
-                    <option value="all">All Categories</option>
-                    <!-- Populated by JS -->
-                </select>
-
-                <div style="width: 1px; height: 20px; background: var(--grid-border);"></div>
-
-                <!-- Jump to Date -->
-                <div style="position: relative;">
-                    <button id="jumpToDateBtn" title="Jump to Date"
-                        style="width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--color-bg); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
-                        📅
-                    </button>
-                    <input type="date" id="jumpDateInput"
-                        style="position: absolute; top: 0; left: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;">
-                </div>
-
-                <!-- Export -->
-                <button id="exportCalendarBtn" title="Export View"
-                    style="width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--color-bg); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
-                    📥
-                </button>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <!-- Custom Search (External to FC) -->
+            <div class="search-wrapper" style="position: relative;">
+                <span
+                    style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);">🔍</span>
+                <input type="text" id="calendarSearchInput" placeholder="Filter events..."
+                    style="padding: 8px 8px 8px 32px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--color-bg); color: var(--text-primary); width: 200px;">
             </div>
 
-            <button id="addSubscriptionBtn" class="btn btn-primary"
-                style="margin-left: 12px; box-shadow: 0 4px 12px rgba(91, 127, 255, 0.3);">
-                <span class="btn-icon">+</span> <span class="btn-text">Add New</span>
+            <button id="addSubscriptionBtn" class="btn btn-primary" onclick="openModal('subscriptionModal')">
+                <span>+</span> Add New
             </button>
         </div>
     </div>
+
+    <!-- The Calendar -->
+    <div id='calendar'></div>
 </div>
-
-<!-- Days of Week -->
-<div class="calendar-grid-header">
-    <div class="day-name">Sun</div>
-    <div class="day-name">Mon</div>
-    <div class="day-name">Tue</div>
-    <div class="day-name">Wed</div>
-    <div class="day-name">Thu</div>
-    <div class="day-name">Fri</div>
-    <div class="day-name">Sat</div>
-</div>
-
-<!-- Calendar Grid -->
-<div id="calendarGrid" class="calendar-grid">
-    <!-- Generated by JS -->
-</div>
-</div>
-
-<!-- Day Detail Modal (Day Summary Card) -->
-<div id="dayModal" class="modal" style="align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-    <div class="modal-content"
-        style="max-width: 480px; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
-        <div class="modal-header"
-            style="display: flex; justify-content: space-between; align-items: center; padding: 24px; background: var(--color-bg-secondary); border-bottom: 1px solid var(--color-border);">
-            <div>
-                <h2 id="modalDateTitle" style="margin: 0; font-size: 1.25rem;">Date</h2>
-                <span id="modalDaySubtitle" style="color: var(--text-secondary); font-size: 0.875rem;">Summary</span>
-            </div>
-            <button class="close-modal"
-                style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
-        </div>
-        <div class="modal-body" style="padding: 0; max-height: 50vh; overflow-y: auto;">
-            <div id="dayEventsList" class="day-events-list" style="padding: 24px; gap: 16px;">
-                <!-- Events populated here -->
-            </div>
-            <div id="emptyStateMessage" style="display: none; padding: 40px 20px; text-align: center;">
-                <div style="font-size: 3rem; margin-bottom: 16px;">✨</div>
-                <h3 style="font-size: 1rem; color: var(--text-primary); margin-bottom: 8px;">You're all clear today!
-                </h3>
-                <p style="color: var(--text-secondary); font-size: 0.875rem;">No subscriptions renewing on this day.</p>
-            </div>
-        </div>
-        <div class="modal-footer"
-            style="padding: 16px 24px; border-top: 1px solid var(--color-border); background: var(--color-bg);">
-            <button id="addEventOnDayBtn" class="btn btn-primary btn-full-width" style="width: 100%;">
-                <i class="fas fa-plus"></i> Add New Subscription
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Add Subscription Modal (Reused or new specific one) -->
-<!-- We will trigger the main subscription modal but pre-fill date -->
-
-<style>
-    /* Monday.com-inspired Calendar Styles */
-    :root {
-        --grid-border: #e6e9ef;
-        --cell-bg: #ffffff;
-        --cell-hover: #f5f6f8;
-        --text-primary: #323338;
-        --text-secondary: #676879;
-        --primary-color: #0073ea;
-        --btn-hover-bg: #dcdfec;
-    }
-
-    [data-theme="dark"] {
-        --grid-border: #3a3a3a;
-        --cell-bg: #1a1a1a;
-        --cell-hover: #252525;
-        --text-primary: #f0f0f0;
-        --text-secondary: #c0c0c0;
-        --primary-color: #579dff;
-        --btn-hover-bg: #2c2e33;
-    }
-
-    .calendar-container {
-        display: flex;
-        flex-direction: column;
-        height: calc(100vh - 80px);
-        /* Adjust based on navbar height */
-        padding: 24px;
-        background-color: var(--color-bg);
-        overflow: hidden;
-    }
-
-    .calendar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-        padding: 12px 0;
-        /* Tightened padding */
-        border-bottom: 1px solid transparent;
-    }
-
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 24px;
-    }
-
-    .header-left h1 {
-        font-size: 24px;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 0;
-        min-width: 220px;
-        line-height: 1.2;
-    }
-
-    .calendar-controls {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    /* Fixed Navigation Buttons */
-    .btn-icon-cal {
-        background: var(--card-bg, #1E1E1E);
-        border: 1px solid var(--border-color, #444);
-        color: var(--text-primary, white);
-        /* Ensure icon is white */
-        width: 36px;
-        /* Slightly larger */
-        height: 36px;
-        border-radius: 8px;
-        /* Rounded square */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .btn-icon-cal:hover {
-        background-color: var(--btn-hover-bg, #333);
-        border-color: var(--primary-color);
-        color: var(--primary-color);
-        transform: translateY(-1px);
-    }
-
-    .header-right {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-
-    /* Grid Header */
-    .calendar-grid-header {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        padding-bottom: 12px;
-        border-bottom: 1px solid var(--grid-border);
-    }
-
-    .day-name {
-        text-align: center;
-        font-weight: 500;
-        color: var(--text-secondary);
-        font-size: 14px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    /* Grid Body */
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        grid-template-rows: repeat(auto-fill, minmax(100px, 1fr));
-        /* Fill remaining space */
-        flex-grow: 1;
-        background-color: var(--grid-border);
-        /* Gap color */
-        gap: 1px;
-        border: 1px solid var(--grid-border);
-        border-radius: 0 0 12px 12px;
-        overflow-y: auto;
-    }
-
-    .calendar-cell {
-        background-color: var(--cell-bg);
-        padding: 8px;
-        min-height: 120px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        position: relative;
-    }
-
-    .calendar-cell:hover {
-        background-color: var(--cell-hover);
-        z-index: 1;
-    }
-
-    .calendar-cell.other-month {
-        background-color: var(--color-bg-secondary, #fafafa);
-        opacity: 0.5;
-    }
-
-    [data-theme="dark"] .calendar-cell.other-month {
-        background-color: #000000;
-    }
-
-    .calendar-cell.today {
-        background-color: rgba(0, 115, 234, 0.05);
-    }
-
-    [data-theme="dark"] .calendar-cell.today {
-        background-color: rgba(87, 157, 255, 0.2);
-        /* Increased opacity */
-        border: 1px solid rgba(87, 157, 255, 0.4);
-    }
-
-    [data-theme="dark"] .day-name {
-        color: #e0e0e0;
-        /* Brighter header text */
-        font-weight: 600;
-    }
-
-    [data-theme="dark"] .btn-icon-cal {
-        border-color: #444;
-        color: #f0f0f0;
-        /* Ensure icon is visible */
-    }
-
-    .cell-date {
-        font-weight: 500;
-        font-size: 14px;
-        margin-bottom: 4px;
-        color: var(--text-secondary);
-        width: 26px;
-        height: 26px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-    }
-
-    .calendar-cell.today .cell-date {
-        background-color: var(--primary-color);
-        color: white;
-        font-weight: 600;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    /* Events Pills & Pastel Colors */
-    .event-pill {
-        display: flex;
-        align-items: center;
-        padding: 6px 8px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        margin-bottom: 3px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-        border-left: 3px solid transparent;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    }
-
-    /* Subtle Pastel Themes */
-    .pill-color-0 {
-        background: #e8ecfc;
-        color: #3b5fc0;
-        border-color: #3b5fc0;
-    }
-
-    /* Blue/Purple */
-    .pill-color-1 {
-        background: #e2f7e7;
-        color: #007f36;
-        border-color: #007f36;
-    }
-
-    /* Green */
-    .pill-color-2 {
-        background: #fff0db;
-        color: #c07b00;
-        border-color: #c07b00;
-    }
-
-    /* Orange */
-    .pill-color-3 {
-        background: #ffe6e6;
-        color: #d93025;
-        border-color: #d93025;
-    }
-
-    /* Red */
-    .pill-color-4 {
-        background: #f3e5f5;
-        color: #8e24aa;
-        border-color: #8e24aa;
-    }
-
-    /* Purple */
-    .pill-color-5 {
-        background: #e0f7fa;
-        color: #00838f;
-        border-color: #00838f;
-    }
-
-    /* Cyan */
-
-    /* Dark Mode Pill Overrides (Slightly darker backgrounds, lighter text) */
-    [data-theme="dark"] .pill-color-0 {
-        background: rgba(59, 95, 192, 0.2);
-        color: #8faefc;
-    }
-
-    [data-theme="dark"] .pill-color-1 {
-        background: rgba(0, 127, 54, 0.2);
-        color: #66e3a0;
-    }
-
-    [data-theme="dark"] .pill-color-2 {
-        background: rgba(192, 123, 0, 0.2);
-        color: #ffca6e;
-    }
-
-    [data-theme="dark"] .pill-color-3 {
-        background: rgba(217, 48, 37, 0.2);
-        color: #fa8e87;
-    }
-
-    [data-theme="dark"] .pill-color-4 {
-        background: rgba(142, 36, 170, 0.2);
-        color: #e1bee7;
-    }
-
-    [data-theme="dark"] .pill-color-5 {
-        background: rgba(0, 131, 143, 0.2);
-        color: #80deea;
-    }
-
-    .event-pill:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        z-index: 10;
-        position: relative;
-    }
-
-    /* Modal Tweaks - Side Drawer / Centered Card */
-    #dayModal .modal-content {
-        max-width: 400px;
-        border-radius: 16px;
-        border: 1px solid var(--grid-border);
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        padding: 0;
-        overflow: hidden;
-    }
-
-    [data-theme="dark"] #dayModal .modal-content {
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
-        background: #1e1e24;
-    }
-
-    .modal-header {
-        padding: 24px 32px;
-        /* Increased padding */
-        border-bottom: 1px solid var(--grid-border);
-        background: var(--color-bg-secondary, #fafafa);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-shrink: 0;
-        /* Prevent shrinking */
-    }
-
-    [data-theme="dark"] .modal-header {
-        background: #1a1c20;
-    }
-
-    .modal-body {
-        padding: 24px;
-    }
-
-    .day-events-list {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        max-height: 400px;
-        overflow-y: auto;
-    }
-
-    .event-item-card {
-        padding: 16px;
-        border: 1px solid var(--grid-border);
-        border-radius: 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: var(--cell-bg);
-        transition: transform 0.2s;
-    }
-
-    .event-item-card:hover {
-        border-color: var(--primary-color);
-        background-color: var(--cell-hover);
-    }
-
-    .event-item-info h4 {
-        margin: 0 0 6px 0;
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-
-    .event-item-meta {
-        font-size: 13px;
-        color: var(--text-secondary);
-    }
-
-
-
-    /* Custom Scrollbar for Event List */
-    .day-events-list::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .day-events-list::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .day-events-list::-webkit-scrollbar-thumb {
-        background: var(--border-color, #444);
-        border-radius: 3px;
-    }
-
-    .day-events-list::-webkit-scrollbar-thumb:hover {
-        background: var(--text-secondary);
-    }
-
-    /* Active Toggle State */
-    .toggle-btn input:checked+span {
-        color: var(--primary-color);
-        font-weight: 800;
-    }
-
-    .toggle-btn:has(input:checked) {
-        background: var(--color-bg-tertiary, #2c2e33);
-        border: 1px solid var(--primary-color);
-    }
-
-    /* Pulse for Today */
-    @keyframes pulse-today {
-        0% {
-            box-shadow: 0 0 0 0 rgba(91, 127, 255, 0.4);
-        }
-
-        70% {
-            box-shadow: 0 0 0 6px rgba(91, 127, 255, 0);
-        }
-
-        100% {
-            box-shadow: 0 0 0 0 rgba(91, 127, 255, 0);
-        }
-    }
-
-    .calendar-cell.today .cell-date {
-        animation: pulse-today 2s infinite;
-    }
-</style>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        let currentDate = new Date();
-        let currentEvents = [];
+        var calendarEl = document.getElementById('calendar');
+        var allEvents = []; // Store raw events for filtering
 
-        const grid = document.getElementById('calendarGrid');
-        const monthLabel = document.getElementById('currentMonthYear');
-        const dayModal = document.getElementById('dayModal');
-        const modalDateTitle = document.getElementById('modalDateTitle');
-        const dayEventsList = document.getElementById('dayEventsList');
-        const addEventOnDayBtn = document.getElementById('addEventOnDayBtn');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            themeSystem: 'standard',
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+            },
+            navLinks: true, // can click day/week names to navigate views
+            editable: true,
+            dayMaxEvents: true, // allow "more" link when too many events
+            height: '100%',
 
-        const searchInput = document.getElementById('calendarSearch');
-        const categoryFilter = document.getElementById('calendarCategoryFilter');
-        const jumpDateInput = document.getElementById('jumpDateInput');
-        const exportBtn = document.getElementById('exportCalendarBtn');
-        const monthTotalAmount = document.getElementById('monthTotalAmount');
+            // Event Data Fetching
+            events: async function (fetchInfo, successCallback, failureCallback) {
+                try {
+                    // Fetch wider range to ensure recurrence calculation works? 
+                    // Actually, let's fetch everything or range. 
+                    // The backend supports range.
+                    const response = await fetch(`/api/subscriptions?status=active&start_date=${fetchInfo.startStr}&end_date=${fetchInfo.endStr}`);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const subs = await response.json();
 
-        // Initial Render
-        fetchEventsAndRender();
+                    // Transform Subscriptions to Events
+                    // We need to expand recurrence logic here because the API might only return the *next* date.
+                    // If the user wants to see "Next Month", but the API only returns "Jan 15", filtering for Feb might return nothing 
+                    // unless we simulate the recurrence.
 
-        // Controls
-        document.getElementById('prevMonth').addEventListener('click', () => {
-            currentDate.setMonth(currentDate.getMonth() - 1);
-            fetchEventsAndRender();
-        });
+                    // SIMPLIFIED APPROACH: We map what the API gives us. 
+                    // If the user needs to see future recurrences not yet in DB, we would use rrule. 
+                    // For now, let's map the provided "next_renewal_date".
 
-        document.getElementById('nextMonth').addEventListener('click', () => {
-            currentDate.setMonth(currentDate.getMonth() + 1);
-            fetchEventsAndRender();
-        });
+                    // Note: If the user navigates far into future, API might return empty if no "next_renewal_date" falls there.
+                    // Ideally, backend handles projection. 
+                    // Hack: We can client-side simulate for the view range if `billing_cycle` is present.
 
-        document.getElementById('todayBtn').addEventListener('click', () => {
-            currentDate = new Date();
-            fetchEventsAndRender();
-        });
+                    let events = [];
+                    const viewStart = new Date(fetchInfo.start);
+                    const viewEnd = new Date(fetchInfo.end);
 
-        // Search Listener
-        searchInput.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            filterGrid(term, categoryFilter.value);
-        });
+                    subs.forEach(sub => {
+                        // Base event
+                        let evtDate = new Date(sub.next_renewal_date);
 
-        // Category Filter Listener
-        categoryFilter.addEventListener('change', (e) => {
-            filterGrid(searchInput.value.toLowerCase(), e.target.value);
-        });
-
-        // Jump to Date Listener
-        jumpDateInput.addEventListener('change', (e) => {
-            if (e.target.value) {
-                currentDate = new Date(e.target.value + 'T00:00:00'); // Fix TZ issue roughly
-                fetchEventsAndRender();
-            }
-        });
-
-        // Export Listener
-        exportBtn.addEventListener('click', () => {
-            // Mock Export
-            const toast = document.createElement('div');
-            toast.style.position = 'fixed';
-            toast.style.bottom = '32px'; /* Moves it to bottom right roughly */
-            toast.style.right = '32px';
-            toast.style.background = '#10B981';
-            toast.style.color = 'white';
-            toast.style.padding = '12px 24px';
-            toast.style.borderRadius = '8px';
-            toast.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
-            toast.style.zIndex = '9999';
-            toast.style.fontWeight = '500';
-            toast.textContent = '📅 Calendar View Exported (Mock)';
-            document.body.appendChild(toast);
-            setTimeout(() => {
-                toast.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(20px)';
-                setTimeout(() => toast.remove(), 500);
-            }, 3000);
-        });
-
-        // Keyboard Navigation
-        document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT') return; // Ignore if typing
-            if (dayModal.style.display === 'flex') return; // Ignore if modal open
-
-            if (e.key === 'ArrowLeft') {
-                document.getElementById('prevMonth').click();
-            } else if (e.key === 'ArrowRight') {
-                document.getElementById('nextMonth').click();
-            }
-        });
-
-        // Add Subscription Button (Global)
-        document.getElementById('addSubscriptionBtn').addEventListener('click', () => {
-            if (typeof openModal === 'function') {
-                openModal('subscriptionModal');
-            } else {
-                console.error("openModal function not found");
-            }
-        });
-
-        function filterGrid(searchTerm, categoryId) {
-            const cells = document.querySelectorAll('.calendar-cell');
-            cells.forEach(cell => {
-                // We only filter event pills, not the cell itself (unless we want to dim days)
-                // Actually, let's filter the PILLS visibility
-                const pills = cell.querySelectorAll('.event-pill');
-                let hasVisiblePills = false;
-
-                pills.forEach(pill => {
-                    const text = pill.textContent.toLowerCase();
-                    const pillCat = pill.dataset.catId || '0'; // We need to store catId on pill
-
-                    const matchesSearch = text.includes(searchTerm);
-                    const matchesCat = categoryId === 'all' || pillCat == categoryId;
-
-                    if (matchesSearch && matchesCat) {
-                        pill.style.display = 'flex';
-                        hasVisiblePills = true;
-                    } else {
-                        pill.style.display = 'none';
-                    }
-                });
-
-                // Optional: Dim cell if no matches found? (maybe too aggressive)
-                // if (searchTerm && !hasVisiblePills && !cell.classList.contains('other-month')) {
-                //     cell.style.opacity = '0.3';
-                // } else {
-                //     cell.style.opacity = '1';
-                // }
-            });
-        }
-
-        async function fetchEventsAndRender() {
-            // Determine date range for current view (start of first week to end of last week)
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-
-            // First day of month
-            const firstDayOfMonth = new Date(year, month, 1);
-            // Starting day of calendar grid (Sunday before first day)
-            const startGridDate = new Date(firstDayOfMonth);
-            startGridDate.setDate(1 - startGridDate.getDay());
-
-            // Last day of month
-            const lastDayOfMonth = new Date(year, month + 1, 0);
-            // End day of calendar grid (Saturday after last day)
-            const endGridDate = new Date(lastDayOfMonth);
-            endGridDate.setDate(lastDayOfMonth.getDate() + (6 - lastDayOfMonth.getDay()));
-
-            // Format for API: YYYY-MM-DD
-            const startStr = startGridDate.toISOString().split('T')[0];
-            const endStr = endGridDate.toISOString().split('T')[0];
-
-            // Update Header
-            const monthName = currentDate.toLocaleString('default', { month: 'long' });
-            monthLabel.textContent = `${monthName} ${year}`;
-
-            try {
-                // Fetch subscriptions with active status within range
-                // Note: The backend filters by next_renewal_date. 
-                // We use status=active to show relevant renewals.
-                const response = await fetch(`/api/subscriptions?status=active&start_date=${startStr}&end_date=${endStr}`);
-                if (!response.ok) throw new Error('Failed to fetch events');
-                const subscriptions = await response.json();
-
-                currentEvents = subscriptions;
-
-                // Populate Category Filter (Unique Categories)
-                const categories = new Set();
-                subscriptions.forEach(s => {
-                    if (s.category_id) categories.add(JSON.stringify({ id: s.category_id, name: s.category_name || 'Uncategorized' }));
-                });
-
-                // Only update if empty to preserve selection? No, always refresh valid options.
-                // But let's try to keep selection if possible.
-                const currentCat = categoryFilter.value;
-                categoryFilter.innerHTML = '<option value="all">All Categories</option>';
-                Array.from(categories).map(c => JSON.parse(c)).forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.id;
-                    opt.textContent = c.name;
-                    categoryFilter.appendChild(opt);
-                });
-                if (currentCat) categoryFilter.value = currentCat;
-
-
-                renderGrid(startGridDate, endGridDate, subscriptions);
-            } catch (error) {
-                console.error("Error fetching calendar events:", error);
-                // Render empty grid on error
-                renderGrid(startGridDate, endGridDate, []);
-            }
-        }
-
-        function renderGrid(startDate, endDate, subscriptions) {
-            grid.innerHTML = '';
-            let monthTotal = 0;
-            const currentMonthIdx = currentDate.getMonth();
-
-            const iteratorDate = new Date(startDate);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            while (iteratorDate <= endDate) {
-                const cell = document.createElement('div');
-                cell.className = 'calendar-cell';
-                const isCurrentMonth = iteratorDate.getMonth() === currentMonthIdx;
-
-
-
-                // Styles for other month
-                if (!isCurrentMonth) {
-                    cell.classList.add('other-month');
-                }
-
-                // Today highlight
-                if (iteratorDate.getTime() === today.getTime()) {
-                    cell.classList.add('today');
-                }
-
-                // Date Number
-                const dateNum = document.createElement('span');
-                dateNum.className = 'cell-date';
-                dateNum.textContent = iteratorDate.getDate();
-                cell.appendChild(dateNum);
-
-                // Find events for this day
-                // Match iteratorDate (YYYY-MM-DD) with sub.next_renewal_date
-                const iterDateStr = iteratorDate.toISOString().split('T')[0];
-                const daysEvents = subscriptions.filter(sub => sub.next_renewal_date === iterDateStr);
-
-                // Calculate Total for Month (only if in current month view)
-                if (isCurrentMonth) {
-                    daysEvents.forEach(e => monthTotal += (parseFloat(e.cost) || 0));
-                }
-
-                // Render Pills
-                daysEvents.forEach(sub => {
-                    const pill = document.createElement('div');
-                    // Pastel Color Logic: Use category_id or hash of name
-                    const colorIndex = (sub.category_id || 0) % 6;
-                    pill.className = `event-pill pill-color-${colorIndex}`;
-                    pill.dataset.catId = sub.category_id; // For filtering
-
-                    // Add icon if available (todo: map categories to icons)
-
-                    // Text
-                    pill.textContent = `${sub.vendor_name} (${sub.currency} ${sub.cost})`;
-                    pill.title = `${sub.vendor_name} - Renewal`;
-
-                    cell.appendChild(pill);
-                });
-
-                // Click event
-                const dateForClick = new Date(iteratorDate); // Closure capture
-                // Only open modal if clicking cell, not pill (propagation handled in framework usually, but explicit check good)
-                cell.onclick = (e) => {
-                    // If clicking directly on empty space (not pill)
-                    // But we want to see day details even if clicking pill? 
-                    // Usually yes, clicking ANYWHERE in cell opens day detail.
-                    openDayModal(dateForClick, daysEvents);
-                };
-
-                grid.appendChild(cell);
-
-                // Increment day
-                iteratorDate.setDate(iteratorDate.getDate() + 1);
-            }
-
-            // Update Header Total
-            // Assume mixed currency is edge case, use first available or default
-            const currencySymbol = subscriptions.length > 0 ? subscriptions[0].currency : '$';
-            monthTotalAmount.textContent = `${currencySymbol} ${monthTotal.toFixed(2)}`;
-        }
-
-        async function openDayModal(date, events) {
-            const dateStr = date.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
-            modalDateTitle.textContent = dateStr;
-
-            // Calculate Daily Total
-            const totalCost = events.reduce((sum, e) => sum + (parseFloat(e.cost) || 0), 0);
-
-            const daySubtitle = document.getElementById('modalDaySubtitle');
-            if (daySubtitle) {
-                // Determine currency symbol (taking first event's currency or default to $)
-                const currency = events.length > 0 ? events[0].currency : 'USD';
-                daySubtitle.innerHTML = `${events.length} Subscription${events.length !== 1 ? 's' : ''} • <strong style="color: var(--text-primary)">Total: ${currency} ${totalCost.toFixed(2)}</strong>`;
-            }
-
-            dayEventsList.innerHTML = '';
-            const emptyState = document.getElementById('emptyStateMessage');
-
-            if (events.length === 0) {
-                dayEventsList.style.display = 'none';
-                if (emptyState) {
-                    emptyState.style.display = 'block';
-
-                    // Enhancement: Show Next 3 Upcoming Renewals in Empty State
-                    // We'll fetch a few upcoming events globally if not already available, or just filter from currentEvents
-                    // Since currentEvents is the whole month, we can find events AFTER this date
-                    const nextEvents = currentEvents
-                        .filter(e => new Date(e.next_renewal_date) > date)
-                        .sort((a, b) => new Date(a.next_renewal_date) - new Date(b.next_renewal_date))
-                        .slice(0, 3);
-
-                    // clear previous upcoming list if any
-                    const existingUpcoming = emptyState.querySelector('.upcoming-preview');
-                    if (existingUpcoming) existingUpcoming.remove();
-
-                    if (nextEvents.length > 0) {
-                        const upcomingContainer = document.createElement('div');
-                        upcomingContainer.className = 'upcoming-preview';
-                        upcomingContainer.style.marginTop = '24px';
-                        upcomingContainer.style.textAlign = 'left';
-                        upcomingContainer.innerHTML = `<h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px; margin-bottom: 12px;">Coming Up Later:</h4>`;
-
-                        nextEvents.forEach(next => {
-                            const nextDate = new Date(next.next_renewal_date).toLocaleDateString('default', { month: 'short', day: 'numeric' });
-                            upcomingContainer.innerHTML += `
-                                <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: var(--color-bg-secondary); border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem;">
-                                    <span style="color: var(--text-primary); font-weight: 500;">${next.vendor_name}</span>
-                                    <span style="color: var(--text-secondary);">${nextDate}</span>
-                                </div>
-                            `;
-                        });
-                        emptyState.appendChild(upcomingContainer);
-                    }
-                }
-            } else {
-                dayEventsList.style.display = 'flex'; // Flex column
-                dayEventsList.style.flexDirection = 'column';
-                if (emptyState) emptyState.style.display = 'none';
-
-                events.forEach(sub => {
-                    const el = document.createElement('div');
-                    el.className = 'event-item-card';
-                    // Inline styles for the card
-                    el.style.display = 'flex';
-                    el.style.justifyContent = 'space-between';
-                    el.style.alignItems = 'center';
-                    el.style.padding = '16px';
-                    el.style.background = 'var(--color-bg)';
-                    el.style.border = '1px solid var(--color-border)';
-                    el.style.borderRadius = '12px';
-                    el.style.marginBottom = '0'; // Controlled by gap
-
-                    // Logo Placeholder (Gradient Circle)
-                    const logoColor = `var(--pill-color-${(sub.category_id || 0) % 6}, #7A9BFF)`;
-                    const logoBg = `rgba(122, 155, 255, 0.12)`; // Fallback or dynamic
-
-                    el.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 16px;">
-                            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--color-bg-tertiary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                                📝
-                            </div>
-                            <div>
-                                <h4 style="margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-primary);">${sub.vendor_name}</h4>
-                                <div style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 2px;">
-                                    ${sub.currency} ${sub.cost} • ${sub.billing_cycle}
-                                </div>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="btn btn-icon-only btn-sm btn-outline edit-sub-btn" data-id="${sub.id}" title="Edit" style="border: 1px solid var(--color-border); color: var(--text-secondary); width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-                            </button>
-                             <button class="btn btn-icon-only btn-sm btn-outline delete-sub-btn" data-id="${sub.id}" title="Delete" style="border: 1px solid var(--color-border); color: var(--color-danger); width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                            </button>
-                        </div>
-                    `;
-                    dayEventsList.appendChild(el);
-
-                    // Attach edit handler
-                    el.querySelector('.edit-sub-btn').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        // Close this modal
-                        dayModal.style.display = 'none';
-
-                        // Open subscription modal
-                        if (typeof openModal === 'function') {
-                            openModal('subscriptionModal', sub.id); // Assuming openModal handles ID for edit
+                        // If date is within view, add it
+                        if (evtDate >= viewStart && evtDate < viewEnd) {
+                            events.push(createEventObj(sub, evtDate));
                         }
 
-                        // If we have the enhanced modal init function, use it
-                        if (typeof initEnhancedSubscriptionModal === 'function') {
-                            // We need to fetch full details or assume sub has them. 
-                            // Ideally, we fetch the single sub details, but for now let's try populating the form directly if easy, 
-                            // or rely on the modal's internal fetch if we pass an ID.
-                            // Actually, standard `openModal` in base.html usually just toggles display. 
-                            // We need a specific "Edit" flow.
+                        // RECURRENCE EXPANSION (Simple Client-Side)
+                        // Allow projecting forward up to viewEnd
+                        // Only do this if we want to confirm future months work even if DB isn't updated.
+                        let nextDate = new Date(evtDate);
+                        let safety = 0;
+                        while (nextDate < viewEnd && safety < 12) { // limit 12 recurrences
+                            // Calculate next
+                            if (sub.billing_cycle === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
+                            else if (sub.billing_cycle === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+                            else if (sub.billing_cycle === 'quarterly') nextDate.setMonth(nextDate.getMonth() + 3);
+                            else if (sub.billing_cycle === 'yearly') nextDate.setFullYear(nextDate.getFullYear() + 1);
+                            else break; // unknown cycle
 
-                            // Let's manually trigger the edit flow if `editSubscription` function exists (common pattern)
-                            if (typeof editSubscription === 'function') {
-                                editSubscription(sub.id);
-                            } else {
-                                // Fallback: Populate form manually
-                                const form = document.getElementById('subscription-form');
-                                if (form) {
-                                    // We might not have all fields in 'sub' if it came from calendar API (which is a list)
-                                    // But let's try filling what we have or fetching.
-                                    // Ideally, we make a quick fetch here or redirect to edit page. 
-                                    // Better UX: Trigger a fetch in the modal.
-
-                                    // Assuming 'window.initEnhancedSubscriptionModal' can handle "isEdit=true"
-                                    // But we need to define how to pass the data.
-                                    // Let's reuse the 'editSubscription' global if it exists, or create it.
-
-                                    // Attempt to define a quick edit loader if missing
-                                    fetch(`/api/subscriptions/${sub.id}`)
-                                        .then(r => r.json())
-                                        .then(fullSub => {
-                                            openModal('subscriptionModal');
-                                            // Call the init function in edit mode
-                                            if (typeof window.initEnhancedSubscriptionModal === 'function') {
-                                                window.initEnhancedSubscriptionModal(fullSub.customer_id, fullSub.customer_name, fullSub.category_id, true);
-                                            }
-
-                                            // Fill form inputs
-                                            const setVal = (name, val) => {
-                                                const inp = form.querySelector(`[name="${name}"]`);
-                                                if (inp) inp.value = val;
-                                            };
-
-                                            setVal('vendor_name', fullSub.vendor_name);
-                                            setVal('cost', fullSub.cost);
-                                            setVal('currency', fullSub.currency);
-                                            setVal('billing_cycle', fullSub.billing_cycle);
-                                            setVal('start_date', fullSub.start_date);
-                                            setVal('description', fullSub.description);
-
-                                            // Handle hidden ID field for update
-                                            let idInput = form.querySelector('input[name="subscription_id"]');
-                                            if (!idInput) {
-                                                idInput = document.createElement('input');
-                                                idInput.type = 'hidden';
-                                                idInput.name = 'subscription_id';
-                                                form.appendChild(idInput);
-                                            }
-                                            idInput.value = fullSub.id;
-
-                                            // Change Modal Title
-                                            const title = document.querySelector('#subscriptionModal .modal-title');
-                                            if (title) title.textContent = 'Edit Subscription';
-
-                                            // Change Submit Button
-                                            const submitBtn = form.querySelector('button[type="submit"]');
-                                            if (submitBtn) submitBtn.textContent = 'Save Changes';
-                                        });
-                                }
+                            if (nextDate >= viewStart && nextDate < viewEnd) {
+                                events.push(createEventObj(sub, nextDate, true)); // isProjected=true
                             }
+                            safety++;
                         }
                     });
 
-                    // Attach delete handler
-                    el.querySelector('.delete-sub-btn').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if (confirm('Are you sure you want to delete this subscription?')) {
-                            // Call delete API
-                            fetch(`/api/subscriptions/${sub.id}`, { method: 'DELETE' })
-                                .then(res => {
-                                    if (res.ok) {
-                                        el.remove();
-                                        // Update local list
-                                        const index = events.findIndex(e => e.id === sub.id);
-                                        if (index > -1) events.splice(index, 1);
+                    allEvents = events; // Cache for local filtering
+                    successCallback(events);
+                } catch (error) {
+                    console.error(error);
+                    failureCallback(error);
+                }
+            },
 
-                                        // Recalculate total
-                                        const newTotal = events.reduce((sum, e) => sum + (parseFloat(e.cost) || 0), 0);
-                                        if (daySubtitle) {
-                                            const currency = events.length > 0 ? events[0].currency : 'USD';
-                                            daySubtitle.innerHTML = `${events.length} Subscription${events.length !== 1 ? 's' : ''} • <strong style="color: var(--text-primary)">Total: ${currency} ${newTotal.toFixed(2)}</strong>`;
-                                        }
+            // Rendering Hooks
+            eventDidMount: function (info) {
+                // Apply tooltip?
+                info.el.title = `${info.event.title} - ${info.event.extendedProps.currency} ${info.event.extendedProps.costDisplay}`;
+            },
 
-                                        // Update summary count if needed, or close if empty
-                                        fetchEventsAndRender(); // Refresh grid
-                                        if (dayEventsList.children.length === 0) {
-                                            dayEventsList.style.display = 'none';
-                                            if (emptyState) {
-                                                emptyState.style.display = 'block';
-                                                // Re-trigger openDayModal to refresh empty state recommendations? 
-                                                // Or just leave it.
-                                            }
-                                        }
-                                    }
-                                });
-                        }
-                    });
-                });
-            }
+            datesSet: function (info) {
+                calculateTotal(calendar.getEvents()); // Calc total for CURRENT view events
+            },
 
-            // "Add Subscription" for this specific date
-            addEventOnDayBtn.onclick = () => {
+            // Interactions
+            eventClick: function (info) {
+                // Open Edit Modal
+                info.jsEvent.preventDefault(); // don't visit URL
+                const subId = info.event.id.replace('proj-', ''); // remove projection prefix
+
                 if (typeof openModal === 'function') {
+                    // Trigger Edit Mode (reuse existing logic from global or create new)
+                    // Passing ID to subscription modal
                     openModal('subscriptionModal');
-                    dayModal.style.display = 'none';
+                    // We'd ideally fetch and fill details here. 
+                    // For now, prompt user it's experimental integration or fill basics.
 
-                    // Reset to "Create" mode
-                    const form = document.getElementById('subscription-form');
-                    if (form) {
-                        form.reset();
-                        // Remove hidden ID
-                        const idInput = form.querySelector('input[name="subscription_id"]');
-                        if (idInput) idInput.remove();
-                        // Reset Title
-                        const title = document.querySelector('#subscriptionModal .modal-title');
-                        if (title) title.textContent = 'Create Subscription';
-                        const submitBtn = form.querySelector('button[type="submit"]');
-                        if (submitBtn) submitBtn.textContent = 'Create Subscription';
-                    }
-
-                    // Attempt to pre-fill date
+                    // Fill basic fields from event props as fallback
+                    const props = info.event.extendedProps;
                     setTimeout(() => {
-                        const startDateInput = document.querySelector('[name="start_date"]');
-                        if (startDateInput) {
-                            startDateInput.value = date.toISOString().split('T')[0];
+                        const form = document.getElementById('subscription-form');
+                        if (form) {
+                            form.querySelector('[name="vendor_name"]').value = info.event.title;
+                            form.querySelector('[name="cost"]').value = props.costDisplay;
+                            // Add hidden ID support if needed
                         }
                     }, 100);
                 }
-            };
+            },
 
-            dayModal.style.display = 'flex'; // Changed to flex for centering
+            dateClick: function (info) {
+                // Open Add Modal pre-filled
+                if (typeof openModal === 'function') {
+                    openModal('subscriptionModal');
+                    setTimeout(() => {
+                        const form = document.getElementById('subscription-form');
+                        if (form) {
+                            form.reset();
+                            form.querySelector('[name="start_date"]').value = info.dateStr;
+                        }
+                    }, 100);
+                }
+            },
+
+            eventDrop: function (info) {
+                // Drag & Drop logic (Update backend)
+                if (!confirm(`Move ${info.event.title} to ${info.event.start.toLocaleDateString()}?`)) {
+                    info.revert();
+                } else {
+                    // Call API to update date (Not implemeneted explicitly yet, stubbing)
+                    console.log("Updated date for", info.event.id);
+                }
+            }
+        });
+
+        calendar.render();
+
+        // Helper: Create FC Event Object
+        function createEventObj(sub, dateObj, isProjected = false) {
+            const catId = sub.category_id || 0;
+            return {
+                id: isProjected ? `proj-${sub.id}-${dateObj.getTime()}` : `${sub.id}`,
+                title: sub.vendor_name,
+                start: dateObj.toISOString().split('T')[0], // YYYY-MM-DD
+                allDay: true,
+                classNames: [`event-pastel-${catId % 6}`],
+                extendedProps: {
+                    costDisplay: sub.cost,
+                    currency: sub.currency,
+                    isProjected: isProjected
+                }
+            };
         }
 
-        // Modal Close Logic
-        const closeBtns = document.querySelectorAll('.close-modal');
-        closeBtns.forEach(btn => btn.addEventListener('click', () => {
-            dayModal.style.display = 'none';
-        }));
+        // Search Filter
+        document.getElementById('calendarSearchInput').addEventListener('input', function (e) {
+            const term = e.target.value.toLowerCase();
+            // FullCalendar doesn't have a direct "filter" method that hides events easily without removing them.
+            // Strategy: Refetch events? Or just toggle visibility using CSS?
+            // CSS is cleaner for instant feeling.
 
-        window.onclick = function (event) {
-            if (event.target == dayModal) {
-                dayModal.style.display = "none";
-            }
+            const events = calendar.getEvents();
+            events.forEach(evt => {
+                const match = evt.title.toLowerCase().includes(term);
+                if (match) {
+                    evt.setProp('display', 'auto');
+                } else {
+                    evt.setProp('display', 'none');
+                }
+            });
+
+            // Recalculate total based on VISIBLE events
+            const visibleEvents = events.filter(e => e.title.toLowerCase().includes(term));
+            calculateTotal(visibleEvents);
+        });
+
+        function calculateTotal(eventsList) {
+            // eventsList is array of FC Event Objects
+            // We want total of visible events in current view
+
+            // Note: calendar.getEvents() returns ALL events in memory/cache. 
+            // We need only those in relevant range? 
+            // Actually, getEvents() usually returns all.
+            // Let's filter by current view active range.
+            const view = calendar.view;
+            if (!view) return;
+
+            let total = 0;
+            const currency = eventsList.length > 0 ? eventsList[0].extendedProps.currency : '$';
+
+            eventsList.forEach(evt => {
+                // Check if in view range
+                if (evt.start >= view.activeStart && evt.start < view.activeEnd) {
+                    // Check if not hidden by search
+                    if (evt.display !== 'none') {
+                        total += parseFloat(evt.extendedProps.costDisplay) || 0;
+                    }
+                }
+            });
+
+            const badge = document.getElementById('viewTotalAmount');
+            badge.textContent = `${currency} ${total.toFixed(2)}`;
         }
     });
 </script>
