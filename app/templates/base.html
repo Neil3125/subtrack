@@ -600,7 +600,7 @@
             </div>
 
             <form onsubmit="handleFormSubmit(event, saveEnhancedSubscription)" id="subscription-form"
-                style="display: flex; flex-direction: column; overflow: hidden; height: 100%;">
+                style="display: flex; flex-direction: column; height: 100%;">
 
                 <!-- FIXED SECTION: ASSIGNMENT -->
                 <div class="modal-assignment-section"
@@ -612,7 +612,7 @@
                             <div class="selection-card-inner">
                                 <div class="selection-card-header">
                                     <span class="selection-card-icon">👤</span>
-                                    <h3 class="selection-card-title">Assigned Customer *</h3>
+                                    <h3 class="selection-card-title">Customers *</h3>
                                 </div>
                                 <div class="selection-card-content">
                                     <input type="hidden" name="customer_id" id="subscription-customer-id" required>
@@ -712,117 +712,113 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                             <!-- Row 1: Vendor (Full Width) -->
                             <div class="form-group" style="grid-column: span 2;">
-                                <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                                    <label class="form-label">Vendor Name *</label>
-                                    <span style="font-size: 11px; color: var(--color-primary); cursor: pointer;"
-                                        onclick="toggleSmartSuggestions()">Show Suggestions</span>
-                                </div>
-                                <input type="text" name="vendor_name" id="subscription-vendor-name" class="form-input"
-                                    required placeholder="Netflix, Spotify, AWS..." autocomplete="off">
+                                <label class="form-label">Vendor Name *</label>
+                            </div>
+                            <input type="text" name="vendor_name" id="subscription-vendor-name" class="form-input"
+                                required placeholder="Netflix, Spotify, AWS..." autocomplete="off">
 
-                                <!-- SMART SUGGESTIONS -->
-                                <div id="smart-suggestions-content" style="margin-top: 8px; display: none;">
-                                    <div id="suggestions-content"
-                                        class="suggestions-content p-3 bg-bg-secondary rounded border border-border">
-                                        <!-- Populated by JS -->
-                                    </div>
+                            <!-- SMART SUGGESTIONS -->
+                            <div id="smart-suggestions-content" style="margin-top: 8px; display: none;">
+                                <div id="suggestions-content"
+                                    class="suggestions-content p-3 bg-bg-secondary rounded border border-border">
+                                    <!-- Populated by JS -->
                                 </div>
-                            </div>
-
-                            <!-- Row 2: Cost & Currency -->
-                            <div class="form-group">
-                                <label class="form-label">Cost *</label>
-                                <div class="input-with-prefix">
-                                    <span class="input-prefix">$</span>
-                                    <input type="number" step="0.01" name="cost" class="form-input" required
-                                        placeholder="9.99">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Currency</label>
-                                <select name="currency" class="form-select">
-                                    <option value="USD">USD - US Dollar</option>
-                                    <option value="EUR">EUR - Euro</option>
-                                    <option value="GBP">GBP - British Pound</option>
-                                    <option value="CAD">CAD - Canadian Dollar</option>
-                                    <option value="AUD">AUD - Australian Dollar</option>
-                                    <option value="JPY">JPY - Japanese Yen</option>
-                                    <option value="INR">INR - Indian Rupee</option>
-                                </select>
-                            </div>
-
-                            <!-- Row 3: Plan & Status -->
-                            <div class="form-group">
-                                <label class="form-label">Plan / Tier</label>
-                                <input type="text" name="plan_name" class="form-input"
-                                    placeholder="Premium, Family, Basic...">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Status</label>
-                                <select name="status" class="form-select">
-                                    <option value="active">Active</option>
-                                    <option value="paused">Paused</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
                             </div>
                         </div>
-                    </div>
 
-                    <hr style="border: 0; border-top: 1px solid var(--color-border); margin: 24px 0;">
-
-                    <!-- SECTION 3: SCHEDULE -->
-                    <div class="form-section mb-6">
-                        <h3
-                            style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 12px; letter-spacing: 0.05em;">
-                            Schedule</h3>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                            <div class="form-group" style="grid-column: span 2;">
-                                <label class="form-label">Billing Cycle *</label>
-                                <select name="billing_cycle" class="form-select" required>
-                                    <option value="monthly">Monthly</option>
-                                    <option value="yearly">Yearly</option>
-                                    <option value="quarterly">Quarterly</option>
-                                    <option value="weekly">Weekly</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Start Date *</label>
-                                <input type="date" name="start_date" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Next Renewal *</label>
-                                <input type="date" name="next_renewal_date" class="form-input" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SECTION 4: NOTES -->
-                    <div class="form-section">
+                        <!-- Row 2: Cost & Currency -->
                         <div class="form-group">
-                            <label class="form-label">Description / Notes</label>
-                            <textarea name="notes" class="form-textarea" rows="3"
-                                placeholder="Add any details..."></textarea>
+                            <label class="form-label">Cost *</label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">$</span>
+                                <input type="number" step="0.01" name="cost" class="form-input" required
+                                    placeholder="9.99">
+                            </div>
                         </div>
-                        <div class="form-group mt-3">
-                            <label class="form-label">Service Country</label>
-                            <input type="text" name="country" class="form-input" placeholder="e.g. US, UK (Optional)">
+                        <div class="form-group">
+                            <label class="form-label">Currency</label>
+                            <select name="currency" class="form-select">
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="GBP">GBP - British Pound</option>
+                                <option value="CAD">CAD - Canadian Dollar</option>
+                                <option value="AUD">AUD - Australian Dollar</option>
+                                <option value="JPY">JPY - Japanese Yen</option>
+                                <option value="INR">INR - Indian Rupee</option>
+                            </select>
+                        </div>
+
+                        <!-- Row 3: Plan & Status -->
+                        <div class="form-group">
+                            <label class="form-label">Plan / Tier</label>
+                            <input type="text" name="plan_name" class="form-input"
+                                placeholder="Premium, Family, Basic...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="active">Active</option>
+                                <option value="paused">Paused</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
                         </div>
                     </div>
-
                 </div>
 
-                <!-- Footer -->
-                <div class="modal-footer modal-footer-improved"
-                    style="flex-shrink: 0; z-index: 10; border-top: 1px solid var(--color-border);">
-                    <button type="button" class="btn btn-secondary"
-                        onclick="closeModal('subscriptionModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="subscription-submit-btn">Create
-                        Subscription</button>
+                <hr style="border: 0; border-top: 1px solid var(--color-border); margin: 24px 0;">
+
+                <!-- SECTION 3: SCHEDULE -->
+                <div class="form-section mb-6">
+                    <h3
+                        style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 12px; letter-spacing: 0.05em;">
+                        Schedule</h3>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label">Billing Cycle *</label>
+                            <select name="billing_cycle" class="form-select" required>
+                                <option value="monthly">Monthly</option>
+                                <option value="yearly">Yearly</option>
+                                <option value="quarterly">Quarterly</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Start Date *</label>
+                            <input type="date" name="start_date" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Next Renewal *</label>
+                            <input type="date" name="next_renewal_date" class="form-input" required>
+                        </div>
+                    </div>
                 </div>
-            </form>
+
+                <!-- SECTION 4: NOTES -->
+                <div class="form-section">
+                    <div class="form-group">
+                        <label class="form-label">Description / Notes</label>
+                        <textarea name="notes" class="form-textarea" rows="3"
+                            placeholder="Add any details..."></textarea>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label class="form-label">Service Country</label>
+                        <input type="text" name="country" class="form-input" placeholder="e.g. US, UK (Optional)">
+                    </div>
+                </div>
+
         </div>
+
+        <!-- Footer -->
+        <div class="modal-footer modal-footer-improved"
+            style="flex-shrink: 0; z-index: 10; border-top: 1px solid var(--color-border);">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('subscriptionModal')">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="subscription-submit-btn">Create
+                Subscription</button>
+        </div>
+        </form>
+    </div>
     </div>
 
 
@@ -966,279 +962,7 @@
 
     {% block extra_scripts %}{% endblock %}
 
-    <!-- Floating Action Button (FAB) for Quick Add -->
-    <div id="fab-container" class="fab-container">
-        <button id="fab-main" class="fab-main" onclick="toggleFabMenu()" aria-label="Quick Add Menu">
-            <span class="fab-icon">+</span>
-        </button>
-        <div id="fab-menu" class="fab-menu">
-            <button class="fab-action" onclick="closeFabMenu(); openModal('customerModal');"
-                data-tooltip="Add Customer">
-                <span class="fab-action-icon">👤</span>
-                <span class="fab-action-label">Customer</span>
-            </button>
-            <button class="fab-action" onclick="closeFabMenu(); openModal('subscriptionModal');"
-                data-tooltip="Add Subscription">
-                <span class="fab-action-icon">📋</span>
-                <span class="fab-action-label">Subscription</span>
-            </button>
-            <button class="fab-action" onclick="closeFabMenu(); openModal('categoryModal');"
-                data-tooltip="Add Category">
-                <span class="fab-action-icon">📁</span>
-                <span class="fab-action-label">Category</span>
-            </button>
-            <button class="fab-action" onclick="closeFabMenu(); openModal('groupModal');" data-tooltip="Add Group">
-                <span class="fab-action-icon">👥</span>
-                <span class="fab-action-label">Group</span>
-            </button>
-        </div>
-    </div>
 
-    <style>
-        /* Floating Action Button Styles */
-        .fab-container {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column-reverse;
-            align-items: center;
-            gap: 12px;
-        }
-
-        /* Safe area for mobile devices */
-        @supports (padding-bottom: env(safe-area-inset-bottom)) {
-            .fab-container {
-                bottom: calc(24px + env(safe-area-inset-bottom));
-                right: calc(24px + env(safe-area-inset-right));
-            }
-        }
-
-        .fab-main {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-primary-dark, #764ba2) 100%);
-            border: none;
-            color: white;
-            font-size: 28px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            outline: none;
-        }
-
-        .fab-main:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5), 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .fab-main:active {
-            transform: scale(0.95);
-        }
-
-        .fab-main.open {
-            transform: rotate(45deg);
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        }
-
-        .fab-main.open:hover {
-            transform: rotate(45deg) scale(1.1);
-        }
-
-        .fab-icon {
-            line-height: 1;
-            transition: transform 0.3s ease;
-        }
-
-        .fab-menu {
-            display: flex;
-            flex-direction: column-reverse;
-            gap: 10px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(20px) scale(0.8);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: none;
-        }
-
-        .fab-menu.open {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0) scale(1);
-            pointer-events: auto;
-        }
-
-        .fab-action {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 16px;
-            background: var(--color-bg-card, white);
-            border: 1px solid var(--color-border, #e2e8f0);
-            border-radius: 24px;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
-            white-space: nowrap;
-            font-size: 14px;
-            color: var(--color-text, #1e293b);
-        }
-
-        .fab-action:hover {
-            transform: translateX(-4px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            background: var(--color-bg-hover, #f8fafc);
-        }
-
-        .fab-action:active {
-            transform: scale(0.95);
-        }
-
-        .fab-action-icon {
-            font-size: 18px;
-        }
-
-        .fab-action-label {
-            font-weight: 500;
-        }
-
-        /* Animation for menu items appearing */
-        .fab-menu.open .fab-action {
-            animation: fabItemAppear 0.3s ease forwards;
-        }
-
-        .fab-menu.open .fab-action:nth-child(1) {
-            animation-delay: 0ms;
-        }
-
-        .fab-menu.open .fab-action:nth-child(2) {
-            animation-delay: 50ms;
-        }
-
-        .fab-menu.open .fab-action:nth-child(3) {
-            animation-delay: 100ms;
-        }
-
-        .fab-menu.open .fab-action:nth-child(4) {
-            animation-delay: 150ms;
-        }
-
-        @keyframes fabItemAppear {
-            from {
-                opacity: 0;
-                transform: translateY(10px) scale(0.8);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        /* Backdrop when menu is open */
-        .fab-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.3);
-            z-index: 999;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .fab-backdrop.open {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* Mobile adjustments */
-        @media (max-width: 640px) {
-            .fab-container {
-                bottom: 16px;
-                right: 16px;
-            }
-
-            .fab-main {
-                width: 52px;
-                height: 52px;
-                font-size: 24px;
-            }
-
-            .fab-action {
-                padding: 8px 14px;
-                font-size: 13px;
-            }
-
-            .fab-action-icon {
-                font-size: 16px;
-            }
-        }
-
-        /* Hide FAB on login/auth pages */
-        body.auth-page .fab-container {
-            display: none;
-        }
-    </style>
-
-    <script>
-        // FAB Menu Toggle Functions
-        let fabBackdrop = null;
-
-        function toggleFabMenu() {
-            const fabMain = document.getElementById('fab-main');
-            const fabMenu = document.getElementById('fab-menu');
-
-            if (fabMenu.classList.contains('open')) {
-                closeFabMenu();
-            } else {
-                openFabMenu();
-            }
-        }
-
-        function openFabMenu() {
-            const fabMain = document.getElementById('fab-main');
-            const fabMenu = document.getElementById('fab-menu');
-
-            fabMain.classList.add('open');
-            fabMenu.classList.add('open');
-
-            // Create backdrop
-            if (!fabBackdrop) {
-                fabBackdrop = document.createElement('div');
-                fabBackdrop.className = 'fab-backdrop';
-                fabBackdrop.onclick = closeFabMenu;
-                document.body.appendChild(fabBackdrop);
-            }
-            fabBackdrop.classList.add('open');
-        }
-
-        function closeFabMenu() {
-            const fabMain = document.getElementById('fab-main');
-            const fabMenu = document.getElementById('fab-menu');
-
-            fabMain.classList.remove('open');
-            fabMenu.classList.remove('open');
-
-            if (fabBackdrop) {
-                fabBackdrop.classList.remove('open');
-            }
-        }
-
-        // Close FAB menu on escape key
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                closeFabMenu();
-            }
-        });
-    </script>
     <script src="/static/js/main.js"></script>
     <script src="/static/js/table-sort.js"></script>
     <script src="/static/js/templates-manager.js"></script>
