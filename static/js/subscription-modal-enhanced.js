@@ -91,126 +91,110 @@ function updateCompactCustomerDisplay(customerName) {
   }
 }
 
-// Toggle the new customer dropdown
-window.toggleCustomerDropdown = function () {
-  const wrapper = document.getElementById('customer-selector-wrapper');
-  const panel = document.getElementById('customer-dropdown-panel');
+// ==================== CUSTOMER SELECTION (CARD LOGIC) ====================
 
-  if (!wrapper || !panel) return;
+// Toggle the customer dropdown (Card Click)
+window.toggleSubscriptionCustomerDropdown = function () {
+  const dropdown = document.getElementById('subscription-customer-dropdown');
+  const display = document.getElementById('subscription-customer-display');
+  const container = document.getElementById('subscription-customer-wrapper');
 
-  const isOpen = panel.style.display === 'block';
+  if (!dropdown) return;
+
+  const isOpen = dropdown.style.display === 'block';
 
   if (isOpen) {
-    panel.style.display = 'none';
-    wrapper.classList.remove('open');
+    dropdown.style.display = 'none';
+    display?.classList.remove('active');
+    container?.classList.remove('open');
   } else {
-    panel.style.display = 'block';
-    wrapper.classList.add('open');
+    dropdown.style.display = 'block';
+    display?.classList.add('active');
+    container?.classList.add('open');
 
-    // Ensure customer list is visible immediately
-    const listEl = document.getElementById('subscription-customer-list');
-    const loadingEl = document.getElementById('subscription-customer-loading');
-
-    // If customers already loaded, show list immediately
-    if (subscriptionModalState.customers.length > 0 && listEl) {
-      listEl.style.display = 'block';
-      if (loadingEl) loadingEl.style.display = 'none';
-    }
-
-    // Clear any previous search filter
-    const searchInput = document.getElementById('subscription-customer-search');
+    // Focus search input
+    const searchInput = document.getElementById('subscription-customer-search-input');
     if (searchInput) {
-      searchInput.value = '';
-      // Show all customers
-      if (listEl) {
-        listEl.querySelectorAll('.dropdown-list-item').forEach(item => {
-          item.style.display = 'flex';
-        });
-      }
       setTimeout(() => searchInput.focus(), 100);
     }
   }
 };
 
-// Legacy function for backward compatibility
-window.toggleCustomerSelector = function () {
-  toggleCustomerDropdown();
+window.closeSubscriptionCustomerDropdown = function () {
+  const dropdown = document.getElementById('subscription-customer-dropdown');
+  if (dropdown) dropdown.style.display = 'none';
 };
 
+// Filter customers in the dropdown
+window.filterSubscriptionCustomers = function (query) {
+  const list = document.getElementById('subscription-customer-list');
+  if (!list) return;
+
+  const items = list.querySelectorAll('.dropdown-list-item');
+  const term = query.toLowerCase();
+  let visibleCount = 0;
+
+  items.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    if (text.includes(term)) {
+      item.style.display = 'flex';
+      visibleCount++;
+    } else {
+      item.style.display = 'none';
+    }
+  });
+};
+
+// Select a customer from the list
+window.selectEnhancedCustomer = function (customerId, customerName) {
+  subscriptionModalState.selectedCustomerId = customerId;
+  subscriptionModalState.selectedCustomerName = customerName;
+
+  // Update hidden input
+  document.getElementById('subscription-customer-id').value = customerId;
+
+  // Update display text on the card
+  const displayPlaceholder = document.getElementById('subscription-customer-placeholder');
+  if (displayPlaceholder) {
+    displayPlaceholder.textContent = customerName;
+    displayPlaceholder.classList.add('selected-value'); // Add a class for styling if needed
+    displayPlaceholder.style.color = 'var(--color-text)'; // Ensure it looks like a value
+  }
+
+  // Highlight selected item in list
+  document.querySelectorAll('#subscription-customer-list .dropdown-list-item').forEach(item => {
+    item.classList.remove('selected');
+  });
+  // Find the item that was clicked (approximate)
+  // Since we pass ID, we can find it by ID if we add data-id, or just rely on re-render.
+  // Ideally renderCustomerList adds data-id. Let's rely on re-render or just close.
+
+  // Close dropdown
+  closeSubscriptionCustomerDropdown();
+
+  // Load suggestions
+  loadSmartSuggestions(customerId);
+  validateSubscriptionForm();
+}
+
+// Clear context
 window.clearCustomerContext = function () {
   subscriptionModalState.contextMode = false;
   subscriptionModalState.selectedCustomerId = null;
   subscriptionModalState.selectedCustomerName = null;
 
-  // Update input value
-  const searchInput = document.getElementById('subscription-customer-search');
-  if (searchInput) searchInput.value = '';
-
-  hideSmartSuggestions();
-
   document.getElementById('subscription-customer-id').value = '';
 
-  // Close customer dropdown
-  const panel = document.getElementById('customer-dropdown-panel');
-  if (panel) panel.style.display = 'none';
+  const displayPlaceholder = document.getElementById('subscription-customer-placeholder');
+  if (displayPlaceholder) {
+    displayPlaceholder.textContent = 'Select customer...';
+    displayPlaceholder.style.color = ''; // Reset color
+  }
+
+  hideSmartSuggestions();
 };
 
-// ==================== ENHANCED CUSTOMER DROPDOWN ====================
-
-window.loadEnhancedCustomers = function () {
-  subscriptionModalState.loading = true;
-
-  const loadingEl = document.getElementById('subscription-customer-loading');
-  const listEl = document.getElementById('subscription-customer-list');
-  const emptyEl = document.getElementById('subscription-customer-empty');
-  const statusText = document.getElementById('customer-status-text');
-
-  // Show loading state
-  if (loadingEl) loadingEl.style.display = 'flex';
-  if (listEl) listEl.style.display = 'none';
-  if (emptyEl) emptyEl.style.display = 'none';
-  if (statusText) statusText.textContent = 'Loading customers...';
-
-  fetch('/api/customers')
-    .then(response => response.json())
-    .then(customers => {
-      subscriptionModalState.customers = customers;
-      subscriptionModalState.loading = false;
-
-      // Hide loading
-      if (loadingEl) loadingEl.style.display = 'none';
-
-      if (customers.length === 0) {
-        if (emptyEl) {
-          emptyEl.innerHTML = '<div class="empty-icon">👥</div><div>No customers yet</div><div style="font-size: 12px; margin-top: 4px; color: var(--color-text-tertiary);">Create a customer first</div>';
-          emptyEl.style.display = 'block';
-        }
-        if (statusText) statusText.textContent = 'No customers available';
-      } else {
-        // IMPORTANT: Show list immediately after loading
-        if (listEl) listEl.style.display = 'block';
-        renderCustomerList(customers);
-
-        if (statusText) {
-          statusText.innerHTML = `<span class="help-icon">✓</span> ${customers.length} customer${customers.length !== 1 ? 's' : ''} available`;
-        }
-      }
-    })
-    .catch(error => {
-      console.error('Error loading customers:', error);
-      subscriptionModalState.loading = false;
-
-      if (loadingEl) loadingEl.style.display = 'none';
-      if (emptyEl) {
-        emptyEl.innerHTML = '<div class="empty-icon">⚠️</div><div>Error loading customers</div><div style="font-size: 12px; margin-top: 4px;">Please try again</div>';
-        emptyEl.style.display = 'block';
-      }
-      if (statusText) {
-        statusText.innerHTML = '<span class="help-icon">⚠️</span> Error loading customers';
-      }
-    });
-}
-
+// Render the customer list
 function renderCustomerList(customers) {
   const listEl = document.getElementById('subscription-customer-list');
   if (!listEl) return;
@@ -220,138 +204,68 @@ function renderCustomerList(customers) {
   customers.forEach(customer => {
     const item = document.createElement('div');
     item.className = 'dropdown-list-item';
+    // Add data-id for easier selection tracking
+    item.dataset.id = customer.id;
+
+    // Check if selected
+    if (customer.id == subscriptionModalState.selectedCustomerId) {
+      item.classList.add('selected');
+    }
+
     item.innerHTML = `
       <span class="trigger-icon">👤</span>
       <span>${customer.name}</span>
     `;
 
-    if (customer.id === subscriptionModalState.selectedCustomerId) {
-      item.classList.add('selected');
-    }
-
-    item.onclick = () => selectEnhancedCustomer(customer.id, customer.name);
+    item.onclick = (e) => {
+      e.stopPropagation();
+      selectEnhancedCustomer(customer.id, customer.name);
+    };
     listEl.appendChild(item);
   });
 
-  // Add "Create New Customer" link at bottom
+  // "Create New" link
   const createLink = document.createElement('div');
   createLink.className = 'dropdown-list-item create-new-link';
   createLink.style.borderTop = '1px solid var(--color-border)';
   createLink.style.color = 'var(--color-primary)';
-  createLink.style.marginTop = '4px';
   createLink.innerHTML = '<span class="trigger-icon">+</span><span>Create New Customer</span>';
-  createLink.onclick = () => {
-    window.location.href = '/customers?action=new'; // Or open customer modal if preferred
-  };
+  createLink.onclick = () => window.location.href = '/customers?action=new';
   listEl.appendChild(createLink);
 }
 
-function preselectCustomer(customerId, customerName) {
-  subscriptionModalState.selectedCustomerId = customerId;
-  subscriptionModalState.selectedCustomerName = customerName;
+// Load customers (fetch)
+window.loadEnhancedCustomers = function () {
+  subscriptionModalState.loading = true;
+  const loadingEl = document.getElementById('subscription-customer-loading');
+  if (loadingEl) loadingEl.style.display = 'block';
 
-  // Update hidden input
-  document.getElementById('subscription-customer-id').value = customerId;
-
-  // Update input display
-  const searchInput = document.getElementById('subscription-customer-search');
-  if (searchInput) {
-    searchInput.value = customerName;
-  }
-}
-
-window.toggleEnhancedDropdown = function (prefix) {
-  const trigger = document.getElementById(`${prefix}-trigger`);
-  const panel = document.getElementById(`${prefix}-panel`);
-
-  if (!trigger || !panel) return;
-
-  const isOpen = panel.style.display === 'block';
-
-  if (isOpen) {
-    panel.style.display = 'none';
-    trigger.classList.remove('open');
-  } else {
-    panel.style.display = 'block';
-    trigger.classList.add('open');
-
-    // Focus search input
-    const searchInput = panel.querySelector('.dropdown-search-input');
-    if (searchInput) {
-      setTimeout(() => searchInput.focus(), 100);
-    }
-  }
+  fetch('/api/customers')
+    .then(r => r.json())
+    .then(customers => {
+      subscriptionModalState.customers = customers;
+      subscriptionModalState.loading = false;
+      if (loadingEl) loadingEl.style.display = 'none';
+      renderCustomerList(customers);
+    })
+    .catch(e => {
+      console.error("Error loading customers", e);
+      if (loadingEl) loadingEl.textContent = "Error loading customers";
+    });
 };
 
-function selectEnhancedCustomer(customerId, customerName) {
-  subscriptionModalState.selectedCustomerId = customerId;
-  subscriptionModalState.selectedCustomerName = customerName;
-
-  // Update hidden input
-  document.getElementById('subscription-customer-id').value = customerId;
-
-  // Update list selection
-  document.querySelectorAll('#subscription-customer-list .dropdown-list-item').forEach(item => {
-    item.classList.remove('selected');
-  });
-  event?.target?.closest('.dropdown-list-item')?.classList.add('selected');
-
-  // Close new customer dropdown
-  const panel = document.getElementById('customer-dropdown-panel');
-  if (panel) panel.style.display = 'none';
-
-  // Update input display
-  const searchInput = document.getElementById('subscription-customer-search');
-  if (searchInput) {
-    searchInput.value = customerName;
-  }
-
-  // Activate the card border animation briefly
-  const customerCard = document.querySelector('.selection-card-customer');
-  if (customerCard) {
-    customerCard.classList.add('active');
-    setTimeout(() => customerCard.classList.remove('active'), 2000);
-  }
-
-  // Load suggestions
-  loadSmartSuggestions(customerId);
-  validateSubscriptionForm(); // Re-validate on selection
-}
-
-window.filterEnhancedDropdown = function (prefix, searchText) {
-  const listEl = document.getElementById(`${prefix}-list`);
-  if (!listEl) return;
-
-  const items = listEl.querySelectorAll('.dropdown-list-item');
-  const searchLower = searchText.toLowerCase();
-
-  let visibleCount = 0;
-  items.forEach(item => {
-    const text = item.textContent.toLowerCase();
-    if (text.includes(searchLower)) {
-      item.style.display = 'flex';
-      visibleCount++;
-    } else {
-      item.style.display = 'none';
-    }
-  });
-
-  // Show/hide empty state
-  const emptyEl = document.getElementById(`${prefix}-empty`);
-  if (emptyEl) {
-    emptyEl.style.display = visibleCount === 0 ? 'block' : 'none';
-  }
+// Preselect customer (for edit mode)
+window.preselectCustomer = function (customerId, customerName) {
+  selectEnhancedCustomer(customerId, customerName);
 };
 
-// Close dropdown when clicking outside
+// Close dropdowns when clicking outside
 document.addEventListener('click', function (e) {
-  if (!e.target.closest('.enhanced-dropdown')) {
-    document.querySelectorAll('.enhanced-dropdown-panel').forEach(panel => {
-      panel.style.display = 'none';
-    });
-    document.querySelectorAll('.enhanced-dropdown-trigger').forEach(trigger => {
-      trigger.classList.remove('open');
-    });
+  if (!e.target.closest('#subscription-customer-wrapper')) {
+    closeSubscriptionCustomerDropdown();
+  }
+  if (!e.target.closest('#subscription-categories-wrapper')) {
+    closeSubscriptionCategorySelector();
   }
 });
 
