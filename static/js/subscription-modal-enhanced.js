@@ -697,7 +697,6 @@ function loadVendors() {
 
   // Fetch unique vendors from subscriptions
   fetch('/api/subscriptions')
-    .then(response => response.json())
     .then(subscriptions => {
       const vendorSet = new Set(seededVendors); // Start with seeds
       subscriptions.forEach(sub => {
@@ -706,6 +705,7 @@ function loadVendors() {
         }
       });
       subscriptionModalState.vendors = Array.from(vendorSet).sort();
+      console.log('Loaded vendors:', subscriptionModalState.vendors.length);
     })
     .catch(error => {
       console.error('Error loading vendors:', error);
@@ -744,8 +744,8 @@ function initVendorAutocomplete() {
   // Use the existing SmartAutocomplete class
   const autocomplete = new SmartAutocomplete(vendorInput, {
     dataSource: subscriptionModalState.vendors,
-    minChars: 1,
-    maxResults: 10,
+    minChars: 0, // Allow clicking to show all
+    maxResults: 50, // Show more results
     placeholder: 'e.g., AWS, Netflix, Adobe',
     emptyMessage: 'No vendors found - type to add new',
     highlightMatches: true,
@@ -758,10 +758,28 @@ function initVendorAutocomplete() {
   const checkVendors = setInterval(() => {
     if (subscriptionModalState.vendors.length > 0) {
       autocomplete.updateDataSource(subscriptionModalState.vendors);
-      clearInterval(checkVendors);
+      // Don't clear interval, keep checking for updates
     }
-  }, 500);
+  }, 1000);
 }
+
+// Filter Categories
+window.filterSubscriptionCategories = function (query) {
+  const list = document.querySelector('#subscription-categories-dropdown .categories-dropdown-list');
+  if (!list) return;
+
+  const items = list.querySelectorAll('.tags-dropdown-item');
+  const term = query.toLowerCase();
+
+  items.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    if (text.includes(term)) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+};
 
 // ==================== OVERRIDE EXISTING FUNCTIONS ====================
 
