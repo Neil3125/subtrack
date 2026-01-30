@@ -91,13 +91,12 @@ function updateCompactCustomerDisplay(customerName) {
   }
 }
 
-// ==================== CUSTOMER SELECTION (CARD LOGIC) ====================
+// ==================== CUSTOMER SELECTION (COMBOBOX LOGIC) ====================
 
-// Toggle the customer dropdown (Card Click)
+// Toggle the customer dropdown (Input Focus/Click)
 window.toggleSubscriptionCustomerDropdown = function () {
   const dropdown = document.getElementById('subscription-customer-dropdown');
-  const display = document.getElementById('subscription-customer-display');
-  const container = document.getElementById('subscription-customer-wrapper');
+  const arrow = document.querySelector('.combobox-arrow');
 
   if (!dropdown) return;
 
@@ -105,29 +104,43 @@ window.toggleSubscriptionCustomerDropdown = function () {
 
   if (isOpen) {
     dropdown.style.display = 'none';
-    display?.classList.remove('active');
-    container?.classList.remove('open');
+    arrow.style.transform = 'rotate(0deg)';
   } else {
     dropdown.style.display = 'block';
-    display?.classList.add('active');
-    container?.classList.add('open');
+    arrow.style.transform = 'rotate(180deg)';
 
-    // Focus search input
-    const searchInput = document.getElementById('subscription-customer-search-input');
-    if (searchInput) {
-      setTimeout(() => searchInput.focus(), 100);
+    // Ensure customer list is visible immediately
+    const listEl = document.getElementById('subscription-customer-list');
+    const loadingEl = document.getElementById('subscription-customer-loading');
+
+    // If customers already loaded, show list immediately
+    if (subscriptionModalState.customers.length > 0 && listEl) {
+      listEl.style.display = 'block';
+      if (loadingEl) loadingEl.style.display = 'none';
     }
+
+    // Clear any previous search filter if desired, or keep current value
+    // We intentionally don't clear the input value so user can refine search
   }
 };
 
 window.closeSubscriptionCustomerDropdown = function () {
   const dropdown = document.getElementById('subscription-customer-dropdown');
+  const arrow = document.querySelector('.combobox-arrow');
   if (dropdown) dropdown.style.display = 'none';
+  if (arrow) arrow.style.transform = 'rotate(0deg)';
 };
 
 // Filter customers in the dropdown
 window.filterSubscriptionCustomers = function (query) {
   const list = document.getElementById('subscription-customer-list');
+  const dropdown = document.getElementById('subscription-customer-dropdown');
+
+  // Auto-open if typing
+  if (dropdown && dropdown.style.display === 'none' && query.length > 0) {
+    dropdown.style.display = 'block';
+  }
+
   if (!list) return;
 
   const items = list.querySelectorAll('.dropdown-list-item');
@@ -153,21 +166,16 @@ window.selectEnhancedCustomer = function (customerId, customerName) {
   // Update hidden input
   document.getElementById('subscription-customer-id').value = customerId;
 
-  // Update display text on the card
-  const displayPlaceholder = document.getElementById('subscription-customer-placeholder');
-  if (displayPlaceholder) {
-    displayPlaceholder.textContent = customerName;
-    displayPlaceholder.classList.add('selected-value'); // Add a class for styling if needed
-    displayPlaceholder.style.color = 'var(--color-text)'; // Ensure it looks like a value
+  // Update display text in the SEARCH INPUT itself
+  const searchInput = document.getElementById('subscription-customer-search-input');
+  if (searchInput) {
+    searchInput.value = customerName;
   }
 
   // Highlight selected item in list
   document.querySelectorAll('#subscription-customer-list .dropdown-list-item').forEach(item => {
     item.classList.remove('selected');
   });
-  // Find the item that was clicked (approximate)
-  // Since we pass ID, we can find it by ID if we add data-id, or just rely on re-render.
-  // Ideally renderCustomerList adds data-id. Let's rely on re-render or just close.
 
   // Close dropdown
   closeSubscriptionCustomerDropdown();
@@ -185,10 +193,9 @@ window.clearCustomerContext = function () {
 
   document.getElementById('subscription-customer-id').value = '';
 
-  const displayPlaceholder = document.getElementById('subscription-customer-placeholder');
-  if (displayPlaceholder) {
-    displayPlaceholder.textContent = 'Select customer...';
-    displayPlaceholder.style.color = ''; // Reset color
+  const searchInput = document.getElementById('subscription-customer-search-input');
+  if (searchInput) {
+    searchInput.value = '';
   }
 
   hideSmartSuggestions();
