@@ -152,7 +152,10 @@ window.closeSubscriptionCustomerDropdown = function () {
 const COMMON_COUNTRIES = [
   "United States", "United Kingdom", "Canada", "Australia", "Germany", "France", "Japan", "India", "Brazil", "Mexico",
   "China", "Italy", "Spain", "Netherlands", "Switzerland", "Sweden", "Belgium", "Austria", "Norway", "Denmark",
-  "Finland", "New Zealand", "Ireland", "Singapore", "South Korea", "Russia", "Turkey", "Saudi Arabia", "United Arab Emirates"
+  "Finland", "New Zealand", "Ireland", "Singapore", "South Korea", "Russia", "Turkey", "Saudi Arabia", "United Arab Emirates",
+  // Caribbean / West Indies
+  "Antigua and Barbuda", "Bahamas", "Barbados", "Cuba", "Dominica", "Dominican Republic", "Grenada", "Haiti",
+  "Jamaica", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "St. Vincent", "Trinidad and Tobago"
 ];
 
 window.initCountryAutocomplete = function () {
@@ -800,15 +803,47 @@ function updateCategoryDisplay() {
 // ==================== VENDOR AUTOCOMPLETE (TYPEAHEAD) ====================
 
 // Load vendor stats for autocomplete
+// ==================== VENDOR AUTOCOMPLETE (TYPEAHEAD) ====================
+
+// Load vendor stats AND templates
 window.loadVendors = function () {
-  fetch('/api/subscriptions/stats/vendors')
-    .then(r => r.json())
-    .then(stats => {
-      subscriptionModalState.vendorStats = stats;
-      // Also extract simple list for legacy support if needed
-      subscriptionModalState.vendors = stats.map(s => s.name);
+  const p1 = fetch('/api/subscriptions/stats/vendors').then(r => r.json());
+  const p2 = fetch('/api/templates').then(r => r.json()).catch(() => []);
+
+  Promise.all([p1, p2])
+    .then(([stats, templates]) => {
+      // 1. Process Templates (High Priority)
+      const templateItems = (templates || []).map(t => ({
+        type: 'template',
+        name: t.vendor_name,
+        plan_name: t.plan_name,
+        cost: t.cost,
+        currency: t.currency,
+        billing_cycle: t.billing_cycle,
+        category_id: t.category_id,
+        sortKey: t.vendor_name.toLowerCase()
+      }));
+
+      // 2. Process History Stats (Low Priority)
+      const statItems = (stats || []).map(s => ({
+        type: 'history',
+        name: s.name,
+        cost: s.cost,
+        currency: s.currency,
+        billing_cycle: s.billing_cycle,
+        category_id: s.category_id,
+        sortKey: s.name.toLowerCase()
+      }));
+
+      // Merge: Templates first, then history
+      subscriptionModalState.vendorOptions = [...templateItems, ...statItems];
+
+      subscriptionModalState.vendors = [...new Set([
+        ...(templates || []).map(t => t.vendor_name),
+        ...(stats || []).map(s => s.name)
+      ])].sort();
     })
-    .catch(err => console.error('Error loading vendor stats:', err));
+    .catch(err => console.error('Error loading vendor data:', err));
 };
 
 // Initialize vendor autocomplete listeners
@@ -821,14 +856,14 @@ window.initVendorAutocomplete = function () {
   if (!suggestionsBox) {
     suggestionsBox = document.createElement('div');
     suggestionsBox.id = 'vendor-typeahead-suggestions';
-    suggestionsBox.className = 'categories-dropdown'; // Reuse existing dropdown validation styles
+    suggestionsBox.className = 'categories-dropdown';
     suggestionsBox.style.display = 'none';
     suggestionsBox.style.position = 'absolute';
     suggestionsBox.style.width = '100%';
     suggestionsBox.style.zIndex = '100';
-    suggestionsBox.style.maxHeight = '200px';
+    suggestionsBox.style.maxHeight = '250px';
     suggestionsBox.style.overflowY = 'auto';
-    input.parentNode.style.position = 'relative'; // Ensure parent is relative
+    input.parentNode.style.position = 'relative';
     input.parentNode.appendChild(suggestionsBox);
   }
 
@@ -840,37 +875,63 @@ window.initVendorAutocomplete = function () {
       return;
     }
 
-    // Filter stats
-    const matches = (subscriptionModalState.vendorStats || []).filter(v =>
-      v.name.toLowerCase().includes(val.toLowerCase())
-    ).slice(0, 5); // Limit to 5
+    // Filter vendorOptions (Templates + History)
+    const term = val.toLowerCase();
+    const allMatches = (subscriptionModalState.vendorOptions || []).filter(v =>
+      v.name.toLowerCase().includes(term)
+    );
+
+    allMatches.sort((a, b) => {
+      if (a.type === 'template' && b.type !== 'template') return -1;
+      if (a.type !== 'template' && b.type === 'template') return 1;
+      return a.sortKey.localeCompare(b.sortKey);
+    });
+
+    const matches = allMatches.slice(0, 10);
 
     if (matches.length > 0) {
       suggestionsBox.innerHTML = '';
-      matches.forEach(vendor => {
-        const item = document.createElement('div');
-        item.className = 'dropdown-list-item';
-        item.style.padding = '8px 12px';
-        item.style.cursor = 'pointer';
-        item.style.display = 'flex';
-        item.style.justifyContent = 'space-between';
+      matches.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'dropdown-list-item';
+        div.style.padding = '8px 12px';
+        div.style.cursor = 'pointer';
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
 
-        // Label with cost info
-        let meta = '';
-        if (vendor.cost) meta += `${vendor.currency || '$'}${vendor.cost}`;
-        if (vendor.billing_cycle) meta += ` / ${vendor.billing_cycle.split('.')[1] || vendor.billing_cycle}`;
+        let label = item.name;
+        let subLabel = '';
+        let badge = '';
 
-        item.innerHTML = `
-          <span style="font-weight: 500;">${vendor.name}</span>
-          <span style="font-size: 11px; color: var(--color-text-secondary);">${meta}</span>
+        if (item.type === 'template') {
+          badge = `<span class="badge" style="font-size: 10px; background: var(--color-primary-bg); color: var(--color-primary); margin-left: 6px; padding: 2px 6px; border-radius: 4px;">Template</span>`;
+          if (item.plan_name) label += ` - ${item.plan_name}`;
+        } else {
+          badge = `<span class="badge" style="font-size: 10px; background: var(--color-bg-secondary); color: var(--color-text-tertiary); margin-left: 6px; padding: 2px 6px; border-radius: 4px;">History</span>`;
+        }
+
+        if (item.cost) subLabel += `${item.currency || '$'}${item.cost}`;
+        if (item.billing_cycle) {
+          let cycle = item.billing_cycle;
+          if (typeof cycle === 'string' && cycle.includes('.')) cycle = cycle.split('.')[1];
+          subLabel += ` / ${cycle}`;
+        }
+
+        div.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div style="display: flex; align-items: center;">
+                <span style="font-weight: 500;">${label}</span>
+                ${badge}
+            </div>
+            <span style="font-size: 11px; color: var(--color-text-secondary);">${subLabel}</span>
+          </div>
         `;
 
-        item.onmousedown = (e) => {
+        div.onmousedown = (e) => {
           e.preventDefault();
-          selectVendorSuggestion(vendor);
+          selectVendorSuggestion(item);
         };
-
-        suggestionsBox.appendChild(item);
+        suggestionsBox.appendChild(div);
       });
       suggestionsBox.style.display = 'block';
     } else {

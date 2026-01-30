@@ -20,6 +20,7 @@ class Category(Base):
     groups = relationship("Group", back_populates="category", cascade="all, delete-orphan")
     customers = relationship("Customer", back_populates="category", viewonly=True)
     subscriptions = relationship("Subscription", back_populates="category", cascade="all, delete-orphan")
+    templates = relationship("SubscriptionTemplate", back_populates="category")
 
     # Many-to-many subscriptions
     subscriptions_many = relationship(

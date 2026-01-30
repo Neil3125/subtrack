@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Template Manager - SubTrack Web{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="gradient-text">📋 Template Manager</h1>
+            <p class="text-secondary">Create and manage reusable subscription templates.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openTemplateModal()">
+            ➕ New Template
+        </button>
+    </div>
+
+    <!-- Templates Grid -->
+    <div class="grid grid-cols-3 gap-6" id="templates-grid">
+        <!-- Rendered by JS -->
+    </div>
+</div>
+
+<!-- Add/Edit Template Modal -->
+<div id="templateModal" class="modal">
+    <div class="modal-content animate-scale-in" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2 class="modal-title" id="templateModalTitle">New Template</h2>
+            <button class="modal-close" onclick="closeTemplateModal()">×</button>
+        </div>
+        <form id="templateForm" onsubmit="saveTemplate(event)">
+            <input type="hidden" id="template-id">
+            <div class="form-group">
+                <label class="form-label">Vendor Name *</label>
+                <input type="text" id="template-vendor" class="form-input" required placeholder="e.g. Netflix">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Plan Name</label>
+                <input type="text" id="template-plan" class="form-input" placeholder="e.g. Premium">
+            </div>
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Cost *</label>
+                    <input type="number" step="0.01" id="template-cost" class="form-input" required placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Currency</label>
+                    <select id="template-currency" class="form-select">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Billing Cycle *</label>
+                    <select id="template-cycle" class="form-select" required>
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="weekly">Weekly</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select id="template-category" class="form-select">
+                        <option value="">None</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeTemplateModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Template</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let templates = [];
+
+    document.addEventListener('DOMContentLoaded', loadTemplates);
+
+    function loadTemplates() {
+        fetch('/api/templates')
+            .then(r => r.json())
+            .then(data => {
+                templates = data;
+                renderTemplates();
+            });
+    }
+
+    function renderTemplates() {
+        const grid = document.getElementById('templates-grid');
+        grid.innerHTML = '';
+
+        if (templates.length === 0) {
+            grid.innerHTML = `<div class="col-span-3 empty-state">
+            <div class="empty-state-icon">📝</div>
+            <h3 class="empty-state-title">No Templates Yet</h3>
+            <p class="empty-state-text">Create your first subscription template to speed up data entry.</p>
+        </div>`;
+            return;
+        }
+
+        templates.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'card card-hover p-4';
+            card.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+                <div>
+                     <h3 class="font-bold text-lg text-primary">${t.vendor_name}</h3>
+                     <div class="text-sm text-secondary">${t.plan_name || 'Basic Plan'}</div>
+                </div>
+                <div class="text-right">
+                    <div class="font-bold">${t.currency} ${t.cost}</div>
+                     <div class="text-xs text-secondary capitalize">${t.billing_cycle}</div>
+                </div>
+            </div>
+            
+            <div class="mt-4 pt-4 border-t border-border flex justify-end gap-2">
+                 <button class="btn btn-sm btn-secondary" onclick="editTemplate(${t.id})">Edit</button>
+                 <button class="btn btn-sm btn-danger" onclick="deleteTemplate(${t.id})">Delete</button>
+            </div>
+        `;
+            grid.appendChild(card);
+        });
+    }
+
+    function openTemplateModal(id = null) {
+        const modal = document.getElementById('templateModal');
+        const form = document.getElementById('templateForm');
+        const title = document.getElementById('templateModalTitle');
+
+        if (id) {
+            const t = templates.find(x => x.id === id);
+            title.textContent = 'Edit Template';
+            document.getElementById('template-id').value = t.id;
+            document.getElementById('template-vendor').value = t.vendor_name;
+            document.getElementById('template-plan').value = t.plan_name || '';
+            document.getElementById('template-cost').value = t.cost;
+            document.getElementById('template-currency').value = t.currency;
+            document.getElementById('template-cycle').value = t.billing_cycle;
+            document.getElementById('template-category').value = t.category_id || '';
+        } else {
+            title.textContent = 'New Template';
+            form.reset();
+            document.getElementById('template-id').value = '';
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function closeTemplateModal() {
+        document.getElementById('templateModal').style.display = 'none';
+    }
+
+    function saveTemplate(e) {
+        e.preventDefault();
+        const id = document.getElementById('template-id').value;
+        const data = {
+            vendor_name: document.getElementById('template-vendor').value,
+            plan_name: document.getElementById('template-plan').value,
+            cost: parseFloat(document.getElementById('template-cost').value),
+            currency: document.getElementById('template-currency').value,
+            billing_cycle: document.getElementById('template-cycle').value,
+            category_id: document.getElementById('template-category').value || null
+        };
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/templates/${id}` : '/api/templates';
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(r => {
+            if (r.ok) {
+                closeTemplateModal();
+                loadTemplates();
+                // Also refresh stats cache if possible or needed
+            }
+        });
+    }
+
+    function editTemplate(id) {
+        openTemplateModal(id);
+    }
+
+    function deleteTemplate(id) {
+        if (confirm('Delete this template?')) {
+            fetch(`/api/templates/${id}`, { method: 'DELETE' })
+                .then(() => loadTemplates());
+        }
+    }
+</script>
+{% endblock %}
