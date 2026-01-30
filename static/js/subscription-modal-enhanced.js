@@ -51,7 +51,7 @@ window.initEnhancedSubscriptionModal = function (customerId = null, customerName
   }
 
   // Initialize categories display
-  updateCategoryDisplay();
+  updateSubscriptionCategoryDisplay();
 
   // Load customers
   loadEnhancedCustomers();
@@ -146,6 +146,75 @@ window.closeSubscriptionCustomerDropdown = function () {
   if (display) display.classList.remove('active');
   if (arrow) arrow.style.transform = 'rotate(0deg)';
 };
+
+// ==================== COUNTRY AUTOCOMPLETE ====================
+
+const COMMON_COUNTRIES = [
+  "United States", "United Kingdom", "Canada", "Australia", "Germany", "France", "Japan", "India", "Brazil", "Mexico",
+  "China", "Italy", "Spain", "Netherlands", "Switzerland", "Sweden", "Belgium", "Austria", "Norway", "Denmark",
+  "Finland", "New Zealand", "Ireland", "Singapore", "South Korea", "Russia", "Turkey", "Saudi Arabia", "United Arab Emirates"
+];
+
+window.initCountryAutocomplete = function () {
+  // nothing to init really, just data
+};
+
+window.openSubscriptionCountryDropdown = function () {
+  const dropdown = document.getElementById('subscription-country-dropdown');
+  if (dropdown) {
+    dropdown.style.display = 'block';
+    renderCountryList('');
+  }
+};
+
+window.closeSubscriptionCountryDropdown = function () {
+  const dropdown = document.getElementById('subscription-country-dropdown');
+  if (dropdown) {
+    // Delay to allow click
+    setTimeout(() => dropdown.style.display = 'none', 200);
+  }
+};
+
+window.filterSubscriptionCountries = function (query) {
+  const dropdown = document.getElementById('subscription-country-dropdown');
+  if (dropdown) dropdown.style.display = 'block';
+  renderCountryList(query);
+};
+
+window.selectSubscriptionCountry = function (countryName) {
+  const input = document.getElementById('subscription-country');
+  if (input) input.value = countryName;
+  const dropdown = document.getElementById('subscription-country-dropdown');
+  if (dropdown) dropdown.style.display = 'none';
+};
+
+function renderCountryList(query) {
+  const dropdown = document.getElementById('subscription-country-dropdown');
+  if (!dropdown) return;
+
+  dropdown.innerHTML = '';
+  const term = query ? query.toLowerCase() : '';
+
+  let matches = COMMON_COUNTRIES.filter(c => c.toLowerCase().includes(term));
+  if (matches.length === 0 && term.length > 0) {
+    // Allow custom entry (no message needed, just empty list allows free text)
+    dropdown.style.display = 'none';
+    return;
+  }
+
+  matches.forEach(country => {
+    const item = document.createElement('div');
+    item.className = 'dropdown-list-item';
+    item.style.padding = '8px 12px';
+    item.style.cursor = 'pointer';
+    item.textContent = country;
+    item.onmousedown = (e) => { // mousedown fires before blur
+      e.preventDefault();
+      selectSubscriptionCountry(country);
+    };
+    dropdown.appendChild(item);
+  });
+}
 
 // Filter customers in the dropdown
 window.filterSubscriptionCustomers = function (query) {
@@ -261,6 +330,97 @@ function renderCustomerList(customers) {
   listEl.appendChild(createLink);
 }
 
+// ==================== CATEGORY TAGS (MULTI-SELECT) ====================
+
+window.toggleSubscriptionCategoryTag = function (element) {
+  const id = parseInt(element.dataset.id);
+  const name = element.dataset.name;
+
+  const existingIndex = subscriptionModalState.selectedCategories.findIndex(c => c.id === id);
+
+  if (existingIndex >= 0) {
+    // Remove
+    subscriptionModalState.selectedCategories.splice(existingIndex, 1);
+    element.classList.remove('selected');
+  } else {
+    // Add
+    subscriptionModalState.selectedCategories.push({ id, name });
+    element.classList.add('selected');
+  }
+
+  updateSubscriptionCategoryDisplay();
+};
+
+window.removeSubscriptionCategoryChip = function (id) {
+  subscriptionModalState.selectedCategories = subscriptionModalState.selectedCategories.filter(c => c.id !== id);
+
+  // Uncheck in dropdown
+  const dropdown = document.getElementById('subscription-categories-dropdown');
+  if (dropdown) {
+    const item = dropdown.querySelector(`.tags-dropdown-item[data-id="${id}"]`);
+    if (item) item.classList.remove('selected');
+  }
+
+  updateSubscriptionCategoryDisplay();
+};
+
+window.updateSubscriptionCategoryDisplay = function () {
+  const display = document.getElementById('subscription-categories-tags');
+  const hiddenInput = document.getElementById('subscription-category-ids');
+
+  if (!display) return;
+
+  display.innerHTML = '';
+
+  // Update hidden input
+  if (hiddenInput) {
+    hiddenInput.value = subscriptionModalState.selectedCategories.map(c => c.id).join(',');
+  }
+
+  // Show placeholder if empty
+  if (subscriptionModalState.selectedCategories.length === 0) {
+    display.innerHTML = '<span class="categories-placeholder">Click to select...</span>';
+  } else {
+    // Render chips
+    subscriptionModalState.selectedCategories.forEach(cat => {
+      const tag = document.createElement('div');
+      tag.className = 'multi-select-tag';
+      tag.innerHTML = `
+        <span>${cat.name}</span>
+        <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeSubscriptionCategoryChip(${cat.id})">×</span>
+      `;
+      display.appendChild(tag);
+    });
+  }
+};
+
+window.openSubscriptionCategorySelector = function () {
+  const dropdown = document.getElementById('subscription-categories-dropdown');
+  if (dropdown) dropdown.style.display = 'block';
+};
+
+window.closeSubscriptionCategorySelector = function () {
+  const dropdown = document.getElementById('subscription-categories-dropdown');
+  if (dropdown) dropdown.style.display = 'none';
+};
+
+// Filter categories
+window.filterSubscriptionCategories = function (query) {
+  const list = document.getElementById('subscription-categories-dropdown');
+  if (!list) return;
+
+  const items = list.querySelectorAll('.tags-dropdown-item');
+  const term = query.toLowerCase();
+
+  items.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    if (text.includes(term)) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+};
 // Load customers (fetch)
 window.loadEnhancedCustomers = function () {
   subscriptionModalState.loading = true;
@@ -271,13 +431,12 @@ window.loadEnhancedCustomers = function () {
     .then(r => r.json())
     .then(customers => {
       subscriptionModalState.customers = customers;
-      subscriptionModalState.loading = false;
-      if (loadingEl) loadingEl.style.display = 'none';
       renderCustomerList(customers);
     })
-    .catch(e => {
-      console.error("Error loading customers", e);
-      if (loadingEl) loadingEl.textContent = "Error loading customers";
+    .catch(err => console.error('Error loading customers:', err))
+    .finally(() => {
+      subscriptionModalState.loading = false;
+      if (loadingEl) loadingEl.style.display = 'none';
     });
 };
 
