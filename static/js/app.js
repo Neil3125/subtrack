@@ -4048,3 +4048,95 @@ window.preselectCustomerGroups = function (ids) {
 
   updateCustomerGroupDisplay();
 };
+
+// ==================== Side Panel (Drawer) Logic ====================
+window.openSidePanel = function (contentHtml, title = 'Details') {
+  const panel = document.getElementById('side-panel');
+  const backdrop = document.getElementById('side-panel-backdrop');
+  const titleEl = document.getElementById('side-panel-title');
+  const contentEl = document.getElementById('side-panel-content');
+  const editBtn = document.getElementById('side-panel-edit-btn');
+
+  if (!panel || !backdrop || !contentEl) return;
+
+  // Set Content
+  contentEl.innerHTML = contentHtml;
+  if (titleEl) titleEl.textContent = title;
+
+  // Reset Edit Button (default hidden)
+  if (editBtn) {
+    editBtn.style.display = 'none';
+    editBtn.onclick = null;
+  }
+
+  // Open
+  panel.classList.add('open');
+  backdrop.classList.add('open');
+  document.body.classList.add('modal-open'); // Prevent background scroll
+};
+
+window.closeSidePanel = function () {
+  const panel = document.getElementById('side-panel');
+  const backdrop = document.getElementById('side-panel-backdrop');
+
+  if (panel) panel.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('open');
+  document.body.classList.remove('modal-open');
+};
+
+/**
+ * Configure the Edit button in the Side Panel header
+ * @param {Function} callback - Function to run when clicked
+ * @param {string} label - Button text (default: 'Edit')
+ */
+window.setSidePanelEditAction = function (callback, label = 'Edit') {
+  const editBtn = document.getElementById('side-panel-edit-btn');
+  if (editBtn) {
+    editBtn.textContent = label;
+    editBtn.style.display = 'inline-block';
+    editBtn.onclick = () => {
+      // closeSidePanel(); // Optional: Close panel if edit opens a modal
+      callback();
+    };
+  }
+};
+
+/**
+ * Helper to generate standardized HTML for a data row in the panel
+ * @param {string} label - Label text
+ * @param {string} value - Value text
+ * @param {boolean} highlight - Whether to highlight the value
+ */
+window.renderSidePanelKeyValue = function (label, value, highlight = false) {
+  if (!value) return '';
+  return `
+    <div class="panel-data-row">
+      <div class="panel-label">${label}</div>
+      <div class="panel-value ${highlight ? 'highlight' : ''}">${value}</div>
+    </div>
+  `;
+};
+
+// ==================== IMPROVED MODAL TABS ====================
+window.switchModalTab = function (element, tabId) {
+  // 1. Remove active class from all tabs in this container
+  const tabContainer = element.closest('.modal-tabs');
+  const tabs = tabContainer.querySelectorAll('.modal-tab-item');
+  tabs.forEach(t => t.classList.remove('active'));
+
+  // 2. Add active class to clicked tab
+  element.classList.add('active');
+
+  // 3. Hide all tab panes in the parent modal body
+  const modalContent = element.closest('.modal-body') || element.closest('.modal-content');
+  const panes = modalContent.querySelectorAll('.tab-pane');
+  panes.forEach(p => p.classList.remove('active'));
+
+  // 4. Show the target pane
+  const targetPane = modalContent.querySelector(`#${tabId}`);
+  if (targetPane) {
+    targetPane.classList.add('active');
+  }
+};
+
+

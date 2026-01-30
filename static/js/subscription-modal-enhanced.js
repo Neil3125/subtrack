@@ -687,12 +687,24 @@ function updateCategoryDisplay() {
 
 // ==================== VENDOR AUTOCOMPLETE ====================
 
+// ==================== VENDOR AUTOCOMPLETE ====================
+
 function loadVendors() {
+  // Common vendors to seed (ESET, Adobe, etc.)
+  const seededVendors = [
+    "Netflix", "Spotify", "Apple", "Google", "AWS", "Microsoft",
+    "Adobe", "ESET", "CrowdStrike", "Palo Alto Networks",
+    "Slack", "Zoom", "Atlassian", "GitHub", "DigitalOcean",
+    "Heroku", "Vercel", "Netlify", "Figma", "Canva",
+    "Dropbox", "Box", "Salesforce", "HubSpot", "Zendesk",
+    "Intercom", "Mailchimp", "SendGrid", "Twilio", "Stripe"
+  ];
+
   // Fetch unique vendors from subscriptions
   fetch('/api/subscriptions')
     .then(response => response.json())
     .then(subscriptions => {
-      const vendorSet = new Set();
+      const vendorSet = new Set(seededVendors); // Start with seeds
       subscriptions.forEach(sub => {
         if (sub.vendor_name) {
           vendorSet.add(sub.vendor_name);
@@ -702,7 +714,7 @@ function loadVendors() {
     })
     .catch(error => {
       console.error('Error loading vendors:', error);
-      subscriptionModalState.vendors = [];
+      subscriptionModalState.vendors = seededVendors.sort();
     });
 }
 

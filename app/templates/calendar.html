@@ -43,7 +43,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var calendarEl = document.getElementById('calendar');
-        var allEvents = []; // Store raw events for filtering
 
         var calendar = new FullCalendar.Calendar(calendarEl, {
             themeSystem: 'standard',
@@ -53,68 +52,49 @@
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
             },
-            navLinks: true, // can click day/week names to navigate views
+            navLinks: true,
             editable: true,
-            dayMaxEvents: true, // allow "more" link when too many events
+            dayMaxEvents: true, // Allow "more" link
             height: '100%',
 
-            // Event Data Fetching
+            // Interaction Handlers
+            selectable: true,
+
+            // Event Data
             events: async function (fetchInfo, successCallback, failureCallback) {
                 try {
-                    // Fetch wider range to ensure recurrence calculation works? 
-                    // Actually, let's fetch everything or range. 
-                    // The backend supports range.
                     const response = await fetch(`/api/subscriptions?status=active&start_date=${fetchInfo.startStr}&end_date=${fetchInfo.endStr}`);
                     if (!response.ok) throw new Error('Network response was not ok');
                     const subs = await response.json();
-
-                    // Transform Subscriptions to Events
-                    // We need to expand recurrence logic here because the API might only return the *next* date.
-                    // If the user wants to see "Next Month", but the API only returns "Jan 15", filtering for Feb might return nothing 
-                    // unless we simulate the recurrence.
-
-                    // SIMPLIFIED APPROACH: We map what the API gives us. 
-                    // If the user needs to see future recurrences not yet in DB, we would use rrule. 
-                    // For now, let's map the provided "next_renewal_date".
-
-                    // Note: If the user navigates far into future, API might return empty if no "next_renewal_date" falls there.
-                    // Ideally, backend handles projection. 
-                    // Hack: We can client-side simulate for the view range if `billing_cycle` is present.
 
                     let events = [];
                     const viewStart = new Date(fetchInfo.start);
                     const viewEnd = new Date(fetchInfo.end);
 
                     subs.forEach(sub => {
-                        // Base event
                         let evtDate = new Date(sub.next_renewal_date);
 
-                        // If date is within view, add it
+                        // Base Event
                         if (evtDate >= viewStart && evtDate < viewEnd) {
                             events.push(createEventObj(sub, evtDate));
                         }
 
-                        // RECURRENCE EXPANSION (Simple Client-Side)
-                        // Allow projecting forward up to viewEnd
-                        // Only do this if we want to confirm future months work even if DB isn't updated.
+                        // Project Recurrences for View Range
                         let nextDate = new Date(evtDate);
                         let safety = 0;
-                        while (nextDate < viewEnd && safety < 12) { // limit 12 recurrences
-                            // Calculate next
+                        while (nextDate < viewEnd && safety < 24) {
                             if (sub.billing_cycle === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
                             else if (sub.billing_cycle === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
                             else if (sub.billing_cycle === 'quarterly') nextDate.setMonth(nextDate.getMonth() + 3);
                             else if (sub.billing_cycle === 'yearly') nextDate.setFullYear(nextDate.getFullYear() + 1);
-                            else break; // unknown cycle
+                            else break;
 
                             if (nextDate >= viewStart && nextDate < viewEnd) {
-                                events.push(createEventObj(sub, nextDate, true)); // isProjected=true
+                                events.push(createEventObj(sub, nextDate, true));
                             }
                             safety++;
                         }
                     });
-
-                    allEvents = events; // Cache for local filtering
                     successCallback(events);
                 } catch (error) {
                     console.error(error);
@@ -122,135 +102,207 @@
                 }
             },
 
-            // Rendering Hooks
-            eventDidMount: function (info) {
-                // Apply tooltip?
-                info.el.title = `${info.event.title} - ${info.event.extendedProps.currency} ${info.event.extendedProps.costDisplay}`;
-            },
+            // --- Hooks ---
 
+            // 1. Calculate Total on View Change
             datesSet: function (info) {
-                calculateTotal(calendar.getEvents()); // Calc total for CURRENT view events
+                recalculateTotal();
             },
 
-            // Interactions
+            // 2. Event Click -> Side Panel (Details)
             eventClick: function (info) {
-                // Open Edit Modal
-                info.jsEvent.preventDefault(); // don't visit URL
-                const subId = info.event.id.replace('proj-', ''); // remove projection prefix
-
-                if (typeof openModal === 'function') {
-                    // Trigger Edit Mode (reuse existing logic from global or create new)
-                    // Passing ID to subscription modal
-                    openModal('subscriptionModal');
-                    // We'd ideally fetch and fill details here. 
-                    // For now, prompt user it's experimental integration or fill basics.
-
-                    // Fill basic fields from event props as fallback
-                    const props = info.event.extendedProps;
-                    setTimeout(() => {
-                        const form = document.getElementById('subscription-form');
-                        if (form) {
-                            form.querySelector('[name="vendor_name"]').value = info.event.title;
-                            form.querySelector('[name="cost"]').value = props.costDisplay;
-                            // Add hidden ID support if needed
-                        }
-                    }, 100);
-                }
+                info.jsEvent.preventDefault();
+                showEventDetailsInPanel(info.event);
             },
 
+            // 3. Date Click -> Side Panel (Day Overview)
             dateClick: function (info) {
-                // Open Add Modal pre-filled
-                if (typeof openModal === 'function') {
-                    openModal('subscriptionModal');
-                    setTimeout(() => {
-                        const form = document.getElementById('subscription-form');
-                        if (form) {
-                            form.reset();
-                            form.querySelector('[name="start_date"]').value = info.dateStr;
-                        }
-                    }, 100);
-                }
+                showDayOverviewInPanel(info.date);
+            },
+
+            // 4. Custom "More" Link -> Side Panel instead of Popover
+            moreLinkClick: function (info) {
+                // FullCalendar 6 doesn't easily allow cancelling the popover via return false in some versions,
+                // but we can try handling it ourselves.
+                showDayOverviewInPanel(info.date);
+                return "function"; // Suppress default popover if supported, or just let it open and we override? 
+                // Actually, `moreLinkClick` can take a function.
+            },
+
+            // 5. Context Menu (Right Click)
+            eventDidMount: function (info) {
+                info.el.title = `${info.event.title} - ${info.event.extendedProps.currency} ${info.event.extendedProps.costDisplay}`;
+
+                info.el.addEventListener('contextmenu', function (e) {
+                    e.preventDefault();
+                    // Basic Context Menu Logic (could be improved with a real UI lib)
+                    // For now, let's open the panel in "Edit Mode" directly or show a simple browser alert?
+                    // Better: Open the panel with actions highlighted.
+                    showEventDetailsInPanel(info.event);
+                });
             },
 
             eventDrop: function (info) {
-                // Drag & Drop logic (Update backend)
                 if (!confirm(`Move ${info.event.title} to ${info.event.start.toLocaleDateString()}?`)) {
                     info.revert();
                 } else {
-                    // Call API to update date (Not implemeneted explicitly yet, stubbing)
-                    console.log("Updated date for", info.event.id);
+                    // TODO: Implement date update API call
+                    console.log("Moved", info.event.title);
                 }
             }
         });
 
         calendar.render();
 
-        // Helper: Create FC Event Object
+        // --- Helpers ---
+
         function createEventObj(sub, dateObj, isProjected = false) {
             const catId = sub.category_id || 0;
+            // original sub data for the panel
             return {
                 id: isProjected ? `proj-${sub.id}-${dateObj.getTime()}` : `${sub.id}`,
                 title: sub.vendor_name,
-                start: dateObj.toISOString().split('T')[0], // YYYY-MM-DD
+                start: dateObj.toISOString().split('T')[0],
                 allDay: true,
                 classNames: [`event-pastel-${catId % 6}`],
                 extendedProps: {
+                    originalId: sub.id,
                     costDisplay: sub.cost,
                     currency: sub.currency,
-                    isProjected: isProjected
+                    billingCycle: sub.billing_cycle,
+                    status: sub.status,
+                    categoryName: sub.category ? sub.category.name : 'Uncategorized',
+                    isProjected: isProjected,
+                    // Store full subject for simplicity
+                    fullData: sub
                 }
             };
         }
 
-        // Search Filter
-        document.getElementById('calendarSearchInput').addEventListener('input', function (e) {
-            const term = e.target.value.toLowerCase();
-            // FullCalendar doesn't have a direct "filter" method that hides events easily without removing them.
-            // Strategy: Refetch events? Or just toggle visibility using CSS?
-            // CSS is cleaner for instant feeling.
-
-            const events = calendar.getEvents();
-            events.forEach(evt => {
-                const match = evt.title.toLowerCase().includes(term);
-                if (match) {
-                    evt.setProp('display', 'auto');
-                } else {
-                    evt.setProp('display', 'none');
-                }
-            });
-
-            // Recalculate total based on VISIBLE events
-            const visibleEvents = events.filter(e => e.title.toLowerCase().includes(term));
-            calculateTotal(visibleEvents);
-        });
-
-        function calculateTotal(eventsList) {
-            // eventsList is array of FC Event Objects
-            // We want total of visible events in current view
-
-            // Note: calendar.getEvents() returns ALL events in memory/cache. 
-            // We need only those in relevant range? 
-            // Actually, getEvents() usually returns all.
-            // Let's filter by current view active range.
+        // --- View Total Logic ---
+        function recalculateTotal() {
             const view = calendar.view;
-            if (!view) return;
-
+            const events = calendar.getEvents();
             let total = 0;
-            const currency = eventsList.length > 0 ? eventsList[0].extendedProps.currency : '$';
+            let currency = 'USD'; // default
 
-            eventsList.forEach(evt => {
-                // Check if in view range
-                if (evt.start >= view.activeStart && evt.start < view.activeEnd) {
-                    // Check if not hidden by search
+            events.forEach(evt => {
+                // strict range check
+                if (evt.start >= view.currentStart && evt.start < view.currentEnd) {
+                    // Check if visible (search filter)
                     if (evt.display !== 'none') {
                         total += parseFloat(evt.extendedProps.costDisplay) || 0;
+                        if (evt.extendedProps.currency) currency = evt.extendedProps.currency;
                     }
                 }
             });
 
             const badge = document.getElementById('viewTotalAmount');
-            badge.textContent = `${currency} ${total.toFixed(2)}`;
+            // Format currency
+            const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: currency });
+            badge.textContent = formatter.format(total);
         }
+
+        // --- Side Panel Interactions ---
+
+        function showEventDetailsInPanel(event) {
+            const props = event.extendedProps;
+            const sub = props.fullData;
+
+            // Build HTML
+            let html = `
+                <div class="panel-section">
+                    ${window.renderSidePanelKeyValue('Vendor', event.title, true)}
+                    ${window.renderSidePanelKeyValue('Cost', `${props.currency} ${props.costDisplay} / ${props.billingCycle}`)}
+                    ${window.renderSidePanelKeyValue('Status', `<span class="badge badge-${props.status === 'active' ? 'success' : 'secondary'}">${props.status}</span>`)}
+                    ${window.renderSidePanelKeyValue('Category', props.categoryName)}
+                    ${window.renderSidePanelKeyValue('Due Date', event.start.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))}
+                    
+                    ${props.isProjected ? '<div class="alert alert-info" style="margin-top: 20px;">ℹ️ This is a projected future occurrence.</div>' : ''}
+                </div>
+            `;
+
+            // Open Panel
+            window.openSidePanel(html, 'Subscription Details');
+
+            // Set Edit Action
+            window.setSidePanelEditAction(() => {
+                if (typeof loadEditData === 'function') {
+                    // Close panel and open modal
+                    window.closeSidePanel();
+                    window.loadEditData('subscription', props.originalId);
+                }
+            });
+        }
+
+        function showDayOverviewInPanel(date) {
+            const dateStr = date.toISOString().split('T')[0];
+            const events = calendar.getEvents().filter(e => e.startStr === dateStr);
+
+            let html = `<div style="margin-bottom: 20px;">
+                <button class="btn btn-primary w-100" onclick="openAddOnDate('${dateStr}')">+ Add Subscription for ${date.toLocaleDateString()}</button>
+            </div>`;
+
+            if (events.length === 0) {
+                html += `<div class="text-secondary text-center p-4">No events scheduled for this day.</div>`;
+            } else {
+                html += `<div class="panel-events-list">`;
+                events.forEach(evt => {
+                    const p = evt.extendedProps;
+                    html += `
+                        <div class="card card-hover mb-2 p-3" style="cursor: pointer;" onclick="triggerEventClick('${evt.id}')">
+                            <div class="flex justify-between items-center">
+                                <strong>${evt.title}</strong>
+                                <span>${p.currency} ${p.costDisplay}</span>
+                            </div>
+                            <div class="text-xs text-secondary mt-1">${p.categoryName}</div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            window.openSidePanel(html, `Overview: ${date.toLocaleDateString()}`);
+
+            // Hide edit button for day view
+            const editBtn = document.getElementById('side-panel-edit-btn');
+            if (editBtn) editBtn.style.display = 'none';
+        }
+
+        // Bridge to trigger event click via ID (for list items in panel)
+        window.triggerEventClick = function (eventId) {
+            const evt = calendar.getEventById(eventId);
+            if (evt) {
+                showEventDetailsInPanel(evt);
+            }
+        };
+
+        window.openAddOnDate = function (dateStr) {
+            if (typeof openModal === 'function') {
+                window.closeSidePanel();
+                openModal('subscriptionModal');
+                setTimeout(() => {
+                    const form = document.querySelector('#subscriptionModal form');
+                    if (form) {
+                        const dateInput = form.querySelector('[name="next_renewal_date"]'); // or start_date
+                        if (dateInput) dateInput.value = dateStr;
+                    }
+                }, 100);
+            }
+        };
+
+        // Search Filter Logic
+        document.getElementById('calendarSearchInput').addEventListener('input', function (e) {
+            const term = e.target.value.toLowerCase();
+            const events = calendar.getEvents();
+
+            events.forEach(evt => {
+                const match = evt.title.toLowerCase().includes(term);
+                evt.setProp('display', match ? 'auto' : 'none');
+            });
+
+            recalculateTotal();
+        });
     });
 </script>
 {% endblock %}

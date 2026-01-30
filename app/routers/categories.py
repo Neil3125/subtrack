@@ -126,6 +126,11 @@ def delete_category(category_id: int, background_tasks: BackgroundTasks, db: Ses
     category_name = db_category.name
     cat_id = db_category.id
     
+    # FIX: Unlink customers who have this as primary category to avoid FK constraint fails
+    # The Customer.category_id FK is nullable but doesn't have ondelete="SET NULL"
+    from app.models.customer import Customer
+    db.query(Customer).filter(Customer.category_id == category_id).update({"category_id": None})
+    
     db.delete(db_category)
     db.commit()
     

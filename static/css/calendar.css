@@ -207,7 +207,165 @@
 }
 
 /* Active View Highlight */
-.fc-button-active {
-    background-color: var(--primary-color) !important;
-    border-color: var(--primary-color) !important;
+/* ... existing styles ... */
+
+/* Side Panel (Drawer) */
+.side-panel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1040;
+    /* Below modal, above calendar */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s;
+    backdrop-filter: blur(2px);
+}
+
+.side-panel-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.side-panel {
+    position: fixed;
+    top: 0;
+    right: -450px;
+    /* Hidden */
+    width: 400px;
+    height: 100vh;
+    background: var(--color-bg);
+    border-left: 1px solid var(--border-color);
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
+    z-index: 1050;
+    transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.side-panel.open {
+    right: 0;
+}
+
+[data-theme="dark"] .side-panel {
+    background: #1e1e24;
+    border-left: 1px solid #333;
+}
+
+.panel-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.panel-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.panel-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.panel-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.panel-close:hover {
+    background: var(--color-bg-secondary);
+    color: var(--text-primary);
+}
+
+.panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.panel-footer {
+    padding: 20px 24px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    background: var(--color-bg-secondary);
+}
+
+/* Detail Row in Panel */
+.detail-row {
+    margin-bottom: 20px;
+}
+
+.detail-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.detail-value {
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Day View List in Panel */
+.mini-event-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mini-event-item {
+    padding: 12px;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mini-event-item:hover {
+    border-color: var(--primary-color);
+    transform: translateX(2px);
+}
+
+.mini-event-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.mini-event-info {
+    flex: 1;
+}
+
+.mini-event-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.mini-event-cost {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
 }

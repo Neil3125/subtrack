@@ -11,5 +11,6 @@ from app.models.renewal_notice import RenewalNotice
 from app.models.activity_log import ActivityLog
 from app.models.log_entry import LogEntry
 from app.models.check_category import CheckCategory
+from app.models.subscription_template import SubscriptionTemplate
 
-__all__ = ["Category", "Group", "Customer", "Subscription", "Link", "User", "SavedReport", "AIRequestCache", "RenewalNotice", "ActivityLog", "LogEntry", "CheckCategory"]
+__all__ = ["Category", "Group", "Customer", "Subscription", "Link", "User", "SavedReport", "AIRequestCache", "RenewalNotice", "ActivityLog", "LogEntry", "CheckCategory", "SubscriptionTemplate"]
