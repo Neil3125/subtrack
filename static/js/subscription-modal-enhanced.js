@@ -91,12 +91,14 @@ function updateCompactCustomerDisplay(customerName) {
   }
 }
 
-// ==================== CUSTOMER SELECTION (COMBOBOX LOGIC) ====================
+// ==================== CUSTOMER SELECTION (CARD LOGIC) ====================
 
-// Toggle the customer dropdown (Input Focus/Click)
+// Toggle the customer dropdown (Card Click)
 window.toggleSubscriptionCustomerDropdown = function () {
   const dropdown = document.getElementById('subscription-customer-dropdown');
-  const arrow = document.querySelector('.combobox-arrow');
+  const display = document.getElementById('subscription-customer-display');
+  const wrapper = document.getElementById('subscription-customer-wrapper');
+  const arrow = display?.querySelector('.customer-selected-arrow');
 
   if (!dropdown) return;
 
@@ -104,10 +106,14 @@ window.toggleSubscriptionCustomerDropdown = function () {
 
   if (isOpen) {
     dropdown.style.display = 'none';
-    arrow.style.transform = 'rotate(0deg)';
+    display?.classList.remove('active');
+    wrapper?.classList.remove('open');
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
   } else {
     dropdown.style.display = 'block';
-    arrow.style.transform = 'rotate(180deg)';
+    display?.classList.add('active');
+    wrapper?.classList.add('open');
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
 
     // Ensure customer list is visible immediately
     const listEl = document.getElementById('subscription-customer-list');
@@ -116,31 +122,34 @@ window.toggleSubscriptionCustomerDropdown = function () {
     // If customers already loaded, show list immediately
     if (subscriptionModalState.customers.length > 0 && listEl) {
       listEl.style.display = 'block';
+      renderCustomerList(subscriptionModalState.customers); // Force Re-render
       if (loadingEl) loadingEl.style.display = 'none';
+    } else {
+      // If empty, force load
+      loadEnhancedCustomers();
     }
 
-    // Clear any previous search filter if desired, or keep current value
-    // We intentionally don't clear the input value so user can refine search
+    // Connect search input focus
+    setTimeout(() => {
+      const searchInput = document.getElementById('subscription-customer-search-input');
+      if (searchInput) searchInput.focus();
+    }, 100);
   }
 };
 
 window.closeSubscriptionCustomerDropdown = function () {
   const dropdown = document.getElementById('subscription-customer-dropdown');
-  const arrow = document.querySelector('.combobox-arrow');
+  const display = document.getElementById('subscription-customer-display');
+  const arrow = display?.querySelector('.customer-selected-arrow');
+
   if (dropdown) dropdown.style.display = 'none';
+  if (display) display.classList.remove('active');
   if (arrow) arrow.style.transform = 'rotate(0deg)';
 };
 
 // Filter customers in the dropdown
 window.filterSubscriptionCustomers = function (query) {
   const list = document.getElementById('subscription-customer-list');
-  const dropdown = document.getElementById('subscription-customer-dropdown');
-
-  // Auto-open if typing
-  if (dropdown && dropdown.style.display === 'none' && query.length > 0) {
-    dropdown.style.display = 'block';
-  }
-
   if (!list) return;
 
   const items = list.querySelectorAll('.dropdown-list-item');
@@ -166,15 +175,19 @@ window.selectEnhancedCustomer = function (customerId, customerName) {
   // Update hidden input
   document.getElementById('subscription-customer-id').value = customerId;
 
-  // Update display text in the SEARCH INPUT itself
-  const searchInput = document.getElementById('subscription-customer-search-input');
-  if (searchInput) {
-    searchInput.value = customerName;
+  // Update display text on the CARD
+  const displayPlaceholder = document.getElementById('subscription-customer-placeholder');
+  if (displayPlaceholder) {
+    displayPlaceholder.textContent = customerName;
+    displayPlaceholder.classList.add('selected-value');
+    displayPlaceholder.style.color = 'var(--color-text)';
+    displayPlaceholder.style.fontWeight = '500';
   }
 
   // Highlight selected item in list
   document.querySelectorAll('#subscription-customer-list .dropdown-list-item').forEach(item => {
     item.classList.remove('selected');
+    if (item.dataset.id == customerId) item.classList.add('selected');
   });
 
   // Close dropdown
@@ -193,10 +206,17 @@ window.clearCustomerContext = function () {
 
   document.getElementById('subscription-customer-id').value = '';
 
-  const searchInput = document.getElementById('subscription-customer-search-input');
-  if (searchInput) {
-    searchInput.value = '';
+  const displayPlaceholder = document.getElementById('subscription-customer-placeholder');
+  if (displayPlaceholder) {
+    displayPlaceholder.textContent = 'Select customer...';
+    displayPlaceholder.style.color = '';
+    displayPlaceholder.style.fontWeight = '';
+    displayPlaceholder.classList.remove('selected-value');
   }
+
+  // Clear search input too
+  const searchInput = document.getElementById('subscription-customer-search-input');
+  if (searchInput) searchInput.value = '';
 
   hideSmartSuggestions();
 };

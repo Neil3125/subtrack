@@ -605,109 +605,115 @@
                 <div class="modal-body modal-body-improved"
                     style="overflow-y: auto; flex: 1; max-height: calc(90vh - 140px);">
 
-                    <!-- SECTION 1: SUBSCRIPTION DETAILS -->
+                    <!-- PRIMARY SELECTION ROW: Customer & Categories (Cards) -->
+                    <div class="primary-selection-row">
+                        <!-- CARD 1: CUSTOMER (Single Select with Search) -->
+                        <div class="selection-card selection-card-customer animated-border-card">
+                            <div class="animated-border"></div>
+                            <div class="selection-card-inner">
+                                <div class="selection-card-header">
+                                    <span class="selection-card-icon">👤</span>
+                                    <h3 class="selection-card-title">Customer *</h3>
+                                </div>
+                                <div class="selection-card-content">
+                                    <input type="hidden" name="customer_id" id="subscription-customer-id" required>
+
+                                    <!-- Wrapper matches 'categories-chips-container' style for consistency -->
+                                    <div class="categories-chips-container" id="subscription-customer-wrapper">
+                                        <!-- Selected Display (Click to Open) -->
+                                        <div class="categories-chips-display" id="subscription-customer-display"
+                                            onclick="toggleSubscriptionCustomerDropdown()">
+                                            <span class="categories-placeholder"
+                                                id="subscription-customer-placeholder">Select customer...</span>
+                                            <span class="customer-selected-arrow"
+                                                style="margin-left: auto; transition: transform 0.2s;">▼</span>
+                                        </div>
+
+                                        <!-- Dropdown Panel -->
+                                        <div class="categories-dropdown" id="subscription-customer-dropdown"
+                                            style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 100; margin-top: 4px;">
+
+                                            <!-- Valid Search Input -->
+                                            <div class="dropdown-search-box"
+                                                style="padding: 8px; border-bottom: 1px solid var(--color-border); background: var(--color-bg-secondary);">
+                                                <input type="text" class="dropdown-search-input"
+                                                    id="subscription-customer-search-input"
+                                                    placeholder="Search customers..."
+                                                    oninput="filterSubscriptionCustomers(this.value)"
+                                                    onclick="event.stopPropagation()" autocomplete="off"
+                                                    style="width: 100%; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg); color: var(--color-text);">
+                                            </div>
+
+                                            <div class="categories-dropdown-list" id="subscription-customer-list"
+                                                style="max-height: 250px; overflow-y: auto;">
+                                                <!-- Populated by JS -->
+                                            </div>
+
+                                            <div class="dropdown-loading" id="subscription-customer-loading"
+                                                style="padding: 16px; text-align: center; color: var(--color-text-secondary); display: none;">
+                                                <div class="spinner-border spinner-border-sm text-primary"
+                                                    role="status"></div>
+                                                <div style="margin-top: 4px; font-size: 12px;">Loading customers...
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CARD 2: CATEGORIES (Multi Select) -->
+                        <div class="selection-card selection-card-categories animated-border-card">
+                            <div class="animated-border"></div>
+                            <div class="selection-card-inner">
+                                <div class="selection-card-header">
+                                    <span class="selection-card-icon">🏷️</span>
+                                    <h3 class="selection-card-title">Categories</h3>
+                                </div>
+                                <div class="selection-card-content">
+                                    <input type="hidden" name="category_ids" id="subscription-category-ids">
+
+                                    <div class="categories-chips-container" id="subscription-categories-wrapper">
+                                        <!-- Selected Chips Display -->
+                                        <div class="categories-chips-display" id="subscription-categories-tags"
+                                            onclick="openSubscriptionCategorySelector()">
+                                            <span class="categories-placeholder">Click to select...</span>
+                                        </div>
+
+                                        <!-- Dropdown Panel -->
+                                        <div class="categories-dropdown" id="subscription-categories-dropdown"
+                                            style="display: none;">
+                                            <div class="categories-dropdown-header">
+                                                <span>Select categories</span>
+                                                <button type="button" class="categories-close"
+                                                    onclick="closeSubscriptionCategorySelector()">✕</button>
+                                            </div>
+                                            <div class="categories-dropdown-list">
+                                                {% for category in categories|default([]) %}
+                                                <div class="categories-dropdown-item tags-dropdown-item"
+                                                    data-id="{{ category.id }}" data-name="{{ category.name }}"
+                                                    onclick="toggleSubscriptionCategoryTag(this)">
+                                                    <span class="categories-item-checkbox"></span>
+                                                    <span class="categories-item-label">{{ category.name }}</span>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: DETAILS -->
                     <div class="modal-section">
                         <div class="section-header">
                             <h3 class="section-title">Subscription Details</h3>
                         </div>
                         <div class="section-content">
-                            <!-- Row 1: Customer (Combobox) -->
+                            <!-- Row 1: Vendor -->
                             <div class="form-row">
                                 <div class="form-group" style="flex: 1;">
-                                    <label class="form-label">Customer *</label>
-                                    <div class="customer-combobox-wrapper" id="customer-selector-wrapper"
-                                        style="position: relative;">
-                                        <input type="hidden" name="customer_id" id="subscription-customer-id" required>
-                                        <div class="combobox-input-container">
-                                            <input type="text" id="subscription-customer-search-input"
-                                                class="form-input" placeholder="Search or select customer..."
-                                                autocomplete="off" oninput="filterSubscriptionCustomers(this.value)"
-                                                onfocus="toggleSubscriptionCustomerDropdown()"
-                                                style="padding-right: 30px; width: 100%;">
-                                            <div id="subscription-customer-spinner" class="spinner-border text-primary"
-                                                role="status"
-                                                style="position: absolute; right: 10px; top: 10px; width: 1rem; height: 1rem; border-width: 2px; display: none;">
-                                                <span class="visually-hidden">Loading...</span>
-                                            </div>
-                                            <span class="combobox-arrow" onclick="toggleSubscriptionCustomerDropdown()"
-                                                style="position: absolute; right: 10px; top: 10px; cursor: pointer; color: var(--color-text-tertiary);">▼</span>
-                                        </div>
-
-                                        <!-- Dropdown Panel (Combobox Style) -->
-                                        <div class="categories-dropdown" id="subscription-customer-dropdown"
-                                            style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 100; margin-top: 4px; max-height: 250px; overflow-y: auto;">
-                                            <div class="categories-dropdown-list" id="subscription-customer-list">
-                                                <!-- Populated by JS -->
-                                            </div>
-                                            <div class="dropdown-loading" id="subscription-customer-loading"
-                                                style="padding: 12px; text-align: center; color: var(--color-text-secondary); display: none;">
-                                                Loading...</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Row 2: Vendor (Full Width) -->
-                            <div class="form-row">
-                                <div class="form-group" style="flex: 1;">
-                                    <label class="form-label">Vendor Name *</label>
-                                    <input type="text" name="vendor_name" id="subscription-vendor-name"
-                                        class="form-input" required placeholder="e.g. Netflix, Spotify, AWS..."
-                                        autocomplete="off">
-                                    <!-- Smart Suggestions Container -->
-                                    <div id="smart-suggestions-content" style="margin-top: 8px; display: none;">
-                                        <div id="suggestions-content"
-                                            class="suggestions-content p-3 bg-bg-secondary rounded border border-border">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Row 3: Categories (Multi-select Chips) -->
-                            <div class="form-row">
-                                <div class="form-group" style="flex: 1;">
-                                    <label class="form-label">Categories</label>
-                                    <div class="input-chips-container" id="subscription-categories-wrapper"
-                                        onclick="document.getElementById('category-search-input').focus()">
-                                        <input type="hidden" name="category_ids" id="subscription-category-ids">
-                                        <div class="chips-area" id="subscription-categories-tags"
-                                            style="display: flex; flex-wrap: wrap; gap: 4px;"></div>
-                                        <input type="text" id="category-search-input" class="chip-input"
-                                            placeholder="Add category..."
-                                            oninput="filterSubscriptionCategories(this.value)"
-                                            onfocus="openSubscriptionCategorySelector()"
-                                            style="border: none; background: transparent; outline: none; flex: 1; min-width: 60px; padding: 4px 0;">
-                                    </div>
-                                    <!-- Category Dropdown -->
-                                    <div class="categories-dropdown" id="subscription-categories-dropdown"
-                                        style="display: none; position: absolute; width: 100%; z-index: 100;">
-                                        <div class="categories-dropdown-list"
-                                            style="max-height: 200px; overflow-y: auto;">
-                                            {% for category in categories|default([]) %}
-                                            <div class="categories-dropdown-item tags-dropdown-item"
-                                                data-id="{{ category.id }}" data-name="{{ category.name }}"
-                                                onclick="toggleSubscriptionCategoryTag(this)">
-                                                <span class="categories-item-checkbox"></span>
-                                                <span class="categories-item-label">{{ category.name }}</span>
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <!-- SECTION 2: FINANCIAL & SCHEDULE -->
-                    <div class="modal-section">
-                        <div class="section-header">
-                            <h3 class="section-title">Financial & Schedule</h3>
-                        </div>
-                        <div class="section-content">
-                            <!-- Row 1: Cost & Currency (50/50 Grid) -->
-                            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                                <div class="form-group">
                                     <label class="form-label">Cost *</label>
                                     <div class="input-with-prefix">
                                         <span class="input-prefix">$</span>
