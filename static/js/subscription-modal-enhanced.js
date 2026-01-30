@@ -156,7 +156,7 @@ window.clearCustomerContext = function () {
 
 // ==================== ENHANCED CUSTOMER DROPDOWN ====================
 
-function loadEnhancedCustomers() {
+window.loadEnhancedCustomers = function () {
   subscriptionModalState.loading = true;
 
   const loadingEl = document.getElementById('subscription-customer-loading');

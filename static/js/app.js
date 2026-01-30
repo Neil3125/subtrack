@@ -1369,6 +1369,12 @@ let subscriptionCustomersCache = [];
 
 // Load customers for the subscription modal
 window.loadCustomersForSubscription = function (categoryId, preSelectedId = null, preSelectedName = null) {
+  // Redirect to enhanced version if available
+  if (window.loadEnhancedCustomers && typeof window.loadEnhancedCustomers === 'function') {
+    window.loadEnhancedCustomers();
+    return;
+  }
+
   const wrapper = document.getElementById('subscription-customer-dropdown');
   const hiddenInput = document.getElementById('subscription-customer-id');
   const listContainer = document.getElementById('subscription-customer-list');

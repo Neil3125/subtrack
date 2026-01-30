@@ -120,18 +120,7 @@ def create_customer(customer: CustomerCreate, background_tasks: BackgroundTasks,
             logger.warning(f"Groups not found: {missing_ids}")
             raise HTTPException(status_code=404, detail=f"Groups with IDs {missing_ids} not found")
     
-    # Check for duplicate customer (same name + email in same primary category)
-    if customer.email:
-        existing_customer = db.query(Customer).filter(
-            Customer.email == customer.email,
-            Customer.category_id == primary_category_id
-        ).first()
-        if existing_customer:
-            logger.warning(f"Duplicate customer: email {customer.email} already exists in category {primary_category_id}")
-            raise HTTPException(
-                status_code=409, 
-                detail=f"A customer with email '{customer.email}' already exists in this category"
-            )
+
     
     try:
         # Create customer with basic fields
