@@ -797,84 +797,181 @@ function updateCategoryDisplay() {
 
 // ==================== VENDOR AUTOCOMPLETE ====================
 
-function loadVendors() {
-  // Common vendors to seed (ESET, Adobe, etc.)
-  const seededVendors = [
-    "Netflix", "Spotify", "Apple", "Google", "AWS", "Microsoft",
-    "Adobe", "ESET", "CrowdStrike", "Palo Alto Networks",
-    "Slack", "Zoom", "Atlassian", "GitHub", "DigitalOcean",
-    "Heroku", "Vercel", "Netlify", "Figma", "Canva",
-    "Dropbox", "Box", "Salesforce", "HubSpot", "Zendesk",
-    "Intercom", "Mailchimp", "SendGrid", "Twilio", "Stripe"
-  ];
+// ==================== VENDOR AUTOCOMPLETE (TYPEAHEAD) ====================
 
-  // Fetch unique vendors from subscriptions
-  fetch('/api/subscriptions')
-    .then(subscriptions => {
-      const vendorSet = new Set(seededVendors); // Start with seeds
-      subscriptions.forEach(sub => {
-        if (sub.vendor_name) {
-          vendorSet.add(sub.vendor_name);
-        }
-      });
-      subscriptionModalState.vendors = Array.from(vendorSet).sort();
-      console.log('Loaded vendors:', subscriptionModalState.vendors.length);
+// Load vendor stats for autocomplete
+window.loadVendors = function () {
+  fetch('/api/subscriptions/stats/vendors')
+    .then(r => r.json())
+    .then(stats => {
+      subscriptionModalState.vendorStats = stats;
+      // Also extract simple list for legacy support if needed
+      subscriptionModalState.vendors = stats.map(s => s.name);
     })
-    .catch(error => {
-      console.error('Error loading vendors:', error);
-      subscriptionModalState.vendors = seededVendors.sort();
-    });
-}
-
-// ==================== TEMPLATES LOGIC ====================
-
-// Templates logic removed - moved to templates-manager.js
-
-window.applySubscriptionTemplate = function (vendor, plan, cost, currency) {
-  // Auto-fill form fields
-  const vendorInput = document.getElementById('subscription-vendor-name');
-  const planInput = document.querySelector('input[name="plan_name"]');
-  const costInput = document.querySelector('input[name="cost"]');
-  const currencySelect = document.querySelector('select[name="currency"]');
-
-  if (vendorInput) vendorInput.value = vendor;
-  if (planInput) planInput.value = plan;
-  if (costInput) costInput.value = cost;
-  if (currencySelect) currencySelect.value = currency;
-
-  // Close dropdown
-  const dropdown = document.getElementById('subscription-templates-dropdown');
-  if (dropdown) dropdown.style.display = 'none';
-
-  // Show feedback
-  showToast(`Applied template: ${vendor}`, 'success');
+    .catch(err => console.error('Error loading vendor stats:', err));
 };
 
-function initVendorAutocomplete() {
-  const vendorInput = document.getElementById('subscription-vendor-name');
-  if (!vendorInput || vendorInput._vendorAutocomplete) return;
+// Initialize vendor autocomplete listeners
+window.initVendorAutocomplete = function () {
+  const input = document.getElementById('subscription-vendor-name');
+  if (!input) return;
 
-  // Use the existing SmartAutocomplete class
-  const autocomplete = new SmartAutocomplete(vendorInput, {
-    dataSource: subscriptionModalState.vendors,
-    minChars: 0, // Allow clicking to show all
-    maxResults: 50, // Show more results
-    placeholder: 'e.g., AWS, Netflix, Adobe',
-    emptyMessage: 'No vendors found - type to add new',
-    highlightMatches: true,
-    showRecentFirst: true
+  // Create suggestions container if not exists
+  let suggestionsBox = document.getElementById('vendor-typeahead-suggestions');
+  if (!suggestionsBox) {
+    suggestionsBox = document.createElement('div');
+    suggestionsBox.id = 'vendor-typeahead-suggestions';
+    suggestionsBox.className = 'categories-dropdown'; // Reuse existing dropdown validation styles
+    suggestionsBox.style.display = 'none';
+    suggestionsBox.style.position = 'absolute';
+    suggestionsBox.style.width = '100%';
+    suggestionsBox.style.zIndex = '100';
+    suggestionsBox.style.maxHeight = '200px';
+    suggestionsBox.style.overflowY = 'auto';
+    input.parentNode.style.position = 'relative'; // Ensure parent is relative
+    input.parentNode.appendChild(suggestionsBox);
+  }
+
+  // Input event
+  input.addEventListener('input', function (e) {
+    const val = e.target.value;
+    if (val.length < 1) {
+      suggestionsBox.style.display = 'none';
+      return;
+    }
+
+    // Filter stats
+    const matches = (subscriptionModalState.vendorStats || []).filter(v =>
+      v.name.toLowerCase().includes(val.toLowerCase())
+    ).slice(0, 5); // Limit to 5
+
+    if (matches.length > 0) {
+      suggestionsBox.innerHTML = '';
+      matches.forEach(vendor => {
+        const item = document.createElement('div');
+        item.className = 'dropdown-list-item';
+        item.style.padding = '8px 12px';
+        item.style.cursor = 'pointer';
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+
+        // Label with cost info
+        let meta = '';
+        if (vendor.cost) meta += `${vendor.currency || '$'}${vendor.cost}`;
+        if (vendor.billing_cycle) meta += ` / ${vendor.billing_cycle.split('.')[1] || vendor.billing_cycle}`;
+
+        item.innerHTML = `
+          <span style="font-weight: 500;">${vendor.name}</span>
+          <span style="font-size: 11px; color: var(--color-text-secondary);">${meta}</span>
+        `;
+
+        item.onmousedown = (e) => {
+          e.preventDefault();
+          selectVendorSuggestion(vendor);
+        };
+
+        suggestionsBox.appendChild(item);
+      });
+      suggestionsBox.style.display = 'block';
+    } else {
+      suggestionsBox.style.display = 'none';
+    }
   });
 
-  vendorInput._vendorAutocomplete = autocomplete;
+  // Blur event
+  input.addEventListener('blur', function () {
+    setTimeout(() => {
+      suggestionsBox.style.display = 'none';
+    }, 200);
+  });
 
-  // Update data source when vendors are loaded
-  const checkVendors = setInterval(() => {
-    if (subscriptionModalState.vendors.length > 0) {
-      autocomplete.updateDataSource(subscriptionModalState.vendors);
-      // Don't clear interval, keep checking for updates
+  // Focus event - show if not empty
+  input.addEventListener('focus', function () {
+    if (input.value.length > 0) {
+      input.dispatchEvent(new Event('input'));
     }
-  }, 1000);
+  });
+};
+
+function selectVendorSuggestion(vendor) {
+  const input = document.getElementById('subscription-vendor-name');
+  if (input) {
+    input.value = vendor.name;
+    input.dispatchEvent(new Event('input')); // Trigger validation
+  }
+
+  // Hide suggestions
+  const box = document.getElementById('vendor-typeahead-suggestions');
+  if (box) box.style.display = 'none';
+
+  // Autofill other details
+  autofillVendorDetails(vendor);
 }
+
+function autofillVendorDetails(vendor) {
+  // 1. Cost & Currency
+  if (vendor.cost) {
+    const costInput = document.querySelector('input[name="cost"]');
+    if (costInput && !costInput.value) { // Only if empty
+      costInput.value = vendor.cost;
+      showAutofillHighlight(costInput);
+    }
+  }
+
+  if (vendor.currency) {
+    const currSelect = document.querySelector('select[name="currency"]');
+    if (currSelect) {
+      currSelect.value = vendor.currency;
+      showAutofillHighlight(currSelect);
+    }
+  }
+
+  // 2. Billing Cycle
+  if (vendor.billing_cycle) {
+    const cycleSelect = document.querySelector('select[name="billing_cycle"]');
+    if (cycleSelect) {
+      let val = vendor.billing_cycle;
+      // Handle enum string (e.g. 'BillingCycle.monthly' -> 'monthly')
+      if (typeof val === 'string' && val.includes('.')) {
+        val = val.split('.')[1];
+      }
+      cycleSelect.value = val;
+      showAutofillHighlight(cycleSelect);
+    }
+  }
+
+  // 3. Plan Name
+  if (vendor.plan_name) {
+    const planInput = document.querySelector('input[name="plan_name"]');
+    if (planInput && !planInput.value) {
+      planInput.value = vendor.plan_name;
+      showAutofillHighlight(planInput);
+    }
+  }
+
+  // 4. Category
+  if (vendor.category_id) {
+    // Check if category is already selected
+    const isSelected = subscriptionModalState.selectedCategories.some(c => c.id === vendor.category_id);
+    if (!isSelected) {
+      selectCategoryTag(vendor.category_id);
+      const catCard = document.querySelector('.selection-card-categories');
+      if (catCard) showAutofillHighlight(catCard);
+    }
+  }
+
+  showToast(`Autofilled details for ${vendor.name}`, 'success');
+}
+
+function showAutofillHighlight(element) {
+  element.classList.add('autofill-highlight');
+  setTimeout(() => element.classList.remove('autofill-highlight'), 1000);
+}
+
+// Keep legacy symbol for compatibility if needed
+window.applySubscriptionTemplate = function (vendor, plan, cost, currency) {
+  // No-op or map to new logic if called
+};
 
 // Filter Categories
 window.filterSubscriptionCategories = function (query) {

@@ -340,3 +340,62 @@ def get_subscription_templates(db: Session = Depends(get_db)):
     except Exception as e:
         print(f"Error fetching templates: {e}")
         return []
+@router.get("/stats/vendors", response_model=List[dict])
+def get_vendor_stats(db: Session = Depends(get_db)):
+    """
+    Get aggregated statistics for vendors to support smart autofill.
+    Returns most frequent settings for each vendor based on history.
+    """
+    # Query all active or past subscriptions
+    subs = db.query(Subscription).all()
+    
+    if not subs:
+        return []
+
+    from collections import Counter, defaultdict
+    
+    # Group by vendor
+    vendor_groups = defaultdict(list)
+    for sub in subs:
+        if sub.vendor_name:
+            vendor_groups[sub.vendor_name].append(sub)
+    
+    results = []
+    
+    for vendor_name, vendor_subs in vendor_groups.items():
+        if not vendor_subs:
+            continue
+            
+        # Helper to find mode
+        def get_mode(items):
+            if not items: return None
+            return Counter(items).most_common(1)[0][0]
+        
+        # Calculate stats
+        costs = [s.cost for s in vendor_subs]
+        currencies = [s.currency for s in vendor_subs if s.currency]
+        cycles = [s.billing_cycle for s in vendor_subs if s.billing_cycle]
+        plans = [s.plan_name for s in vendor_subs if s.plan_name]
+        category_ids = [s.category_id for s in vendor_subs if s.category_id]
+        
+        # Determine average cost (maybe better than mode for cost?)
+        # Let's use Mode for consistency, or Average if variance is low?
+        # Plan says "Most frequent or Average". Let's use Mode for cost to hit exact price points (e.g. 15.99)
+        default_cost = get_mode(costs)
+        
+        # Create stat object
+        stat = {
+            "name": vendor_name,
+            "count": len(vendor_subs),
+            "category_id": get_mode(category_ids),
+            "cost": default_cost,
+            "currency": get_mode(currencies) or "USD",
+            "billing_cycle": get_mode(cycles),
+            "plan_name": get_mode(plans)
+        }
+        results.append(stat)
+        
+    # Sort by frequency
+    results.sort(key=lambda x: x['count'], reverse=True)
+    
+    return results
