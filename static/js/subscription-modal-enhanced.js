@@ -231,6 +231,18 @@ function renderCustomerList(customers) {
     item.onclick = () => selectEnhancedCustomer(customer.id, customer.name);
     listEl.appendChild(item);
   });
+
+  // Add "Create New Customer" link at bottom
+  const createLink = document.createElement('div');
+  createLink.className = 'dropdown-list-item create-new-link';
+  createLink.style.borderTop = '1px solid var(--color-border)';
+  createLink.style.color = 'var(--color-primary)';
+  createLink.style.marginTop = '4px';
+  createLink.innerHTML = '<span class="trigger-icon">+</span><span>Create New Customer</span>';
+  createLink.onclick = () => {
+    window.location.href = '/customers?action=new'; // Or open customer modal if preferred
+  };
+  listEl.appendChild(createLink);
 }
 
 function preselectCustomer(customerId, customerName) {
@@ -305,6 +317,7 @@ function selectEnhancedCustomer(customerId, customerName) {
 
   // Load suggestions
   loadSmartSuggestions(customerId);
+  validateSubscriptionForm(); // Re-validate on selection
 }
 
 window.filterEnhancedDropdown = function (prefix, searchText) {
@@ -855,10 +868,68 @@ document.addEventListener('click', function (e) {
 
 console.log('✅ Enhanced Subscription Modal loaded successfully');
 
+// ==================== VALIDATION LOGIC ====================
+
+function validateSubscriptionForm() {
+  const form = document.getElementById('subscription-form');
+  const customerId = document.getElementById('subscription-customer-id').value;
+  const vendorName = document.getElementById('subscription-vendor-name').value;
+  const cost = document.querySelector('input[name="cost"]').value;
+  const submitBtn = form.querySelector('button[type="submit"]');
+
+  const isValid = customerId && vendorName && cost;
+
+  // Toggle button state
+  if (submitBtn) {
+    submitBtn.disabled = !isValid;
+    if (!isValid) {
+      submitBtn.title = "Please fill in all required fields (Customer, Vendor, Cost)";
+    } else {
+      submitBtn.title = "";
+    }
+  }
+
+  // Visual feedback for missing fields (on blur or change)
+  if (!customerId) {
+    const wrapper = document.getElementById('customer-selected-display');
+    if (wrapper) wrapper.classList.add('invalid');
+  } else {
+    document.getElementById('customer-selected-display')?.classList.remove('invalid');
+  }
+
+  return isValid;
+}
+
+// Add validation listeners
+document.addEventListener('DOMContentLoaded', () => {
+  const inputs = ['subscription-vendor-name', 'subscription-customer-id'];
+  const costInput = document.querySelector('input[name="cost"]');
+
+  inputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', validateSubscriptionForm);
+      el.addEventListener('change', validateSubscriptionForm);
+    }
+  });
+
+  if (costInput) {
+    costInput.addEventListener('input', validateSubscriptionForm);
+  }
+
+  // Also listen for customer selection changes via state
+  // (This is handled in selectEnhancedCustomer)
+});
+
 // ==================== UNIFIED SUBMISSION HANDLER ====================
 
 // Save subscription (Create or Update)
 window.saveEnhancedSubscription = function (formData, itemId = null) {
+  if (!validateSubscriptionForm()) {
+    showToast('Please fill in all required fields.', 'error');
+    return;
+  }
+
   const method = itemId ? 'PUT' : 'POST';
   const url = itemId ? `/api/subscriptions/${itemId}` : '/api/subscriptions';
   const action = itemId ? 'updated' : 'created';
@@ -922,13 +993,26 @@ window.saveEnhancedSubscription = function (formData, itemId = null) {
       return response.json();
     })
     .then(data => {
-      showToast(`Subscription ${action} successfully`, 'success');
-      closeModal('subscriptionModal');
-      // Reload page or update UI
-      setTimeout(() => window.location.reload(), 500);
+      const customerName = subscriptionModalState.selectedCustomerName || formData.customer_name;
+      showToast(`Success: ${formData.vendor_name} subscription ${action} for ${customerName || 'customer'}`, 'success');
+
+      // Close modal
+      const modal = document.getElementById('subscriptionModal');
+      if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+          modal.style.display = 'none';
+          document.body.classList.remove('modal-open');
+          document.body.style.paddingRight = '';
+        }, 300);
+      }
+
+      // Refresh the page to show new data
+      // In a full SPA this would re-fetch just the table, but for now reload is safest
+      setTimeout(() => window.location.reload(), 1000); // 1s delay to let user see toast
     })
     .catch(error => {
-      showToast(`Error: ${error.message}`, 'error');
       console.error('Error saving subscription:', error);
+      showToast(error.message || 'Error saving subscription', 'error');
     });
 };

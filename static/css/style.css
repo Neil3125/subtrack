@@ -905,6 +905,54 @@ select[name="customer_id"] {
   grid-template-columns: repeat(5, 1fr);
 }
 
+/* Grouped form fields in grid */
+.form-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .form-section {
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+    /* Align bottoms of inputs */
+  }
+
+  .form-section .form-group[style*="grid-column: span 2"] {
+    grid-column: span 2;
+  }
+}
+
+/* Dashboard Card Contrast */
+.card .text-xs.text-secondary {
+  color: var(--color-primary);
+  /* Make 'Click to view' more visible */
+  opacity: 0.8;
+  font-weight: 500;
+  margin-top: auto;
+  /* Push to bottom if flex column */
+}
+
+.card:hover .text-xs.text-secondary {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* Fix icon spacing and alignment */
+.value-card .icon,
+.stat-card .icon {
+  margin-right: var(--space-2);
+  vertical-align: text-bottom;
+}
+
+.form-label .icon {
+  margin-right: 6px;
+  vertical-align: -2px;
+  /* Slight optical adjustment */
+  color: var(--color-text-secondary);
+}
+
 /* Responsive grid - larger screens first */
 @media (max-width: 1400px) {
   .grid-cols-5 {
