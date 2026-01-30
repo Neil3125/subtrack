@@ -16,22 +16,26 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-4 mb-8">
-        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 0ms; cursor: pointer;" onclick="openModal('totalCustomersModal')">
+        <div class="card card-hover stat-card animate-slide-in clickable-card"
+            style="animation-delay: 0ms; cursor: pointer;" onclick="openModal('totalCustomersModal')">
             <div class="text-sm text-secondary mb-2">Total Customers</div>
             <div class="text-3xl font-bold text-primary mb-2">{{ total_customers }}</div>
             <div class="text-xs text-secondary">Click to view details →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 100ms; cursor: pointer;" onclick="openModal('categoriesModal')">
+        <div class="card card-hover stat-card animate-slide-in clickable-card"
+            style="animation-delay: 100ms; cursor: pointer;" onclick="openModal('categoriesModal')">
             <div class="text-sm text-secondary mb-2">Categories</div>
             <div class="text-3xl font-bold text-success mb-2">{{ categories_count }}</div>
             <div class="text-xs text-secondary">Click to view breakdown →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 200ms; cursor: pointer;" onclick="openModal('countriesModal')">
+        <div class="card card-hover stat-card animate-slide-in clickable-card"
+            style="animation-delay: 200ms; cursor: pointer;" onclick="openModal('countriesModal')">
             <div class="text-sm text-secondary mb-2">Countries</div>
             <div class="text-3xl font-bold text-warning mb-2">{{ countries_count }}</div>
             <div class="text-xs text-secondary">Click to view breakdown →</div>
         </div>
-        <div class="card card-hover stat-card animate-slide-in clickable-card" style="animation-delay: 300ms; cursor: pointer;" onclick="openModal('groupsModal')">
+        <div class="card card-hover stat-card animate-slide-in clickable-card"
+            style="animation-delay: 300ms; cursor: pointer;" onclick="openModal('groupsModal')">
             <div class="text-sm text-secondary mb-2">In Groups</div>
             <div class="text-3xl font-bold text-info mb-2">{{ in_groups_count }}</div>
             <div class="text-xs text-secondary">Click to view details →</div>
@@ -61,7 +65,8 @@
             </div>
             <div class="form-group flex-1" style="min-width: 200px;">
                 <label class="form-label">Search</label>
-                <input type="text" class="form-input" id="filter-search" placeholder="Search by name, email..." oninput="filterCustomers()">
+                <input type="text" class="form-input" id="filter-search" placeholder="Search by name, email..."
+                    oninput="filterCustomers()">
             </div>
             <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
         </div>
@@ -78,22 +83,20 @@
             <table class="table" id="customers-table">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Country</th>
-                        <th>Category</th>
-                        <th>Group</th>
-                        <th>Subscriptions</th>
+                        <th data-sortable="true" data-sort-type="text">Name</th>
+                        <th data-sortable="true" data-sort-type="text">Email</th>
+                        <th data-sortable="true" data-sort-type="text">Phone</th>
+                        <th data-sortable="true" data-sort-type="text">Country</th>
+                        <th data-sortable="true" data-sort-type="text">Category</th>
+                        <th data-sortable="true" data-sort-type="text">Group</th>
+                        <th data-sortable="true" data-sort-type="number">Subscriptions</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for customer in customers %}
-                    <tr class="customer-row" 
-                        data-category="{{ customer.category_id }}"
-                        data-country="{{ customer.country or '' }}"
-                        data-name="{{ customer.name|lower }}"
+                    <tr class="customer-row" data-category="{{ customer.category_id }}"
+                        data-country="{{ customer.country or '' }}" data-name="{{ customer.name|lower }}"
                         data-email="{{ (customer.email or '')|lower }}">
                         <td class="font-medium">
                             <a href="/customers/{{ customer.id }}" class="text-primary hover:underline">
@@ -111,48 +114,54 @@
                         </td>
                         <td>
                             {% if customer.categories and customer.categories|length > 0 %}
-                                <a href="/categories/{{ customer.categories[0].id }}" class="badge badge-primary">
-                                    {{ customer.categories[0].name }}
-                                </a>
-                                {% if customer.categories|length > 1 %}
-                                <span class="group-count-badge" title="Also in: {% for cat in customer.categories[1:] %}{{ cat.name }}{% if not loop.last %}, {% endif %}{% endfor %}">
-                                    +{{ customer.categories|length - 1 }}
-                                </span>
-                                {% endif %}
+                            <a href="/categories/{{ customer.categories[0].id }}" class="badge badge-primary">
+                                {{ customer.categories[0].name }}
+                            </a>
+                            {% if customer.categories|length > 1 %}
+                            <span class="group-count-badge"
+                                title="Also in: {% for cat in customer.categories[1:] %}{{ cat.name }}{% if not loop.last %}, {% endif %}{% endfor %}">
+                                +{{ customer.categories|length - 1 }}
+                            </span>
+                            {% endif %}
                             {% elif customer.primary_category %}
-                                <a href="/categories/{{ customer.primary_category.id }}" class="badge badge-primary">
-                                    {{ customer.primary_category.name }}
-                                </a>
+                            <a href="/categories/{{ customer.primary_category.id }}" class="badge badge-primary">
+                                {{ customer.primary_category.name }}
+                            </a>
                             {% else %}
-                                <span class="text-secondary">-</span>
+                            <span class="text-secondary">-</span>
                             {% endif %}
                         </td>
                         <td>
                             {% if customer.groups and customer.groups|length > 0 %}
-                                <a href="/groups/{{ customer.groups[0].id }}" class="badge badge-success">
-                                    {{ customer.groups[0].name }}
-                                </a>
-                                {% if customer.groups|length > 1 %}
-                                <span class="group-count-badge" title="Also in: {% for grp in customer.groups[1:] %}{{ grp.name }}{% if not loop.last %}, {% endif %}{% endfor %}">
-                                    +{{ customer.groups|length - 1 }}
-                                </span>
-                                {% endif %}
+                            <a href="/groups/{{ customer.groups[0].id }}" class="badge badge-success">
+                                {{ customer.groups[0].name }}
+                            </a>
+                            {% if customer.groups|length > 1 %}
+                            <span class="group-count-badge"
+                                title="Also in: {% for grp in customer.groups[1:] %}{{ grp.name }}{% if not loop.last %}, {% endif %}{% endfor %}">
+                                +{{ customer.groups|length - 1 }}
+                            </span>
+                            {% endif %}
                             {% elif customer.primary_group %}
-                                <a href="/groups/{{ customer.primary_group.id }}" class="badge badge-success">
-                                    {{ customer.primary_group.name }}
-                                </a>
+                            <a href="/groups/{{ customer.primary_group.id }}" class="badge badge-success">
+                                {{ customer.primary_group.name }}
+                            </a>
                             {% else %}
-                                <span class="text-secondary">-</span>
+                            <span class="text-secondary">-</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td data-sort-value="{{ customer.subscriptions|length }}">
                             <span class="badge badge-info">{{ customer.subscriptions|length }}</span>
                         </td>
                         <td>
                             <div class="flex gap-1">
-                                <a href="/customers/{{ customer.id }}" class="btn btn-sm btn-secondary" title="View">👁️</a>
-                                <button class="btn btn-sm btn-secondary" onclick="loadEditData('customer', {{ customer.id }})" title="Edit">✏️</button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteItem('customer', {{ customer.id }}, '{{ customer.name }}')" title="Delete">🗑️</button>
+                                <a href="/customers/{{ customer.id }}" class="btn btn-sm btn-secondary"
+                                    title="View">👁️</a>
+                                <button class="btn btn-sm btn-secondary"
+                                    onclick="loadEditData('customer', {{ customer.id }})" title="Edit">✏️</button>
+                                <button class="btn btn-sm btn-danger"
+                                    onclick="deleteItem('customer', {{ customer.id }}, '{{ customer.name }}')"
+                                    title="Delete">🗑️</button>
                             </div>
                         </td>
                     </tr>
@@ -186,7 +195,8 @@
                     <span class="badge badge-primary">{{ item.count }}</span>
                 </div>
                 <div class="progress" style="height: 6px;">
-                    <div class="progress-bar" style="width: {{ (item.count / total_customers * 100) if total_customers > 0 else 0 }}%;"></div>
+                    <div class="progress-bar"
+                        style="width: {{ (item.count / total_customers * 100) if total_customers > 0 else 0 }}%;"></div>
                 </div>
             </div>
             {% endfor %}
@@ -208,7 +218,9 @@
                     <span class="badge badge-secondary">{{ item.count }}</span>
                 </div>
                 <div class="progress" style="height: 6px;">
-                    <div class="progress-bar" style="width: {{ (item.count / total_customers * 100) if total_customers > 0 else 0 }}%; background: var(--color-success);"></div>
+                    <div class="progress-bar"
+                        style="width: {{ (item.count / total_customers * 100) if total_customers > 0 else 0 }}%; background: var(--color-success);">
+                    </div>
                 </div>
             </div>
             {% endfor %}
@@ -260,13 +272,17 @@
             {% if category_breakdown %}
             <div class="space-y-3">
                 {% for item in category_breakdown %}
-                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-bg-secondary);">
+                <div class="flex justify-between items-center p-3 rounded"
+                    style="background: var(--color-bg-secondary);">
                     <div class="flex items-center gap-2">
-                        <a href="/categories/{{ item.id }}" class="text-primary font-medium hover:underline">{{ item.name }}</a>
+                        <a href="/categories/{{ item.id }}" class="text-primary font-medium hover:underline">{{
+                            item.name }}</a>
                     </div>
                     <div class="flex items-center gap-3">
                         <div class="progress" style="width: 100px; height: 6px;">
-                            <div class="progress-bar" style="width: {{ (item.count / total_customers * 100) if total_customers > 0 else 0 }}%;"></div>
+                            <div class="progress-bar"
+                                style="width: {{ (item.count / total_customers * 100) if total_customers > 0 else 0 }}%;">
+                            </div>
                         </div>
                         <span class="badge badge-primary">{{ item.count }}</span>
                     </div>
@@ -291,11 +307,14 @@
             {% if country_breakdown %}
             <div class="space-y-3" style="max-height: 400px; overflow-y: auto;">
                 {% for item in country_breakdown %}
-                <div class="flex justify-between items-center p-3 rounded" style="background: var(--color-bg-secondary);">
+                <div class="flex justify-between items-center p-3 rounded"
+                    style="background: var(--color-bg-secondary);">
                     <span class="font-medium">{{ item.country or 'Not Specified' }}</span>
                     <div class="flex items-center gap-3">
                         <div class="progress" style="width: 100px; height: 6px;">
-                            <div class="progress-bar" style="width: {{ (item.count / total_customers * 100) if total_customers > 0 else 0 }}%; background: var(--color-success);"></div>
+                            <div class="progress-bar"
+                                style="width: {{ (item.count / total_customers * 100) if total_customers > 0 else 0 }}%; background: var(--color-success);">
+                            </div>
                         </div>
                         <span class="badge badge-secondary">{{ item.count }}</span>
                     </div>
@@ -339,20 +358,24 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for customer in customers if customer.primary_group or (customer.groups and customer.groups|length > 0) %}
+                        {% for customer in customers if customer.primary_group or (customer.groups and
+                        customer.groups|length > 0) %}
                         <tr>
                             <td class="font-medium" style="padding: 12px 16px;">
-                                <a href="/customers/{{ customer.id }}" class="text-primary hover:underline">{{ customer.name }}</a>
+                                <a href="/customers/{{ customer.id }}" class="text-primary hover:underline">{{
+                                    customer.name }}</a>
                             </td>
                             <td style="padding: 12px 16px;">
                                 <div class="flex flex-wrap gap-2">
-                                {% if customer.groups %}
+                                    {% if customer.groups %}
                                     {% for grp in customer.groups %}
-                                    <a href="/groups/{{ grp.id }}" class="badge badge-success" style="white-space: nowrap;">{{ grp.name }}</a>
+                                    <a href="/groups/{{ grp.id }}" class="badge badge-success"
+                                        style="white-space: nowrap;">{{ grp.name }}</a>
                                     {% endfor %}
-                                {% elif customer.primary_group %}
-                                    <a href="/groups/{{ customer.primary_group.id }}" class="badge badge-success">{{ customer.primary_group.name }}</a>
-                                {% endif %}
+                                    {% elif customer.primary_group %}
+                                    <a href="/groups/{{ customer.primary_group.id }}" class="badge badge-success">{{
+                                        customer.primary_group.name }}</a>
+                                    {% endif %}
                                 </div>
                             </td>
                             <td style="padding: 12px 16px;">
@@ -374,38 +397,38 @@
 </div>
 
 <script>
-function filterCustomers() {
-    const categoryFilter = document.getElementById('filter-category').value;
-    const countryFilter = document.getElementById('filter-country').value;
-    const searchFilter = document.getElementById('filter-search').value.toLowerCase();
-    
-    const rows = document.querySelectorAll('.customer-row');
-    let visibleCount = 0;
-    
-    rows.forEach(row => {
-        const category = row.dataset.category;
-        const country = row.dataset.country;
-        const name = row.dataset.name;
-        const email = row.dataset.email;
-        
-        let show = true;
-        
-        if (categoryFilter && category !== categoryFilter) show = false;
-        if (countryFilter && country !== countryFilter) show = false;
-        if (searchFilter && !name.includes(searchFilter) && !email.includes(searchFilter)) show = false;
-        
-        row.style.display = show ? '' : 'none';
-        if (show) visibleCount++;
-    });
-    
-    document.getElementById('visible-count').textContent = `${visibleCount} customers`;
-}
+    function filterCustomers() {
+        const categoryFilter = document.getElementById('filter-category').value;
+        const countryFilter = document.getElementById('filter-country').value;
+        const searchFilter = document.getElementById('filter-search').value.toLowerCase();
 
-function clearFilters() {
-    document.getElementById('filter-category').value = '';
-    document.getElementById('filter-country').value = '';
-    document.getElementById('filter-search').value = '';
-    filterCustomers();
-}
+        const rows = document.querySelectorAll('.customer-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const category = row.dataset.category;
+            const country = row.dataset.country;
+            const name = row.dataset.name;
+            const email = row.dataset.email;
+
+            let show = true;
+
+            if (categoryFilter && category !== categoryFilter) show = false;
+            if (countryFilter && country !== countryFilter) show = false;
+            if (searchFilter && !name.includes(searchFilter) && !email.includes(searchFilter)) show = false;
+
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+
+        document.getElementById('visible-count').textContent = `${visibleCount} customers`;
+    }
+
+    function clearFilters() {
+        document.getElementById('filter-category').value = '';
+        document.getElementById('filter-country').value = '';
+        document.getElementById('filter-search').value = '';
+        filterCustomers();
+    }
 </script>
 {% endblock %}

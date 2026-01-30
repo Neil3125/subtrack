@@ -127,14 +127,14 @@
                         <th style="width: 40px;">
                             <input type="checkbox" id="select-all" onchange="toggleSelectAll()">
                         </th>
-                        <th>Vendor</th>
-                        <th>Plan</th>
-                        <th>Customer</th>
-                        <th>Category</th>
-                        <th>Cost</th>
-                        <th>Cycle</th>
-                        <th>Status</th>
-                        <th>Next Renewal</th>
+                        <th data-sortable="true" data-sort-type="text">Vendor</th>
+                        <th data-sortable="true" data-sort-type="text">Plan</th>
+                        <th data-sortable="true" data-sort-type="text">Customer</th>
+                        <th data-sortable="true" data-sort-type="text">Category</th>
+                        <th data-sortable="true" data-sort-type="number">Cost</th>
+                        <th data-sortable="true" data-sort-type="text">Cycle</th>
+                        <th data-sortable="true" data-sort-type="text">Status</th>
+                        <th data-sortable="true" data-sort-type="number">Next Renewal</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -179,7 +179,7 @@
                             </a>
                             {% endif %}
                         </td>
-                        <td>${{ "%.2f"|format(sub.cost) }} {{ sub.currency }}</td>
+                        <td data-sort-value="{{ sub.cost }}">${{ "%.2f"|format(sub.cost) }} {{ sub.currency }}</td>
                         <td><span class="badge badge-secondary">{{ sub.billing_cycle.value }}</span></td>
                         <td>
                             {% if sub.status.value == 'active' %}
@@ -192,7 +192,7 @@
                             <span class="badge badge-secondary">{{ sub.status.value }}</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td data-sort-value="{{ sub.days_until_renewal() if sub.next_renewal_date else 9999 }}">
                             {% if sub.next_renewal_date %}
                             {% set days = sub.days_until_renewal() %}
                             {% if days < 0 %} <span class="badge badge-danger">{{ -days }}d overdue</span>
