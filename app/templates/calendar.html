@@ -141,11 +141,11 @@
     }
 
     [data-theme="dark"] {
-        --grid-border: #24262b;
-        --cell-bg: #111111;
-        --cell-hover: #1f2125;
-        --text-primary: #e6e6e6;
-        --text-secondary: #b0b1b8;
+        --grid-border: #3a3a3a;
+        --cell-bg: #1a1a1a;
+        --cell-hover: #252525;
+        --text-primary: #f0f0f0;
+        --text-secondary: #c0c0c0;
         --primary-color: #579dff;
         --btn-hover-bg: #2c2e33;
     }
@@ -286,7 +286,21 @@
     }
 
     [data-theme="dark"] .calendar-cell.today {
-        background-color: rgba(87, 157, 255, 0.1);
+        background-color: rgba(87, 157, 255, 0.2);
+        /* Increased opacity */
+        border: 1px solid rgba(87, 157, 255, 0.4);
+    }
+
+    [data-theme="dark"] .day-name {
+        color: #e0e0e0;
+        /* Brighter header text */
+        font-weight: 600;
+    }
+
+    [data-theme="dark"] .btn-icon-cal {
+        border-color: #444;
+        color: #f0f0f0;
+        /* Ensure icon is visible */
     }
 
     .cell-date {
@@ -416,6 +430,12 @@
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
         padding: 0;
         overflow: hidden;
+    }
+
+    [data-theme="dark"] #dayModal .modal-content {
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+        background: #1e1e24;
     }
 
     .modal-header {
