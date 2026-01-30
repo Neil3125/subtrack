@@ -363,19 +363,14 @@ function initCollapsibleSections() {
 
 window.toggleSmartSuggestions = function () {
   const content = document.getElementById('smart-suggestions-content');
-  const toggle = document.getElementById('smart-suggestions-toggle');
-  const header = document.querySelector('.modal-section-collapsible .collapsible-header');
-
-  if (!content || !toggle || !header) return;
+  if (!content) return;
 
   const isOpen = content.style.display !== 'none';
 
   if (isOpen) {
     content.style.display = 'none';
-    header.classList.remove('open');
   } else {
     content.style.display = 'block';
-    header.classList.add('open');
 
     // Load suggestions if not already loaded
     if (subscriptionModalState.selectedCustomerId && !content.dataset.loaded) {
@@ -720,60 +715,7 @@ function loadVendors() {
 
 // ==================== TEMPLATES LOGIC ====================
 
-window.toggleTemplateDropdown = function () {
-  const dropdown = document.getElementById('subscription-templates-dropdown');
-  const list = document.getElementById('subscription-templates-list');
-
-  if (!dropdown || !list) return;
-
-  const isOpen = dropdown.style.display === 'block';
-
-  if (isOpen) {
-    dropdown.style.display = 'none';
-  } else {
-    dropdown.style.display = 'block';
-    loadSubscriptionTemplates();
-  }
-};
-
-window.loadSubscriptionTemplates = function () {
-  const list = document.getElementById('subscription-templates-list');
-  if (!list) return;
-
-  list.innerHTML = '<div class="p-3 text-center text-sm text-secondary">Loading templates...</div>';
-
-  fetch('/api/subscriptions/templates/all')
-    .then(res => res.json())
-    .then(templates => {
-      if (!templates || templates.length === 0) {
-        list.innerHTML = '<div class="p-3 text-center text-sm text-secondary">No templates found.<br>Create subscriptions to build history.</div>';
-        return;
-      }
-
-      let html = '';
-      templates.forEach(t => {
-        // Escape quotes for onclick
-        const vendorEsc = t.vendor_name.replace(/'/g, "\\'");
-        const planEsc = (t.plan_name || '').replace(/'/g, "\\'");
-
-        html += `
-                <div class="p-2 hover:bg-bg-secondary cursor-pointer border-b border-border last:border-0 flex justify-between items-center" 
-                     onclick="applySubscriptionTemplate('${vendorEsc}', '${planEsc}', ${t.cost}, '${t.currency}')">
-                    <div>
-                        <div class="font-medium text-sm text-text">${t.vendor_name}</div>
-                        <div class="text-xs text-secondary">${t.plan_name || 'Basic'}</div>
-                    </div>
-                    <div class="text-sm font-semibold text-primary">${t.currency} ${t.cost}</div>
-                </div>
-                `;
-      });
-      list.innerHTML = html;
-    })
-    .catch(err => {
-      console.error(err);
-      list.innerHTML = '<div class="p-3 text-center text-sm text-danger">Error loading templates</div>';
-    });
-};
+// Templates logic removed - moved to templates-manager.js
 
 window.applySubscriptionTemplate = function (vendor, plan, cost, currency) {
   // Auto-fill form fields

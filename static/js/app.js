@@ -4118,25 +4118,6 @@ window.renderSidePanelKeyValue = function (label, value, highlight = false) {
 };
 
 // ==================== IMPROVED MODAL TABS ====================
-window.switchModalTab = function (element, tabId) {
-  // 1. Remove active class from all tabs in this container
-  const tabContainer = element.closest('.modal-tabs');
-  const tabs = tabContainer.querySelectorAll('.modal-tab-item');
-  tabs.forEach(t => t.classList.remove('active'));
-
-  // 2. Add active class to clicked tab
-  element.classList.add('active');
-
-  // 3. Hide all tab panes in the parent modal body
-  const modalContent = element.closest('.modal-body') || element.closest('.modal-content');
-  const panes = modalContent.querySelectorAll('.tab-pane');
-  panes.forEach(p => p.classList.remove('active'));
-
-  // 4. Show the target pane
-  const targetPane = modalContent.querySelector(`#${tabId}`);
-  if (targetPane) {
-    targetPane.classList.add('active');
-  }
-};
+// Tabs logic removed - flattened layout used now
 
 

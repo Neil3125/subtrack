@@ -590,203 +590,186 @@
             </div>
 
             <form onsubmit="handleFormSubmit(event, saveEnhancedSubscription)" id="subscription-form">
-                <div class="modal-body modal-body-improved" style="overflow-y: auto; flex: 1; padding: 0;">
+                <div class="modal-body modal-body-improved" style="overflow-y: auto; flex: 1; padding: 24px;">
 
-                    <!-- Tabs Header -->
-                    <div class="modal-tabs" style="padding: 0 24px; margin-top: 16px;">
-                        <div class="modal-tab-item active" onclick="switchModalTab(this, 'tab-basics')">Basics</div>
-                        <div class="modal-tab-item" onclick="switchModalTab(this, 'tab-schedule')">Schedule</div>
-                        <div class="modal-tab-item" onclick="switchModalTab(this, 'tab-org')">Organization</div>
-                        <div class="modal-tab-item" onclick="switchModalTab(this, 'tab-notes')">Notes</div>
+                    <!-- 1. ASSIGNMENT SECTION (Customer & Category) -->
+                    <div class="form-section mb-6">
+                        <h3
+                            style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 12px; letter-spacing: 0.05em;">
+                            Assignment</h3>
+
+                        <!-- Customer Selection -->
+                        <div class="form-group mb-4">
+                            <label class="form-label">Assigned Customer</label>
+                            <input type="hidden" name="customer_id" id="subscription-customer-id" required>
+
+                            <div class="customer-selector-wrapper" id="customer-selector-wrapper">
+                                <div class="customer-selected-display" id="customer-selected-display"
+                                    onclick="toggleCustomerDropdown()">
+                                    <span class="customer-selected-name" id="selected-customer-name">Select
+                                        customer...</span>
+                                    <span class="customer-selected-arrow">▼</span>
+                                </div>
+
+                                <div class="customer-dropdown-panel" id="customer-dropdown-panel"
+                                    style="display: none;">
+                                    <div class="dropdown-search-box">
+                                        <input type="text" class="dropdown-search-input" placeholder="Search..."
+                                            id="subscription-customer-search"
+                                            oninput="filterEnhancedDropdown('subscription-customer', this.value)">
+                                    </div>
+                                    <div class="dropdown-list" id="subscription-customer-list" style="display: none;">
+                                    </div>
+                                    <div class="dropdown-loading" id="subscription-customer-loading">Loading...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categories Selection -->
+                        <div class="form-group">
+                            <label class="form-label">Categories</label>
+                            <input type="hidden" name="category_ids" id="subscription-category-ids" value="">
+                            <input type="hidden" name="category_id" id="subscription-category-id" value="">
+                            <!-- Legacy -->
+
+                            <div class="categories-chips-container" id="subscription-categories-wrapper">
+                                <div class="categories-chips-display" id="subscription-categories-tags"
+                                    onclick="openCategorySelector()">
+                                    <span class="categories-placeholder">Click to select...</span>
+                                </div>
+
+                                <div class="categories-dropdown" id="subscription-categories-dropdown"
+                                    style="display: none;">
+                                    <div class="categories-dropdown-header">
+                                        <span>Select categories</span>
+                                        <button type="button" class="categories-close"
+                                            onclick="closeCategorySelector()">✕</button>
+                                    </div>
+                                    <div class="categories-dropdown-list">
+                                        {% for category in categories|default([]) %}
+                                        <div class="categories-dropdown-item tags-dropdown-item"
+                                            data-id="{{ category.id }}" data-name="{{ category.name }}"
+                                            onclick="toggleCategoryTag(this)">
+                                            <span class="categories-item-checkbox"></span>
+                                            <span class="categories-item-label">{{ category.name }}</span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div style="padding: 0 24px 24px 24px;">
-                        <!-- TAB 1: BASICS -->
-                        <div id="tab-basics" class="tab-pane active">
-                            <!-- SECTION: SMART SUGGESTIONS (COLLAPSIBLE) -->
-                            <div class="modal-section modal-section-collapsible"
-                                style="margin-bottom: 20px; border: 1px solid var(--color-border); border-radius: 8px; overflow: hidden;">
-                                <div class="collapsible-header" onclick="toggleSmartSuggestions()"
-                                    style="background: var(--color-bg-secondary); padding: 12px 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
-                                    <div class="collapsible-title"
-                                        style="display: flex; align-items: center; gap: 8px;">
-                                        <span class="collapsible-icon">✨</span>
-                                        <span class="collapsible-text" style="font-weight: 500;">Smart
-                                            suggestions</span>
-                                        <span class="collapsible-subtitle"
-                                            style="font-size: 0.85em; opacity: 0.7;">(based on this customer)</span>
-                                    </div>
-                                    <button type="button" class="collapsible-toggle" id="smart-suggestions-toggle"
-                                        style="background: none; border: none; font-size: 12px;">
-                                        <span class="toggle-icon">▼</span>
-                                    </button>
+                    <hr style="border: 0; border-top: 1px solid var(--color-border); margin: 24px 0;">
+
+                    <!-- 2. SUBSCRIPTION DETAILS -->
+                    <div class="form-section mb-6">
+                        <h3
+                            style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 12px; letter-spacing: 0.05em;">
+                            Subscription Details</h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                    <label class="form-label">Vendor Name *</label>
+                                    <span style="font-size: 11px; color: var(--color-primary); cursor: pointer;"
+                                        onclick="toggleSmartSuggestions()">Show Suggestions</span>
                                 </div>
-                                <div class="collapsible-content" id="smart-suggestions-content"
-                                    style="display: none; padding: 16px; background: var(--color-bg-card);">
-                                    <div id="suggestions-content" class="suggestions-content">
+                                <input type="text" name="vendor_name" id="subscription-vendor-name" class="form-input"
+                                    required placeholder="Netflix, Spotify, AWS..." autocomplete="off">
+
+                                <!-- SMART SUGGESTIONS (Always present near vendor) -->
+                                <div id="smart-suggestions-content" style="margin-top: 8px; display: none;">
+                                    <div id="suggestions-content"
+                                        class="suggestions-content p-3 bg-bg-secondary rounded border border-border">
                                         <!-- Populated by JS -->
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Vendor Name *</label>
-                                    <input type="text" name="vendor_name" id="subscription-vendor-name"
-                                        class="form-input" required placeholder="Netflix, Spotify, AWS..."
-                                        autocomplete="off">
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Cost *</label>
-                                    <div class="input-with-prefix">
-                                        <span class="input-prefix">$</span>
-                                        <input type="number" step="0.01" name="cost" class="form-input" required
-                                            placeholder="9.99">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Currency</label>
-                                    <select name="currency" class="form-select">
-                                        <option value="USD">USD - US Dollar</option>
-                                        <option value="EUR">EUR - Euro</option>
-                                        <option value="GBP">GBP - British Pound</option>
-                                        <option value="CAD">CAD - Canadian Dollar</option>
-                                        <option value="AUD">AUD - Australian Dollar</option>
-                                        <option value="JPY">JPY - Japanese Yen</option>
-                                        <option value="INR">INR - Indian Rupee</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Plan / Tier</label>
-                                    <input type="text" name="plan_name" class="form-input"
-                                        placeholder="Premium, Family, Basic...">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Status</label>
-                                    <select name="status" class="form-select">
-                                        <option value="active">Active</option>
-                                        <option value="paused">Paused</option>
-                                        <option value="cancelled">Cancelled</option>
-                                    </select>
-                                </div>
-                            </div>
                         </div>
 
-                        <!-- TAB 2: SCHEDULE -->
-                        <div id="tab-schedule" class="tab-pane">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Billing Cycle *</label>
-                                    <select name="billing_cycle" class="form-select" required>
-                                        <option value="monthly">Monthly</option>
-                                        <option value="yearly">Yearly</option>
-                                        <option value="quarterly">Quarterly</option>
-                                        <option value="weekly">Weekly</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">Start Date *</label>
-                                    <input type="date" name="start_date" class="form-input" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Next Renewal *</label>
-                                    <input type="date" name="next_renewal_date" class="form-input" required>
-                                </div>
-                            </div>
-
-                            <div class="info-box info-box-info">
-                                ℹ️ <strong>Tip:</strong> The <em>Next Renewal</em> date is automatically calculated, but
-                                you can adjust it if needed.
-                            </div>
-                        </div>
-
-                        <!-- TAB 3: ORGANIZATION -->
-                        <div id="tab-org" class="tab-pane">
-                            <!-- Customer Selection Card -->
-                            <div class="card p-4 mb-4" style="border: 1px solid var(--color-border);">
-                                <label class="form-label mb-2 block">Assigned Customer</label>
-                                <input type="hidden" name="customer_id" id="subscription-customer-id" required>
-
-                                <div class="customer-selector-wrapper" id="customer-selector-wrapper">
-                                    <div class="customer-selected-display" id="customer-selected-display"
-                                        onclick="toggleCustomerDropdown()">
-                                        <span class="customer-selected-name" id="selected-customer-name">Select
-                                            customer...</span>
-                                        <span class="customer-selected-arrow">▼</span>
-                                    </div>
-
-                                    <div class="customer-dropdown-panel" id="customer-dropdown-panel"
-                                        style="display: none;">
-                                        <div class="dropdown-search-box">
-                                            <input type="text" class="dropdown-search-input" placeholder="Search..."
-                                                id="subscription-customer-search"
-                                                oninput="filterEnhancedDropdown('subscription-customer', this.value)">
-                                        </div>
-                                        <div class="dropdown-list" id="subscription-customer-list"
-                                            style="display: none;"></div>
-                                        <div class="dropdown-loading" id="subscription-customer-loading">Loading...
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Categories Selection Card -->
-                            <div class="card p-4 mb-4" style="border: 1px solid var(--color-border);">
-                                <label class="form-label mb-2 block">Categories</label>
-                                <input type="hidden" name="category_ids" id="subscription-category-ids" value="">
-                                <input type="hidden" name="category_id" id="subscription-category-id" value="">
-                                <!-- Legacy -->
-
-                                <div class="categories-chips-container" id="subscription-categories-wrapper">
-                                    <div class="categories-chips-display" id="subscription-categories-tags"
-                                        onclick="openCategorySelector()">
-                                        <span class="categories-placeholder">Click to select...</span>
-                                    </div>
-
-                                    <div class="categories-dropdown" id="subscription-categories-dropdown"
-                                        style="display: none;">
-                                        <div class="categories-dropdown-header">
-                                            <span>Select categories</span>
-                                            <button type="button" class="categories-close"
-                                                onclick="closeCategorySelector()">✕</button>
-                                        </div>
-                                        <div class="categories-dropdown-list">
-                                            {% for category in categories|default([]) %}
-                                            <div class="categories-dropdown-item tags-dropdown-item"
-                                                data-id="{{ category.id }}" data-name="{{ category.name }}"
-                                                onclick="toggleCategoryTag(this)">
-                                                <span class="categories-item-checkbox"></span>
-                                                <span class="categories-item-label">{{ category.name }}</span>
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TAB 4: NOTES -->
-                        <div id="tab-notes" class="tab-pane">
+                        <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Description / Notes</label>
-                                <textarea name="notes" class="form-textarea" rows="6"
-                                    placeholder="Add any details, contract info, or cancellation terms here..."></textarea>
+                                <label class="form-label">Cost *</label>
+                                <div class="input-with-prefix">
+                                    <span class="input-prefix">$</span>
+                                    <input type="number" step="0.01" name="cost" class="form-input" required
+                                        placeholder="9.99">
+                                </div>
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">Currency</label>
+                                <select name="currency" class="form-select">
+                                    <option value="USD">USD - US Dollar</option>
+                                    <option value="EUR">EUR - Euro</option>
+                                    <option value="GBP">GBP - British Pound</option>
+                                    <option value="CAD">CAD - Canadian Dollar</option>
+                                    <option value="AUD">AUD - Australian Dollar</option>
+                                    <option value="JPY">JPY - Japanese Yen</option>
+                                    <option value="INR">INR - Indian Rupee</option>
+                                </select>
+                            </div>
+                        </div>
 
-                            <div class="form-group mt-4">
-                                <label class="form-label">Service Country</label>
-                                <input type="text" name="country" class="form-input"
-                                    placeholder="e.g. US, UK (Optional)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Plan / Tier</label>
+                                <input type="text" name="plan_name" class="form-input"
+                                    placeholder="Premium, Family, Basic...">
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select name="status" class="form-select">
+                                    <option value="active">Active</option>
+                                    <option value="paused">Paused</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid var(--color-border); margin: 24px 0;">
+
+                    <!-- 3. SCHEDULE -->
+                    <div class="form-section mb-6">
+                        <h3
+                            style="font-size: 0.85rem; text-transform: uppercase; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 12px; letter-spacing: 0.05em;">
+                            Schedule</h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Billing Cycle *</label>
+                                <select name="billing_cycle" class="form-select" required>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="yearly">Yearly</option>
+                                    <option value="quarterly">Quarterly</option>
+                                    <option value="weekly">Weekly</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Start Date *</label>
+                                <input type="date" name="start_date" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Next Renewal *</label>
+                                <input type="date" name="next_renewal_date" class="form-input" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. NOTES -->
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label class="form-label">Description / Notes</label>
+                            <textarea name="notes" class="form-textarea" rows="3"
+                                placeholder="Add any details..."></textarea>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label class="form-label">Service Country</label>
+                            <input type="text" name="country" class="form-input" placeholder="e.g. US, UK (Optional)">
                         </div>
                     </div>
 
