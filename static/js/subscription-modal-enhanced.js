@@ -142,16 +142,17 @@ window.clearCustomerContext = function () {
   subscriptionModalState.selectedCustomerId = null;
   subscriptionModalState.selectedCustomerName = null;
 
-  updateCompactCustomerDisplay(null);
+  // Update input value
+  const searchInput = document.getElementById('subscription-customer-search');
+  if (searchInput) searchInput.value = '';
+
   hideSmartSuggestions();
 
   document.getElementById('subscription-customer-id').value = '';
 
   // Close customer dropdown
   const panel = document.getElementById('customer-dropdown-panel');
-  const wrapper = document.getElementById('customer-selector-wrapper');
   if (panel) panel.style.display = 'none';
-  if (wrapper) wrapper.classList.remove('open');
 };
 
 // ==================== ENHANCED CUSTOMER DROPDOWN ====================
@@ -252,14 +253,10 @@ function preselectCustomer(customerId, customerName) {
   // Update hidden input
   document.getElementById('subscription-customer-id').value = customerId;
 
-  // Update trigger display
-  const trigger = document.getElementById('subscription-customer-trigger');
-  if (trigger) {
-    const textEl = trigger.querySelector('.trigger-text');
-    if (textEl) {
-      textEl.textContent = customerName;
-      textEl.classList.remove('placeholder');
-    }
+  // Update input display
+  const searchInput = document.getElementById('subscription-customer-search');
+  if (searchInput) {
+    searchInput.value = customerName;
   }
 }
 
@@ -301,12 +298,13 @@ function selectEnhancedCustomer(customerId, customerName) {
 
   // Close new customer dropdown
   const panel = document.getElementById('customer-dropdown-panel');
-  const wrapper = document.getElementById('customer-selector-wrapper');
   if (panel) panel.style.display = 'none';
-  if (wrapper) wrapper.classList.remove('open');
 
-  // Update compact display
-  updateCompactCustomerDisplay(customerName);
+  // Update input display
+  const searchInput = document.getElementById('subscription-customer-search');
+  if (searchInput) {
+    searchInput.value = customerName;
+  }
 
   // Activate the card border animation briefly
   const customerCard = document.querySelector('.selection-card-customer');
@@ -673,10 +671,10 @@ function updateCategoryDisplay() {
 
     categoriesToShow.forEach(cat => {
       const tag = document.createElement('div');
-      tag.className = 'category-tag';
+      tag.className = 'chip';
       tag.innerHTML = `
         <span>${cat.name}</span>
-        <span class="category-tag-remove" onclick="event.stopPropagation(); removeCategoryChip(${cat.id})">×</span>
+        <span class="chip-remove" onclick="event.stopPropagation(); removeCategoryChip(${cat.id})">×</span>
       `;
       display.appendChild(tag);
     });
@@ -684,7 +682,9 @@ function updateCategoryDisplay() {
     // Show "+X more" if there are more categories
     if (remainingCount > 0) {
       const moreTag = document.createElement('div');
-      moreTag.className = 'category-tag category-tag-more';
+      moreTag.className = 'chip';
+      moreTag.style.background = 'var(--color-bg-secondary)';
+      moreTag.style.color = 'var(--color-text-secondary)';
       moreTag.innerHTML = `+${remainingCount} more`;
       moreTag.style.cursor = 'pointer';
       moreTag.onclick = () => openCategorySelector();
