@@ -26,6 +26,9 @@ window.initEnhancedSubscriptionModal = function (customerId = null, customerName
     subscriptionModalState.contextMode = false;
     subscriptionModalState.selectedCustomerId = null;
     subscriptionModalState.selectedCustomerName = null;
+
+    // Force clear category display
+    updateSubscriptionCategoryDisplay();
   }
 
   // Set context mode if customer provided
@@ -885,7 +888,7 @@ window.initVendorAutocomplete = function () {
         h.name.toLowerCase().includes(term.toLowerCase())
       );
 
-      // 3. Merge & Sort (Templates First)
+      // 3. Map Templates
       const mappedTemplates = templates.map(t => ({
         type: 'template',
         id: t.id,
@@ -897,9 +900,26 @@ window.initVendorAutocomplete = function () {
         category_id: t.category_id
       }));
 
-      // Avoid duplicates (if template exists, ignore history with exact same name)
-      const templateNames = new Set(mappedTemplates.map(t => t.name.toLowerCase()));
-      const uniqueHistory = history.filter(h => !templateNames.has(h.name.toLowerCase()));
+      // 4. Deduplication Logic
+      // We want to show ALL templates.
+      // We only want to hide HISTORY if there is a TEMPLATE for the same Vendor AND Plan (or generic vendor).
+
+      const templateKeys = new Set(mappedTemplates.map(t => `${t.name.toLowerCase()}|${(t.plan_name || '').toLowerCase()}`));
+
+      // Also block generic history if a generic template exists
+      const vendorHasTemplate = new Set(mappedTemplates.map(t => t.name.toLowerCase()));
+
+      const uniqueHistory = history.filter(h => {
+        // If this history item exactly matches a template (Vendor + Plan), hide it
+        const key = `${h.name.toLowerCase()}|`; // History usually doesn't have plan names in this view, or we treat it as generic
+        // Actually, history items from `get_vendor_stats` are aggregated by Vendor Name.
+        // So if we have ANY template for this vendor, we might want to hide the generic history to encourage template use?
+        // User request: "show multiple templates... under same vendor".
+
+        // Let's hide History item only if it is EXACTLY covered or if we want to prioritize templates.
+        // Current decision: If I have a template for "ESET", hide the generic "ESET" history stats to avoid clutter.
+        return !vendorHasTemplate.has(h.name.toLowerCase());
+      });
 
       const results = [...mappedTemplates, ...uniqueHistory].slice(0, 10);
 
@@ -935,9 +955,13 @@ window.initVendorAutocomplete = function () {
       // Badge & Labels
       let badge = '';
       let label = item.name;
+      let planBadge = '';
+
       if (item.type === 'template') {
         badge = `<span style="font-size: 10px; background: rgba(99, 102, 241, 0.1); color: #818cf8; padding: 2px 8px; border-radius: 99px; border: 1px solid rgba(99,102,241,0.2);">Template</span>`;
-        if (item.plan_name) label += ` <span style="opacity:0.6; font-weight:normal;">— ${item.plan_name}</span>`;
+        if (item.plan_name) {
+          label += ` <span style="opacity:0.9; font-weight:500; color:var(--color-text);"> - ${item.plan_name}</span>`;
+        }
       } else {
         badge = `<span style="font-size: 10px; opacity: 0.5; padding: 2px 6px;">History</span>`;
       }
@@ -961,7 +985,7 @@ window.initVendorAutocomplete = function () {
                     ${badge}
                 </div>
             </div>
-            <div style="font-family:monospace; font-weight:600; font-size:13px; color:var(--color-text-secondary); background:rgba(255,255,255,0.05); padding:4px 8px; rounded:6px;">
+            <div style="font-family:monospace; font-weight:600; font-size:13px; color:var(--color-text-secondary); background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:6px;">
                 ${subText}
             </div>
         `;
