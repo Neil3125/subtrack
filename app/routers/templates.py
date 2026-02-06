@@ -32,11 +32,24 @@ class TemplateResponse(TemplateBase):
 @router.get("", response_model=List[TemplateResponse])
 def list_templates(search: Optional[str] = None, db: Session = Depends(get_db)):
     """List all templates, optionally filtering by search query."""
-    query = db.query(SubscriptionTemplate)
-    if search:
-        search_term = f"%{search}%"
-        query = query.filter(SubscriptionTemplate.vendor_name.ilike(search_term))
-    return query.all()
+    try:
+        query = db.query(SubscriptionTemplate)
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(SubscriptionTemplate.vendor_name.ilike(search_term))
+        return query.all()
+    except Exception as e:
+        print(f"Error listing templates: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/debug/check")
+def debug_check(db: Session = Depends(get_db)):
+    """Debug endpoint to verify table existence and DB connection."""
+    try:
+        count = db.query(SubscriptionTemplate).count()
+        return {"status": "ok", "count": count, "message": "Table exists and is accessible"}
+    except Exception as e:
+        return {"status": "error", "message": str(e), "hint": "Table might not exist. Restart server."}
 
 @router.post("", response_model=TemplateResponse)
 def create_template(template: TemplateCreate, db: Session = Depends(get_db)):
