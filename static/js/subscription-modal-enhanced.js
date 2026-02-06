@@ -805,27 +805,26 @@ function updateCategoryDisplay() {
 // Load vendor stats for autocomplete
 // ==================== VENDOR AUTOCOMPLETE (TYPEAHEAD) ====================
 
+// Debounce Utility (Added for search)
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
 // Load vendor stats AND templates
 window.loadVendors = function () {
-  const p1 = fetch('/api/subscriptions/stats/vendors').then(r => r.json());
-  const p2 = fetch('/api/templates').then(r => r.json()).catch(() => []);
-
-  Promise.all([p1, p2])
-    .then(([stats, templates]) => {
-      // 1. Process Templates (High Priority)
-      const templateItems = (templates || []).map(t => ({
-        type: 'template',
-        name: t.vendor_name,
-        plan_name: t.plan_name,
-        cost: t.cost,
-        currency: t.currency,
-        billing_cycle: t.billing_cycle,
-        category_id: t.category_id,
-        sortKey: t.vendor_name.toLowerCase()
-      }));
-
-      // 2. Process History Stats (Low Priority)
-      const statItems = (stats || []).map(s => ({
+  // Only load stats history here. Templates are now searched dynamically.
+  fetch('/api/subscriptions/stats/vendors')
+    .then(r => r.json())
+    .then(stats => {
+      subscriptionModalState.historyOptions = (stats || []).map(s => ({
         type: 'history',
         name: s.name,
         cost: s.cost,
@@ -834,18 +833,11 @@ window.loadVendors = function () {
         category_id: s.category_id,
         sortKey: s.name.toLowerCase()
       }));
-
-      // Merge: Templates first, then history
-      subscriptionModalState.vendorOptions = [...templateItems, ...statItems];
-
-      subscriptionModalState.vendors = [...new Set([
-        ...(templates || []).map(t => t.vendor_name),
-        ...(stats || []).map(s => s.name)
-      ])].sort();
     })
-    .catch(err => console.error('Error loading vendor data:', err));
+    .catch(err => console.error('Error loading vendor stats:', err));
 };
 
+// Initialize vendor autocomplete listeners
 // Initialize vendor autocomplete listeners
 window.initVendorAutocomplete = function () {
   const input = document.getElementById('subscription-vendor-name');
@@ -861,83 +853,127 @@ window.initVendorAutocomplete = function () {
     suggestionsBox.style.position = 'absolute';
     suggestionsBox.style.width = '100%';
     suggestionsBox.style.zIndex = '100';
-    suggestionsBox.style.maxHeight = '250px';
+    suggestionsBox.style.maxHeight = '300px';
     suggestionsBox.style.overflowY = 'auto';
+    suggestionsBox.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
+    suggestionsBox.style.borderRadius = '12px';
+    suggestionsBox.style.backdropFilter = 'blur(12px)';
+    suggestionsBox.style.border = '1px solid var(--color-border)';
+    suggestionsBox.style.background = 'var(--color-bg-secondary)';
     input.parentNode.style.position = 'relative';
     input.parentNode.appendChild(suggestionsBox);
   }
 
-  // Input event
-  input.addEventListener('input', function (e) {
-    const val = e.target.value;
-    if (val.length < 1) {
+  // Search Function
+  const performSearch = async (term) => {
+    if (term.length < 1) {
       suggestionsBox.style.display = 'none';
       return;
     }
 
-    // Filter vendorOptions (Templates + History)
-    const term = val.toLowerCase();
-    const allMatches = (subscriptionModalState.vendorOptions || []).filter(v =>
-      v.name.toLowerCase().includes(term)
-    );
+    suggestionsBox.style.display = 'block';
+    suggestionsBox.innerHTML = '<div style="padding:12px; text-align:center; color:var(--color-text-secondary);">Searching...</div>';
 
-    allMatches.sort((a, b) => {
-      if (a.type === 'template' && b.type !== 'template') return -1;
-      if (a.type !== 'template' && b.type === 'template') return 1;
-      return a.sortKey.localeCompare(b.sortKey);
-    });
+    try {
+      // 1. Fetch Templates (Server-Side)
+      const templates = await fetch(`/api/templates?search=${encodeURIComponent(term)}`)
+        .then(r => r.json())
+        .catch(() => []);
 
-    const matches = allMatches.slice(0, 10);
+      // 2. Filter History (Client-Side)
+      const history = (subscriptionModalState.historyOptions || []).filter(h =>
+        h.name.toLowerCase().includes(term.toLowerCase())
+      );
 
-    if (matches.length > 0) {
-      suggestionsBox.innerHTML = '';
-      matches.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'dropdown-list-item';
-        div.style.padding = '8px 12px';
-        div.style.cursor = 'pointer';
-        div.style.display = 'flex';
-        div.style.justifyContent = 'space-between';
+      // 3. Merge & Sort (Templates First)
+      const mappedTemplates = templates.map(t => ({
+        type: 'template',
+        id: t.id,
+        name: t.vendor_name,
+        plan_name: t.plan_name,
+        cost: t.cost,
+        currency: t.currency,
+        billing_cycle: t.billing_cycle,
+        category_id: t.category_id
+      }));
 
-        let label = item.name;
-        let subLabel = '';
-        let badge = '';
+      // Avoid duplicates (if template exists, ignore history with exact same name)
+      const templateNames = new Set(mappedTemplates.map(t => t.name.toLowerCase()));
+      const uniqueHistory = history.filter(h => !templateNames.has(h.name.toLowerCase()));
 
-        if (item.type === 'template') {
-          badge = `<span class="badge" style="font-size: 10px; background: var(--color-primary-bg); color: var(--color-primary); margin-left: 6px; padding: 2px 6px; border-radius: 4px;">Template</span>`;
-          if (item.plan_name) label += ` - ${item.plan_name}`;
-        } else {
-          badge = `<span class="badge" style="font-size: 10px; background: var(--color-bg-secondary); color: var(--color-text-tertiary); margin-left: 6px; padding: 2px 6px; border-radius: 4px;">History</span>`;
-        }
+      const results = [...mappedTemplates, ...uniqueHistory].slice(0, 10);
 
-        if (item.cost) subLabel += `${item.currency || '$'}${item.cost}`;
-        if (item.billing_cycle) {
-          let cycle = item.billing_cycle;
-          if (typeof cycle === 'string' && cycle.includes('.')) cycle = cycle.split('.')[1];
-          subLabel += ` / ${cycle}`;
-        }
+      renderSuggestions(results, term);
+    } catch (err) {
+      console.error(err);
+      suggestionsBox.innerHTML = '<div style="padding:12px; text-align:center; color:var(--color-danger);">Error searching</div>';
+    }
+  };
 
-        div.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-            <div style="display: flex; align-items: center;">
-                <span style="font-weight: 500;">${label}</span>
-                ${badge}
+  const debouncedSearch = debounce((e) => performSearch(e.target.value), 300);
+
+  input.addEventListener('input', debouncedSearch);
+
+  // Render logic
+  function renderSuggestions(items, term) {
+    suggestionsBox.innerHTML = '';
+    if (items.length === 0) {
+      suggestionsBox.innerHTML = `<div style="padding:12px; text-align:center; color:var(--color-text-tertiary);">No matches for "${term}"</div>`;
+      return;
+    }
+
+    items.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'dropdown-list-item';
+      div.style.padding = '10px 14px';
+      div.style.cursor = 'pointer';
+      div.style.borderBottom = '1px solid var(--color-border)';
+      div.style.display = 'flex';
+      div.style.justifyContent = 'space-between';
+      div.style.alignItems = 'center';
+
+      // Badge & Labels
+      let badge = '';
+      let label = item.name;
+      if (item.type === 'template') {
+        badge = `<span style="font-size: 10px; background: rgba(99, 102, 241, 0.1); color: #818cf8; padding: 2px 8px; border-radius: 99px; border: 1px solid rgba(99,102,241,0.2);">Template</span>`;
+        if (item.plan_name) label += ` <span style="opacity:0.6; font-weight:normal;">— ${item.plan_name}</span>`;
+      } else {
+        badge = `<span style="font-size: 10px; opacity: 0.5; padding: 2px 6px;">History</span>`;
+      }
+
+      // Subtext (Cost/Cycle)
+      let subText = '';
+      if (item.cost) {
+        let cycle = item.billing_cycle || '';
+        if (cycle.includes('.')) cycle = cycle.split('.')[1]; // Fix enum format if present
+
+        const cycleMap = { 'monthly': 'mo', 'yearly': 'yr', 'quarterly': 'qtr', 'weekly': 'wk' };
+        cycle = cycleMap[cycle.toLowerCase()] || cycle;
+
+        subText = `${item.currency} ${item.cost.toFixed(2)}/${cycle}`;
+      }
+
+      div.innerHTML = `
+            <div>
+                <div style="font-weight: 500; font-size: 14px; margin-bottom: 2px;">${label}</div>
+                <div style="display:flex; align-items:center; gap: 8px;">
+                    ${badge}
+                </div>
             </div>
-            <span style="font-size: 11px; color: var(--color-text-secondary);">${subLabel}</span>
-          </div>
+            <div style="font-family:monospace; font-weight:600; font-size:13px; color:var(--color-text-secondary); background:rgba(255,255,255,0.05); padding:4px 8px; rounded:6px;">
+                ${subText}
+            </div>
         `;
 
-        div.onmousedown = (e) => {
-          e.preventDefault();
-          selectVendorSuggestion(item);
-        };
-        suggestionsBox.appendChild(div);
-      });
-      suggestionsBox.style.display = 'block';
-    } else {
-      suggestionsBox.style.display = 'none';
-    }
-  });
+      div.onmousedown = (e) => {
+        e.preventDefault();
+        selectVendorSuggestion(item);
+      };
+
+      suggestionsBox.appendChild(div);
+    });
+  }
 
   // Blur event
   input.addEventListener('blur', function () {
@@ -947,82 +983,71 @@ window.initVendorAutocomplete = function () {
   });
 
   // Focus event - show if not empty
-  input.addEventListener('focus', function () {
-    if (input.value.length > 0) {
-      input.dispatchEvent(new Event('input'));
+  input.addEventListener('focus', function (e) {
+    if (e.target.value.length > 0) {
+      performSearch(e.target.value);
     }
+  }); // Keep only basic focus logic for now or let debouncedSearch handle it
+};
+
+// Select a vendor from stats or template
+window.selectVendorSuggestion = function (item) {
+  const suggestionsBox = document.getElementById('vendor-typeahead-suggestions');
+  if (suggestionsBox) suggestionsBox.style.display = 'none';
+
+  // 1. Vendor Name
+  const input = document.getElementById('subscription-vendor-name');
+  if (input) {
+    input.value = item.name;
+    // Trigger validation or other listeners
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  // 2. Autofill (Cost, Currency, Cycle, Category)
+  if (item.cost) {
+    const costInput = document.querySelector('input[name="cost"]');
+    if (costInput) costInput.value = item.cost;
+  }
+
+  if (item.currency) {
+    const currSelect = document.querySelector('select[name="currency"]');
+    if (currSelect) currSelect.value = item.currency;
+  }
+
+  if (item.billing_cycle) {
+    const cycleSelect = document.querySelector('select[name="billing_cycle"]');
+    if (cycleSelect) {
+      let cycle = item.billing_cycle;
+      if (typeof cycle === 'string' && cycle.includes('.')) cycle = cycle.split('.')[1];
+      cycleSelect.value = cycle.toLowerCase();
+    }
+  }
+
+  // Autofill category
+  if (item.category_id) {
+    if (window.selectCategoryTag) {
+      // Clear existing tags
+      if (subscriptionModalState) subscriptionModalState.selectedCategories = [];
+      window.updateSubscriptionCategoryDisplay();
+
+      // Select new (slight delay to ensure DOM update if needed)
+      setTimeout(() => window.selectCategoryTag(item.category_id), 50);
+    }
+  }
+
+  // Visual Feedback (Premium Flash)
+  const inputs = document.querySelectorAll('#subscription-form input, #subscription-form select');
+  inputs.forEach(el => {
+    // Don't flash vendor name as it was just typed/filled
+    if (el.id === 'subscription-vendor-name') return;
+
+    el.style.transition = 'background-color 0.5s ease';
+    const originalBg = el.style.backgroundColor;
+    el.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
+    setTimeout(() => el.style.backgroundColor = originalBg, 600);
   });
 };
 
-function selectVendorSuggestion(vendor) {
-  const input = document.getElementById('subscription-vendor-name');
-  if (input) {
-    input.value = vendor.name;
-    input.dispatchEvent(new Event('input')); // Trigger validation
-  }
-
-  // Hide suggestions
-  const box = document.getElementById('vendor-typeahead-suggestions');
-  if (box) box.style.display = 'none';
-
-  // Autofill other details
-  autofillVendorDetails(vendor);
-}
-
-function autofillVendorDetails(vendor) {
-  // 1. Cost & Currency
-  if (vendor.cost) {
-    const costInput = document.querySelector('input[name="cost"]');
-    if (costInput && !costInput.value) { // Only if empty
-      costInput.value = vendor.cost;
-      showAutofillHighlight(costInput);
-    }
-  }
-
-  if (vendor.currency) {
-    const currSelect = document.querySelector('select[name="currency"]');
-    if (currSelect) {
-      currSelect.value = vendor.currency;
-      showAutofillHighlight(currSelect);
-    }
-  }
-
-  // 2. Billing Cycle
-  if (vendor.billing_cycle) {
-    const cycleSelect = document.querySelector('select[name="billing_cycle"]');
-    if (cycleSelect) {
-      let val = vendor.billing_cycle;
-      // Handle enum string (e.g. 'BillingCycle.monthly' -> 'monthly')
-      if (typeof val === 'string' && val.includes('.')) {
-        val = val.split('.')[1];
-      }
-      cycleSelect.value = val;
-      showAutofillHighlight(cycleSelect);
-    }
-  }
-
-  // 3. Plan Name
-  if (vendor.plan_name) {
-    const planInput = document.querySelector('input[name="plan_name"]');
-    if (planInput && !planInput.value) {
-      planInput.value = vendor.plan_name;
-      showAutofillHighlight(planInput);
-    }
-  }
-
-  // 4. Category
-  if (vendor.category_id) {
-    // Check if category is already selected
-    const isSelected = subscriptionModalState.selectedCategories.some(c => c.id === vendor.category_id);
-    if (!isSelected) {
-      selectCategoryTag(vendor.category_id);
-      const catCard = document.querySelector('.selection-card-categories');
-      if (catCard) showAutofillHighlight(catCard);
-    }
-  }
-
-  showToast(`Autofilled details for ${vendor.name}`, 'success');
-}
 
 function showAutofillHighlight(element) {
   element.classList.add('autofill-highlight');

@@ -30,9 +30,13 @@ class TemplateResponse(TemplateBase):
         from_attributes = True
 
 @router.get("", response_model=List[TemplateResponse])
-def list_templates(db: Session = Depends(get_db)):
-    """List all templates."""
-    return db.query(SubscriptionTemplate).all()
+def list_templates(search: Optional[str] = None, db: Session = Depends(get_db)):
+    """List all templates, optionally filtering by search query."""
+    query = db.query(SubscriptionTemplate)
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(SubscriptionTemplate.vendor_name.ilike(search_term))
+    return query.all()
 
 @router.post("", response_model=TemplateResponse)
 def create_template(template: TemplateCreate, db: Session = Depends(get_db)):
