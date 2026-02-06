@@ -17,6 +17,8 @@ async def lifespan(app: FastAPI):
     """Application lifespan - runs on startup and shutdown."""
     # Startup: Initialize data persistence (restore data if DB is empty)
     from app.database import engine, Base
+    # Explicitly import models to ensure they are registered with Base.metadata
+    from app.models.subscription_template import SubscriptionTemplate
     Base.metadata.create_all(bind=engine)
     
     from app.data_persistence import init_data_persistence
