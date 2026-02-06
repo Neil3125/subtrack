@@ -104,7 +104,7 @@ def create_subscription(subscription: SubscriptionCreate, background_tasks: Back
                     plan_name=db_subscription.plan_name,
                     cost=db_subscription.cost,
                     currency=db_subscription.currency,
-                    billing_cycle=db_subscription.billing_cycle,
+                    billing_cycle=db_subscription.billing_cycle if isinstance(db_subscription.billing_cycle, BillingCycle) else BillingCycle(db_subscription.billing_cycle),
                     category_id=primary_category_id
                 )
                 db.add(template)

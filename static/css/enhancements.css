@@ -158,8 +158,38 @@ body.sidebar-collapsed .main-content {
 }
 
 /* Modal Enhancements */
-/* Note: modal open/close animations are defined in static/css/style.css and static/css/animations.css.
-   Avoid duplicating animations here to prevent visual “jumping”. */
+/* Glassmorphism */
+.modal-content,
+.modal-content-improved {
+  background: rgba(30, 30, 35, 0.7) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Spring Animation for Modals */
+@keyframes springPopup {
+  0% {
+    transform: scale(0.8) translateY(20px);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.02) translateY(-5px);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal.show .modal-content,
+.modal.show .modal-content-improved {
+  animation: springPopup 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+}
 
 /* Empty States */
 .empty-state {
