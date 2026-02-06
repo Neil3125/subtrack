@@ -115,6 +115,8 @@
         <div class="card-header">
             <h2 class="card-title">📋 Subscription List</h2>
             <div class="flex gap-2 items-center">
+                <button class="btn btn-sm btn-primary" onclick="openModal('subscriptionModal')">➕ Create
+                    Subscription</button>
                 <span class="badge badge-primary" id="visible-count">{{ subscriptions|length }} subscriptions</span>
                 <button class="btn btn-sm btn-secondary" onclick="exportSubscriptions()">📥 Export</button>
             </div>
