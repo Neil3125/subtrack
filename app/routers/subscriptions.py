@@ -5,6 +5,7 @@ from typing import List, Optional
 from datetime import date
 from app.database import get_db
 from app.models import Subscription, Customer, Category
+from app.models.subscription_template import SubscriptionTemplate
 from app.models.activity_log import ActivityLog
 from app.schemas import SubscriptionCreate, SubscriptionUpdate, SubscriptionResponse
 from app.data_persistence import auto_save
@@ -57,8 +58,8 @@ def create_subscription(subscription: SubscriptionCreate, background_tasks: Back
     # Primary category stays as first category for backward compatibility
     primary_category_id = category_ids[0]
 
-    # Create subscription (exclude category_ids because it's not a column)
-    payload = subscription.model_dump(exclude={"category_ids"})
+    # Create subscription (exclude category_ids and save_template)
+    payload = subscription.model_dump(exclude={"category_ids", "save_template"})
     payload["category_id"] = primary_category_id
 
     db_subscription = Subscription(**payload)
@@ -87,6 +88,30 @@ def create_subscription(subscription: SubscriptionCreate, background_tasks: Back
 
     # Auto-save data to file
     background_tasks.add_task(auto_save, db)
+
+    # Save as template if requested
+    if subscription.save_template:
+        try:
+            # Check if template already exists to avoid duplicates
+            existing = db.query(SubscriptionTemplate).filter(
+                SubscriptionTemplate.vendor_name == db_subscription.vendor_name,
+                SubscriptionTemplate.plan_name == db_subscription.plan_name
+            ).first()
+            
+            if not existing:
+                template = SubscriptionTemplate(
+                    vendor_name=db_subscription.vendor_name,
+                    plan_name=db_subscription.plan_name,
+                    cost=db_subscription.cost,
+                    currency=db_subscription.currency,
+                    billing_cycle=db_subscription.billing_cycle,
+                    category_id=primary_category_id
+                )
+                db.add(template)
+                db.commit()
+                print(f"Template auto-saved for {db_subscription.vendor_name}")
+        except Exception as e:
+            print(f"Error saving template: {e}")
 
     # Ensure response includes category_ids
     setattr(db_subscription, "category_ids", [c.id for c in db_subscription.categories] if db_subscription.categories else [db_subscription.category_id])
@@ -295,48 +320,31 @@ def renew_subscription(subscription_id: int, background_tasks: BackgroundTasks, 
         "next_renewal_date": new_date.isoformat()
     }
 @router.get("/templates/all", response_model=List[dict])
-def get_subscription_templates(db: Session = Depends(get_db)):
-    """Get a list of unique subscription templates (vendor/plan combinations) from history."""
-    # This query groups by vendor and plan to get unique combinations
-    # We select the most recent cost/currency for each combo
-    # Note: This is an approximation using a simple query for sqlite compatibility
-    # For robust production use, execute a proper SQL group by
-    from sqlalchemy import text
-    
-    # Raw SQL for better compatibility and group by control
-    sql = """
-    SELECT vendor_name, plan_name, cost, currency, count(*) as usage_count
-    FROM subscriptions 
-    WHERE vendor_name IS NOT NULL AND vendor_name != ''
-    GROUP BY vendor_name, plan_name, cost, currency
-    ORDER BY usage_count DESC
-    LIMIT 20
-    """
-    
+def get_subscription_templates(search: Optional[str] = None, db: Session = Depends(get_db)):
+    """Get a list of subscription templates (vendor/plan combinations)."""
     try:
-        results = db.execute(text(sql)).fetchall()
-        templates = []
-        seen_combos = set()
+        query = db.query(SubscriptionTemplate)
         
-        for row in results:
-            vendor = row[0]
-            plan = row[1]
-            cost = row[2]
-            currency = row[3]
+        if search:
+            query = query.filter(SubscriptionTemplate.vendor_name.ilike(f"%{search}%"))
             
-            # Create unique key to avoid near-duplicates
-            key = f"{vendor}|{plan}"
-            if key not in seen_combos:
-                templates.append({
-                    "vendor_name": vendor,
-                    "plan_name": plan,
-                    "cost": cost,
-                    "currency": currency,
-                    "label": f"{vendor} {f'- {plan}' if plan else ''} ({currency} {cost})"
-                })
-                seen_combos.add(key)
-                
-        return templates
+        templates = query.order_by(SubscriptionTemplate.vendor_name).all()
+        
+        # Format as expected by frontend
+        results = []
+        for t in templates:
+            results.append({
+                "id": t.id,
+                "vendor_name": t.vendor_name,
+                "plan_name": t.plan_name,
+                "cost": t.cost,
+                "currency": t.currency,
+                "billing_cycle": t.billing_cycle,
+                "category_id": t.category_id,
+                "label": f"{t.vendor_name} {f'- {t.plan_name}' if t.plan_name else ''} ({t.currency} {t.cost})"
+            })
+            
+        return results
     except Exception as e:
         print(f"Error fetching templates: {e}")
         return []

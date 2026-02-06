@@ -876,7 +876,7 @@ window.initVendorAutocomplete = function () {
 
     try {
       // 1. Fetch Templates (Server-Side)
-      const templates = await fetch(`/api/templates?search=${encodeURIComponent(term)}`)
+      const templates = await fetch(`/api/subscriptions/templates/all?search=${encodeURIComponent(term)}`)
         .then(r => r.json())
         .catch(() => []);
 
@@ -1227,6 +1227,12 @@ window.saveEnhancedSubscription = function (formData, itemId = null) {
 
   // Handle cost
   if (formData.cost) formData.cost = parseFloat(formData.cost);
+
+  // Handle save_template checkbox
+  const saveTemplateCheckbox = document.getElementById('save-as-template');
+  if (saveTemplateCheckbox) {
+    formData.save_template = saveTemplateCheckbox.checked;
+  }
 
   // Handle customer_id (ensure integer)
   if (formData.customer_id) {

@@ -8,7 +8,6 @@ from datetime import date, timedelta
 from app.database import get_db
 from app.models import Category, Group, Customer, Subscription, Link, User
 from app.models.subscription import SubscriptionStatus
-from app.models.subscription_template import SubscriptionTemplate
 from app.routers.auth_routes import get_current_user
 
 router = APIRouter()
@@ -100,14 +99,6 @@ async def categories_list(request: Request, db: Session = Depends(get_db)):
     })
 
 
-@router.get("/templates-manager", response_class=HTMLResponse)
-async def templates_manager(request: Request, db: Session = Depends(get_db)):
-    """Render templates manager."""
-    categories = db.query(Category).all()
-    return templates.TemplateResponse("templates_management.html", {
-        "request": request,
-        "categories": categories
-    })
 
 
 @router.get("/groups", response_class=HTMLResponse)

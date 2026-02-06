@@ -176,12 +176,6 @@
                         </a>
                     </li>
                     <li class="sidebar-nav-item">
-                        <a href="/templates-manager"
-                            class="sidebar-nav-link {% if request.path == '/templates-manager' %}active{% endif %}">
-                            📑 Templates
-                        </a>
-                    </li>
-                    <li class="sidebar-nav-item">
                         <a href="/analytics"
                             class="sidebar-nav-link {% if '/analytics' in request.path %}active{% endif %}">
                             📈 Analytics
@@ -795,6 +789,17 @@
                                 placeholder="Add any details..."></textarea>
                         </div>
                     </div>
+                </div>
+
+                <!-- CHECKBOX: Save as Template -->
+                <div class="px-6 pb-2">
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input type="checkbox" id="save-as-template" name="save_template"
+                            class="form-checkbox w-4 h-4 rounded border-glass-border bg-bg-secondary text-primary focus:ring-primary focus:ring-offset-0 transition-colors">
+                        <span class="text-sm text-secondary group-hover:text-white transition-colors">
+                            Save as <strong class="text-primary font-medium">Smart Template</strong> for future use
+                        </span>
+                    </label>
                 </div>
 
         </div>

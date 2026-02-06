@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 from app.config import settings
-from app.routers import categories, groups, customers, subscriptions, ai_routes, search, search_routes, templates
+from app.routers import categories, groups, customers, subscriptions, ai_routes, search, search_routes
 from app.routers import web_routes, export_routes, auth_routes, users, saved_reports_routes, email_routes, log_check_routes, admin_routes
 from app.routers import activity_routes
 from app.routers.auth_routes import get_session
@@ -109,7 +109,7 @@ app.include_router(categories.router, prefix="/api/categories", tags=["categorie
 app.include_router(groups.router, prefix="/api/groups", tags=["groups"])
 app.include_router(customers.router, prefix="/api/customers", tags=["customers"])
 app.include_router(subscriptions.router, prefix="/api/subscriptions", tags=["subscriptions"])
-app.include_router(templates.router, prefix="/api/templates", tags=["templates"])
+# app.include_router(templates.router, prefix="/api/templates", tags=["templates"])
 app.include_router(ai_routes.router, prefix="/api/ai", tags=["ai"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(search_routes.router, tags=["search-html"])
