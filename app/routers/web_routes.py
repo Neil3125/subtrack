@@ -8,6 +8,7 @@ from datetime import date, timedelta
 from app.database import get_db
 from app.models import Category, Group, Customer, Subscription, Link, User
 from app.models.subscription import SubscriptionStatus
+from app.models.subscription_template import SubscriptionTemplate
 from app.routers.auth_routes import get_current_user
 
 router = APIRouter()
