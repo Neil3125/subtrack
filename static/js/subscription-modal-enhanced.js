@@ -1047,6 +1047,12 @@ window.selectVendorSuggestion = function (item) {
     }
   }
 
+  // Autofill Plan Name
+  if (item.plan_name) {
+    const planInput = document.querySelector('input[name="plan_name"]');
+    if (planInput) planInput.value = item.plan_name;
+  }
+
   // Autofill category
   if (item.category_id) {
     if (window.selectCategoryTag) {
