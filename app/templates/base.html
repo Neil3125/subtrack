@@ -789,29 +789,46 @@
                                 placeholder="Add any details..."></textarea>
                         </div>
                     </div>
-                </div>
 
-                <!-- CHECKBOX: Save as Template -->
-                <div class="px-6 pb-2">
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" id="save-as-template" name="save_template"
-                            class="form-checkbox w-4 h-4 rounded border-glass-border bg-bg-secondary text-primary focus:ring-primary focus:ring-offset-0 transition-colors">
-                        <span class="text-sm text-secondary group-hover:text-white transition-colors">
-                            Save as <strong class="text-primary font-medium">Smart Template</strong> for future use
-                        </span>
-                    </label>
-                </div>
+                    <!-- SECTION 6: SETTINGS -->
+                    <div class="form-section pb-2">
+                        <h3 class="text-xs font-bold text-secondary uppercase tracking-wider mb-3 px-1">Settings</h3>
 
+                        <div
+                            class="bg-glass-card border border-glass-border rounded-xl p-4 transition-all hover:border-primary/30">
+                            <label class="flex items-center gap-3 cursor-pointer group select-none">
+                                <div class="relative flex items-center">
+                                    <input type="checkbox" id="save-as-template" name="save_template"
+                                        class="peer sr-only">
+                                    <div
+                                        class="w-11 h-6 bg-glass-border rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col">
+                                    <span
+                                        class="text-sm font-medium text-white group-hover:text-indigo-300 transition-colors">Save
+                                        as Smart Template</span>
+                                    <span class="text-xs text-secondary">Remember plan & cost next time you type this
+                                        vendor</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
         </div>
 
-        <!-- Footer -->
-        <div class="modal-footer modal-footer-improved"
-            style="flex-shrink: 0; z-index: 10; border-top: 1px solid var(--color-border);">
-            <button type="button" class="btn btn-secondary" onclick="closeModal('subscriptionModal')">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="subscription-submit-btn">Create
-                Subscription</button>
-        </div>
-        </form>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer modal-footer-improved"
+        style="flex-shrink: 0; z-index: 10; border-top: 1px solid var(--color-border);">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('subscriptionModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="subscription-submit-btn">Create
+            Subscription</button>
+    </div>
+    </form>
     </div>
     </div>
 

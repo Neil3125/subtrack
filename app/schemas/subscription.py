@@ -26,6 +26,8 @@ class SubscriptionCreate(SubscriptionBase):
     category_id: Optional[int] = None
     # Multi-select categories
     category_ids: Optional[List[int]] = None
+    # Flag to save as smart template
+    save_template: bool = False
 
 
 class SubscriptionUpdate(BaseModel):
