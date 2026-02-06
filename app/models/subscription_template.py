@@ -1,30 +1,25 @@
-"""Subscription Template model."""
-from sqlalchemy import Column, Integer, String, Float, Enum, ForeignKey, Text
+"""Subscription template model."""
+from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
+from datetime import datetime
 from app.database import Base
 from app.models.subscription import BillingCycle
 
 class SubscriptionTemplate(Base):
-    """Template for quickly creating subscriptions."""
-    
     __tablename__ = "subscription_templates"
-    
+
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False, index=True) # User-friendly name e.g. "Work Adobe"
+    vendor_name = Column(String(200), index=True, nullable=False)
+    plan_name = Column(String(200), nullable=True) # e.g. "Premium", "Family"
+    cost = Column(Float, nullable=False)
+    currency = Column(String(3), default="USD")
+    billing_cycle = Column(Enum(BillingCycle), nullable=False)
     
-    # Template fields (optional defaults)
-    vendor_name = Column(String(200), nullable=True)
-    plan_name = Column(String(200), nullable=True)
-    cost = Column(Float, nullable=True)
-    currency = Column(String(3), nullable=True, default="USD")
-    billing_cycle = Column(Enum(BillingCycle), nullable=True)
-    
-    # Organization
+    # Optional category pre-selection
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
-    notes = Column(Text, nullable=True)
     
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
     # Relationships
-    category = relationship("Category")
-    
-    def __repr__(self):
-        return f"<SubscriptionTemplate(id={self.id}, name='{self.name}')>"
+    category = relationship("Category", back_populates="templates")

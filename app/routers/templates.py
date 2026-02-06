@@ -5,7 +5,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
 from app.database import get_db
-from app.models.template import SubscriptionTemplate
+from app.models.subscription_template import SubscriptionTemplate
 from app.models.subscription import BillingCycle
 
 router = APIRouter()
