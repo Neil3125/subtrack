@@ -326,7 +326,13 @@ def get_subscription_templates(search: Optional[str] = None, db: Session = Depen
         query = db.query(SubscriptionTemplate)
         
         if search:
-            query = query.filter(SubscriptionTemplate.vendor_name.ilike(f"%{search}%"))
+            from sqlalchemy import or_
+            query = query.filter(
+                or_(
+                    SubscriptionTemplate.vendor_name.ilike(f"%{search}%"),
+                    SubscriptionTemplate.plan_name.ilike(f"%{search}%")
+                )
+            )
             
         templates = query.order_by(SubscriptionTemplate.vendor_name).all()
         
