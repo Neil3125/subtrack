@@ -230,7 +230,7 @@
     function analyzeLinks() {
         showToast('Analyzing relationships...', 'info');
 
-        fetch('/api/links/analyze', {
+        fetch('/api/ai/analyze-links', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -263,7 +263,7 @@
     function updateLinkDecision(linkId, decision) {
         showToast(`Updating link...`, 'info');
 
-        fetch(`/api/links/${linkId}/decision`, {
+        fetch(`/api/ai/links/${linkId}/decide`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
@@ -290,7 +290,7 @@
 
         showToast('Unlinking...', 'info');
 
-        fetch(`/api/links/${linkId}`, {
+        fetch(`/api/ai/links/${linkId}`, {
             method: 'DELETE'
         })
             .then(response => response.json())

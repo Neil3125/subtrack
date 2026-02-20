@@ -368,13 +368,13 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                 db.flush()  # Get the new ID
                 imported_counts["categories"] += 1
                 id_map["categories"][cat_data["id"]] = cat.id
+                db.commit()
             except IntegrityError as e:
                 warnings.append(f"Category {cat_data.get('id')} skipped: {str(e)}")
                 db.rollback()
             except Exception as e:
                 warnings.append(f"Category {cat_data.get('id')} error: {str(e)}")
                 db.rollback()
-        db.commit()
         
         # Import groups
         for group_data in data.get("groups", []):
@@ -399,13 +399,13 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                 db.flush()
                 imported_counts["groups"] += 1
                 id_map["groups"][group_data["id"]] = group.id
+                db.commit()
             except IntegrityError as e:
                 warnings.append(f"Group {group_data.get('id')} skipped: {str(e)}")
                 db.rollback()
             except Exception as e:
                 warnings.append(f"Group {group_data.get('id')} error: {str(e)}")
                 db.rollback()
-        db.commit()
         
         # Import customers
         for customer_data in data.get("customers", []):
@@ -439,13 +439,13 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                 db.flush()
                 imported_counts["customers"] += 1
                 id_map["customers"][customer_data["id"]] = customer.id
+                db.commit()
             except IntegrityError as e:
                 warnings.append(f"Customer {customer_data.get('id')} skipped: {str(e)}")
                 db.rollback()
             except Exception as e:
                 warnings.append(f"Customer {customer_data.get('id')} error: {str(e)}")
                 db.rollback()
-        db.commit()
         
         # Import subscriptions
         for sub_data in data.get("subscriptions", []):
@@ -502,13 +502,13 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                 db.add(sub)
                 db.flush()
                 imported_counts["subscriptions"] += 1
+                db.commit()
             except IntegrityError as e:
                 warnings.append(f"Subscription {sub_data.get('id')} skipped: {str(e)}")
                 db.rollback()
             except Exception as e:
                 warnings.append(f"Subscription {sub_data.get('id')} error: {str(e)}")
                 db.rollback()
-        db.commit()
         
         # Import links
         for link_data in data.get("links", []):
@@ -525,12 +525,12 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                     )
                     db.add(link)
                     imported_counts["links"] += 1
+                    db.commit()
             except IntegrityError as e:
                 warnings.append(f"Link {link_data.get('id')} skipped: {str(e)}")
                 db.rollback()
             except Exception:
-                pass
-        db.commit()
+                db.rollback()
         
         # Import saved reports
         for report_data in data.get("saved_reports", []):
@@ -545,12 +545,12 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                     )
                     db.add(report)
                     imported_counts["saved_reports"] += 1
+                    db.commit()
             except IntegrityError as e:
                 warnings.append(f"Saved report {report_data.get('id')} skipped: {str(e)}")
                 db.rollback()
             except Exception:
-                pass
-        db.commit()
+                db.rollback()
         
         # Import many-to-many relationships
         from sqlalchemy import text

@@ -86,9 +86,9 @@
   --shadow-xl: 0 24px 48px -8px rgba(0, 0, 0, 0.9);
 
   /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 200ms cubic-bezier(0.2, 0, 0, 1);
+  --transition-base: 300ms cubic-bezier(0.2, 0, 0, 1);
+  --transition-slow: 450ms cubic-bezier(0.2, 0, 0, 1);
 
   /* Layout */
   --sidebar-width: 260px;
@@ -1504,8 +1504,8 @@ select[name="customer_id"] {
 /* Enhanced Card Hover Effects */
 /* Card hover styles - smooth shadow transition */
 .card-hover {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 0.4s cubic-bezier(0.2, 0, 0, 1);
   position: relative;
 }
 
@@ -1519,7 +1519,7 @@ select[name="customer_id"] {
   position: relative;
   overflow: hidden;
   border-left: 4px solid var(--color-primary);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .stat-card:nth-child(1) {
