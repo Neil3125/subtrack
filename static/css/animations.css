@@ -284,15 +284,7 @@ html {
 
 /* ==================== Particle Animations - Optimized ==================== */
 .particle {
-    /* 10. Refined floating background particles */
-    transition: transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease;
-    filter: blur(1px);
-    opacity: 0.6;
-}
-
-.particle:hover {
-    transform: scale(1.2);
-    opacity: 0.8;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ==================== Empty State Animation ==================== */
@@ -362,53 +354,4 @@ html {
     .card-hover:hover {
         transform: translateY(-2px) scale(1);
     }
-}
-
-/* ==================== 8. Staggered Entry Animations ==================== */
-@keyframes slideUpFade {
-    0% {
-        opacity: 0;
-        transform: translateY(16px);
-    }
-
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.table tbody tr:nth-child(1),
-.card-hover:nth-child(1),
-.list-group-item:nth-child(1) {
-    animation: slideUpFade 0.4s cubic-bezier(0.2, 0, 0, 1) 0.04s both;
-}
-
-.table tbody tr:nth-child(2),
-.card-hover:nth-child(2),
-.list-group-item:nth-child(2) {
-    animation: slideUpFade 0.4s cubic-bezier(0.2, 0, 0, 1) 0.08s both;
-}
-
-.table tbody tr:nth-child(3),
-.card-hover:nth-child(3),
-.list-group-item:nth-child(3) {
-    animation: slideUpFade 0.4s cubic-bezier(0.2, 0, 0, 1) 0.12s both;
-}
-
-.table tbody tr:nth-child(4),
-.card-hover:nth-child(4),
-.list-group-item:nth-child(4) {
-    animation: slideUpFade 0.4s cubic-bezier(0.2, 0, 0, 1) 0.16s both;
-}
-
-.table tbody tr:nth-child(5),
-.card-hover:nth-child(5),
-.list-group-item:nth-child(5) {
-    animation: slideUpFade 0.4s cubic-bezier(0.2, 0, 0, 1) 0.20s both;
-}
-
-.table tbody tr:nth-child(n+6),
-.card-hover:nth-child(n+6),
-.list-group-item:nth-child(n+6) {
-    animation: slideUpFade 0.4s cubic-bezier(0.2, 0, 0, 1) 0.24s both;
 }
