@@ -4,7 +4,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
 from contextlib import asynccontextmanager
 from app.config import settings
 from app.routers import categories, groups, customers, subscriptions, ai_routes, search, search_routes
@@ -96,9 +95,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
 # Add authentication middleware
 app.add_middleware(AuthMiddleware)
-
-# Add GZip Middleware for overall response compression
-app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
