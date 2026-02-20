@@ -2366,7 +2366,7 @@ window.updateSubscription = function (formData, id) {
 
 // Delete with confirmation and undo option
 window.deleteItem = function (type, id, name) {
-  const confirmMsg = `Delete "${name}"?\n\nThis will remove:\n• The ${type} itself\n• All associated data\n\nThis action can be undone for 10 seconds.`;
+  const confirmMsg = `Delete "${name}"?\n\nThis will remove:\n• The ${type} itself\n• All associated data\n\nThis action can be undone for 3 seconds.`;
 
   if (!confirm(confirmMsg)) {
     return;
@@ -2437,7 +2437,7 @@ window.deleteItem = function (type, id, name) {
         showToast(`Error deleting ${type}`, 'error');
         console.error('Error:', error);
       });
-  }, 10000);
+  }, 3000);
 };
 
 // ==================== Tooltips ====================
