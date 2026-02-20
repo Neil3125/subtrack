@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>{% block title %}SubTrack Web{% endblock %}</title>
 
     <!-- Prevent FOUC (Flash of Unstyled Content) and dark mode flash -->
@@ -65,6 +65,11 @@
 
     <!-- Navbar -->
     <nav class="navbar">
+        <button id="mobile-menu-btn" class="btn btn-icon-only btn-secondary"
+            style="display: none; border: none; background: transparent; font-size: 1.5rem; padding: 0 10px 0 0;"
+            aria-label="Toggle menu">
+            ☰
+        </button>
         <a href="/" class="navbar-brand">
             <span>📊</span> SubTrack
         </a>

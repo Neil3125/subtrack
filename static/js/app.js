@@ -246,6 +246,41 @@ window.setVisualTheme = function (themeName) {
   showToast(`Theme changed to ${themeNames[themeName]}`, 'success');
 };
 
+// ==================== Mobile Navigation ====================
+document.addEventListener('DOMContentLoaded', () => {
+  const mobileBtn = document.getElementById('mobile-menu-btn');
+  const sidebar = document.querySelector('.sidebar');
+
+  if (mobileBtn && sidebar) {
+    const checkMobile = () => {
+      if (window.innerWidth <= 1024) {
+        mobileBtn.style.display = 'block';
+      } else {
+        mobileBtn.style.display = 'none';
+        sidebar.classList.remove('mobile-open');
+      }
+    };
+
+    window.addEventListener('resize', checkMobile);
+    checkMobile(); // Check on init
+
+    mobileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle('mobile-open');
+    });
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth <= 1024 &&
+        sidebar.classList.contains('mobile-open') &&
+        !sidebar.contains(e.target) &&
+        e.target !== mobileBtn) {
+        sidebar.classList.remove('mobile-open');
+      }
+    });
+  }
+});
+
 // ==================== Initialize ====================
 document.addEventListener('DOMContentLoaded', function () {
   console.log('SubTrack Web Enhanced - Initialized');
