@@ -87,8 +87,9 @@
             {% if links %}
             <div class="space-y-3">
                 {% for link in links %}
-                <div class="link-item card" data-type="{{ link.source_type }}"
-                    data-status="{{ link.user_decision or 'pending' }}" data-confidence="{{ link.confidence }}"
+                <div class="link-item card" data-type="{{ link.source_type.value }}"
+                    data-status="{{ link.user_decision.value if link.user_decision else 'pending' }}"
+                    data-confidence="{{ link.confidence }}"
                     style="background: var(--color-bg-secondary); border-left: 4px solid {% if link.confidence >= 0.7 %}var(--color-success){% elif link.confidence >= 0.4 %}var(--color-warning){% else %}var(--color-secondary){% endif %};">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
@@ -97,22 +98,23 @@
                                     class="badge badge-{{ 'success' if link.confidence >= 0.7 else 'warning' if link.confidence >= 0.4 else 'secondary' }}">
                                     {{ (link.confidence * 100)|int }}% confidence
                                 </span>
-                                <span class="text-sm font-medium text-secondary">{{ link.source_type.value }} ↔ {{
-                                    link.target_type.value }}</span>
+                                <span class="text-sm font-medium text-secondary">{{ link.source_type.value | capitalize
+                                    }} ↔ {{
+                                    link.target_type.value | capitalize }}</span>
                                 {% if link.user_decision %}
                                 <span
-                                    class="badge badge-{{ 'success' if link.user_decision == 'accepted' else 'danger' }}">
-                                    {{ link.user_decision | capitalize }}
+                                    class="badge badge-{{ 'success' if link.user_decision.value == 'accepted' else 'danger' }}">
+                                    {{ link.user_decision.value | capitalize }}
                                 </span>
                                 {% else %}
                                 <span class="badge badge-warning">Pending Review</span>
                                 {% endif %}
                             </div>
                             <div class="mb-2 font-semibold">
-                                <span class="text-primary">{{ link.source_type | capitalize }} #{{ link.source_id
+                                <span class="text-primary">{{ link.source_type.value | capitalize }} #{{ link.source_id
                                     }}</span>
                                 →
-                                <span class="text-primary">{{ link.target_type | capitalize }} #{{ link.target_id
+                                <span class="text-primary">{{ link.target_type.value | capitalize }} #{{ link.target_id
                                     }}</span>
                             </div>
                             <p class="text-sm text-secondary">{{ link.evidence_text }}</p>
@@ -126,8 +128,9 @@
                                 ✗ Reject
                             </button>
                             {% else %}
-                            <span class="badge badge-{{ 'success' if link.user_decision == 'accepted' else 'danger' }}">
-                                {{ link.user_decision | capitalize }}
+                            <span
+                                class="badge badge-{{ 'success' if link.user_decision.value == 'accepted' else 'danger' }}">
+                                {{ link.user_decision.value | capitalize }}
                             </span>
                             <button class="btn btn-secondary btn-sm" onclick="unlinkRelationship({{ link.id }})">
                                 🔓 Unlink
@@ -201,7 +204,7 @@
         links.forEach(link => {
             const linkType = link.dataset.type;
             const linkStatus = link.dataset.status;
-            const linkConfidence = parseInt(link.dataset.confidence);
+            const linkConfidence = parseFloat(link.dataset.confidence) * 100;
 
             let show = true;
 

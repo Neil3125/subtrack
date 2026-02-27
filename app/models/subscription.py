@@ -24,6 +24,7 @@ class BillingCycle(str, enum.Enum):
     YEARLY = "yearly"
     WEEKLY = "weekly"
     BIANNUAL = "biannual"
+    CUSTOM = "custom"
 
 
 class Subscription(Base):
@@ -39,6 +40,8 @@ class Subscription(Base):
     cost = Column(Float, nullable=False)
     currency = Column(String(3), nullable=False, default="USD")
     billing_cycle = Column(Enum(BillingCycle), nullable=False, default=BillingCycle.MONTHLY)
+    custom_billing_amount = Column(Integer, nullable=True)
+    custom_billing_unit = Column(String(20), nullable=True)
     start_date = Column(Date, nullable=False, default=date.today)
     next_renewal_date = Column(Date, nullable=False, index=True)
     status = Column(Enum(SubscriptionStatus), nullable=False, default=SubscriptionStatus.ACTIVE, index=True)

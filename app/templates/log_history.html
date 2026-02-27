@@ -2,29 +2,45 @@
 
 {% block title %}Log History - SubTrack{% endblock %}
 
+{% block extra_head %}
+<!-- Pro Theme CSS -->
+<link rel="stylesheet" href="/static/css/log_check_pro.css">
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script>
+
+<script>
+    // Apply Pro Theme class to body
+    document.body.classList.add('log-check-pro');
+</script>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-6" style="max-width: 1000px;">
-    <div class="header-flex mb-6">
-        <div>
-            <h1 class="page-title">Log History</h1>
-            <p class="text-secondary">View and manage past maintenance logs</p>
+<div class="pro-container animate-enter" style="max-width: 1000px;">
+    <!-- Header -->
+    <header class="pro-header mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="pro-title text-left">Log History</h1>
+                <p class="pro-subtitle text-left">View and manage past maintenance logs</p>
+            </div>
+            <div>
+                <a href="/log-check" class="btn btn-primary"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid var(--color-glass-border);">
+                    <span>➕</span> New Log
+                </a>
+            </div>
         </div>
-        <div class="flex gap-2">
-            <a href="/log-check" class="btn btn-primary">
-                <span>➕</span> New Log
-            </a>
-        </div>
-    </div>
+    </header>
 
     <!-- Filters -->
-    <div class="card p-4 mb-6">
+    <div class="glass-card mb-6 p-4">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="form-group mb-0">
-                <input type="text" class="form-input" id="search-input" placeholder="Search logs..."
+                <input type="text" class="pro-input w-full" id="search-input" placeholder="Search logs..."
                     onkeyup="filterLogs()">
             </div>
             <div class="form-group mb-0">
-                <select class="form-select" id="filter-type" onchange="filterLogs()">
+                <select class="form-select bg-gray-800 text-white border-gray-600 w-full" id="filter-type"
+                    onchange="filterLogs()">
                     <option value="">All Types</option>
                     <option value="service">Service Check</option>
                     <option value="backup">Backup Check</option>
@@ -39,42 +55,66 @@
     <!-- Log List -->
     <div class="flex flex-col gap-4" id="log-list">
         {% for log in logs %}
-        <div class="card p-0 log-item overflow-hidden" data-type="{{ log.check_type }}"
+        <div class="glass-card p-0 log-item overflow-hidden mb-2" data-type="{{ log.check_type }}"
             data-text="{{ log.full_entry|lower }}" data-date="{{ log.created_at }}">
-            <div class="p-4 border-b border-border flex justify-between items-center bg-bg-secondary">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center"
+                style="background: rgba(0,0,0,0.2);">
                 <div class="flex items-center gap-3">
-                    <span class="badge 
-                        {% if log.check_type == 'service' %}badge-blue
-                        {% elif log.check_type == 'backup' %}badge-green
-                        {% elif log.check_type == 'onsite' %}badge-orange
-                        {% else %}badge-purple{% endif %}">
+                    <span
+                        class="badge 
+                        {% if log.check_type == 'service' %}bg-blue-900 text-blue-300
+                        {% elif log.check_type == 'backup' %}bg-green-900 text-green-300
+                        {% elif log.check_type == 'onsite' %}bg-orange-900 text-orange-300
+                        {% else %}bg-purple-900 text-purple-300{% endif %} px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
                         {{ log.check_type|title }}
                     </span>
-                    <span class="text-sm font-mono text-secondary">{{ log.date_str }}</span>
-                    <span class="text-sm font-medium text-secondary">⏱️ {{ log.duration_minutes }}m</span>
+                    <span class="text-sm font-mono text-gray-400">{{ log.date_str }}</span>
+                    <span class="text-sm font-medium text-gray-400">⏱️ {{ log.duration_minutes }}m</span>
                 </div>
                 <div class="flex gap-2">
-                    <button class="btn btn-sm btn-ghost" onclick="copyLog('{{ log.full_entry|escapejs }}')">
+                    <button class="btn btn-secondary btn-sm rounded" style="padding: 2px 8px;"
+                        onclick="copyLog('{{ log.full_entry|escapejs }}')">
                         📋 Copy
                     </button>
-                    <button class="btn btn-sm btn-ghost text-danger" onclick="deleteLog({{ log.id }}, this)">
+                    <button class="btn btn-secondary btn-sm text-red-400 border-red-900 rounded"
+                        style="padding: 2px 8px;" onclick="deleteLog({{ log.id }}, this)">
                         🗑️ Delete
                     </button>
                 </div>
             </div>
-            <div class="p-4 font-mono text-sm whitespace-pre-wrap leading-relaxed">{{ log.full_entry }}</div>
+            <div class="p-4 font-mono text-sm whitespace-pre-wrap leading-relaxed text-gray-200">{{ log.full_entry }}
+            </div>
         </div>
         {% else %}
-        <div class="text-center py-12 text-secondary">
+        <div class="text-center py-12 text-gray-400 glass-card">
             <div class="text-4xl mb-3">📭</div>
             <p>No log entries found.</p>
-            <a href="/log-check" class="btn btn-link mt-2">Create your first log</a>
+            <a href="/log-check" class="text-blue-400 hover:text-blue-300 mt-2 inline-block">Create your first log</a>
         </div>
         {% endfor %}
     </div>
 </div>
 
+<div id="status-toast" class="status-toast"
+    style="display: none; position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 24px; border-radius: 8px; z-index: 10000; border-left: 4px solid #10b981; transition: opacity 0.3s; opacity: 0;">
+    <span class="text-xl">✅</span>
+    <span id="toast-message" class="ml-2">Action successful</span>
+</div>
+
 <script>
+    function showToast(msg, type = 'success') {
+        const toast = document.getElementById('status-toast');
+        document.getElementById('toast-message').textContent = msg;
+        toast.style.borderLeftColor = type === 'error' ? '#ef4444' : '#10b981';
+        toast.style.display = 'flex';
+        toast.style.opacity = '1';
+        toast.style.alignItems = 'center';
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.style.display = 'none', 300);
+        }, 3000);
+    }
+
     function filterLogs() {
         const search = document.getElementById('search-input').value.toLowerCase();
         const type = document.getElementById('filter-type').value;
@@ -101,18 +141,33 @@
                 const card = btn.closest('.log-item');
                 card.style.opacity = '0';
                 setTimeout(() => card.remove(), 300);
+                showToast("Log deleted");
             } else {
-                alert('Failed to delete log');
+                showToast('Failed to delete log', 'error');
             }
         } catch (e) {
             console.error(e);
-            alert('Error deleting log');
+            showToast('Error deleting log', 'error');
         }
     }
 
     function copyLog(text) {
         navigator.clipboard.writeText(text).then(() => {
-            alert('Log copied to clipboard!');
+            showToast('Log copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            // Fallback
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast('Log copied to clipboard!');
+            } catch (err) {
+                showToast('Failed to copy', 'error');
+            }
+            document.body.removeChild(textArea);
         });
     }
 </script>

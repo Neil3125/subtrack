@@ -763,11 +763,32 @@
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Billing Cycle *</label>
-                                    <select name="billing_cycle" class="form-select" required>
+                                    <select name="billing_cycle" id="subscription-billing-cycle" class="form-select"
+                                        required onchange="toggleCustomBillingRow()">
                                         <option value="monthly">Monthly</option>
                                         <option value="yearly">Yearly</option>
                                         <option value="quarterly">Quarterly</option>
                                         <option value="weekly">Weekly</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Row 2.5: Custom Billing (Hidden by default) -->
+                            <div class="form-row" id="custom-billing-row"
+                                style="display: none; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-group">
+                                    <label class="form-label">Every...</label>
+                                    <input type="number" name="custom_billing_amount" id="custom-billing-amount"
+                                        class="form-input" min="1" placeholder="e.g. 2">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Time Unit</label>
+                                    <select name="custom_billing_unit" id="custom-billing-unit" class="form-select">
+                                        <option value="days">Days</option>
+                                        <option value="weeks">Weeks</option>
+                                        <option value="months" selected>Months</option>
+                                        <option value="years">Years</option>
                                     </select>
                                 </div>
                             </div>
@@ -994,7 +1015,22 @@
             <!-- Dynamic Content -->
         </div>
     </div>
-
+    <script>
+        function toggleCustomBillingRow() {
+            var cycleSelect = document.getElementById('subscription-billing-cycle');
+            var customRow = document.getElementById('custom-billing-row');
+            var amountInput = document.getElementById('custom-billing-amount');
+            if (cycleSelect && customRow) {
+                if (cycleSelect.value === 'custom') {
+                    customRow.style.display = 'grid';
+                    amountInput.required = true;
+                } else {
+                    customRow.style.display = 'none';
+                    amountInput.required = false;
+                }
+            }
+        }
+    </script>
 </body>
 
 </html>

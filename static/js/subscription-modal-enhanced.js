@@ -1264,6 +1264,16 @@ window.saveEnhancedSubscription = function (formData, itemId = null) {
     formData.save_template = saveTemplateCheckbox.checked;
   }
 
+  // Handle custom billing cycles
+  if (formData.billing_cycle === 'custom') {
+    const amountInput = document.getElementById('custom-billing-amount');
+    const unitInput = document.getElementById('custom-billing-unit');
+    if (amountInput && unitInput) {
+      formData.custom_billing_amount = parseInt(amountInput.value, 10) || 1;
+      formData.custom_billing_unit = unitInput.value || 'months';
+    }
+  }
+
   // Handle customer_id (ensure integer)
   if (formData.customer_id) {
     if (typeof formData.customer_id === 'string') {

@@ -61,7 +61,14 @@
                 </div>
                 <div>
                     <div class="text-sm text-secondary mb-1">Billing Cycle</div>
-                    <div class="font-medium">{{ subscription.billing_cycle.value }}</div>
+                    <div class="font-medium">
+                        {% if subscription.billing_cycle.value == 'custom' %}
+                        Every {{ subscription.custom_billing_amount or 1 }} {{ (subscription.custom_billing_unit or
+                        'months')|capitalize }}
+                        {% else %}
+                        {{ subscription.billing_cycle.value|capitalize }}
+                        {% endif %}
+                    </div>
                 </div>
                 <div>
                     <div class="text-sm text-secondary mb-1">Start Date</div>

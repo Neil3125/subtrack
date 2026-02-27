@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-02-20T15:37:24.233009",
+  "exported_at": "2026-02-27T15:46:26.553761",
   "categories": [
     {
       "id": 1,
@@ -411,12 +411,32 @@
       "status": "ACTIVE",
       "notes": "Cloud infrastructure with compliance and security features",
       "country": null
+    },
+    {
+      "id": 20,
+      "customer_id": 1,
+      "category_id": 1,
+      "vendor_name": "Test Vendor",
+      "plan_name": "",
+      "cost": 99.99,
+      "currency": "USD",
+      "billing_cycle": "CUSTOM",
+      "start_date": "2026-02-27",
+      "next_renewal_date": "2026-04-27",
+      "status": "ACTIVE",
+      "notes": "",
+      "country": null
     }
   ],
   "links": [],
   "saved_reports": [],
   "many_to_many": {
-    "subscription_categories": [],
+    "subscription_categories": [
+      {
+        "subscription_id": 20,
+        "category_id": 1
+      }
+    ],
     "customer_categories": [],
     "customer_groups": []
   }

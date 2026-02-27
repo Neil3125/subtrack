@@ -995,6 +995,13 @@ window.loadEditData = function (type, id) {
         }
       });
 
+      // Specifically trigger custom billing UI in subscription modal
+      if (type === 'subscription') {
+        if (data.billing_cycle === 'custom' && typeof toggleCustomBillingRow === 'function') {
+          setTimeout(toggleCustomBillingRow, 50);
+        }
+      }
+
       // Store ID for update
       form.dataset.itemId = id;
 

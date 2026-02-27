@@ -182,7 +182,16 @@
                             {% endif %}
                         </td>
                         <td data-sort-value="{{ sub.cost }}">${{ "%.2f"|format(sub.cost) }} {{ sub.currency }}</td>
-                        <td><span class="badge badge-secondary">{{ sub.billing_cycle.value }}</span></td>
+                        <td>
+                            <span class="badge badge-secondary">
+                                {% if sub.billing_cycle.value == 'custom' %}
+                                Every {{ sub.custom_billing_amount or 1 }} {{ (sub.custom_billing_unit or
+                                'months')|capitalize }}
+                                {% else %}
+                                {{ sub.billing_cycle.value|capitalize }}
+                                {% endif %}
+                            </span>
+                        </td>
                         <td>
                             {% if sub.status.value == 'active' %}
                             <span class="badge badge-success">Active</span>

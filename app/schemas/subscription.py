@@ -12,6 +12,8 @@ class SubscriptionBase(BaseModel):
     cost: float = Field(..., gt=0)
     currency: str = Field(default="USD", max_length=3)
     billing_cycle: BillingCycle
+    custom_billing_amount: Optional[int] = None
+    custom_billing_unit: Optional[str] = None
     start_date: date
     next_renewal_date: date
     status: SubscriptionStatus = SubscriptionStatus.ACTIVE
@@ -37,6 +39,8 @@ class SubscriptionUpdate(BaseModel):
     cost: Optional[float] = Field(None, gt=0)
     currency: Optional[str] = None
     billing_cycle: Optional[BillingCycle] = None
+    custom_billing_amount: Optional[int] = None
+    custom_billing_unit: Optional[str] = None
     start_date: Optional[date] = None
     next_renewal_date: Optional[date] = None
     status: Optional[SubscriptionStatus] = None

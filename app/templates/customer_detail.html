@@ -5,7 +5,8 @@
 {% block content %}
 <div class="animate-fade-in">
     <!-- Back Button -->
-    <button class="btn btn-secondary btn-sm mb-4" onclick="window.history.back()" style="display: inline-flex; align-items: center; gap: 6px;">
+    <button class="btn btn-secondary btn-sm mb-4" onclick="window.history.back()"
+        style="display: inline-flex; align-items: center; gap: 6px;">
         ← Back
     </button>
 
@@ -13,33 +14,35 @@
         <a href="/" style="color: var(--color-text-secondary);">Dashboard</a>
         <span style="margin: 0 var(--space-2); color: var(--color-text-tertiary);">/</span>
         {% if customer.categories and customer.categories|length > 0 %}
-        <a href="/categories/{{ customer.categories[0].id }}" style="color: var(--color-text-secondary);">{{ customer.categories[0].name }}</a>
+        <a href="/categories/{{ customer.categories[0].id }}" style="color: var(--color-text-secondary);">{{
+            customer.categories[0].name }}</a>
         {% elif customer.primary_category %}
-        <a href="/categories/{{ customer.primary_category.id }}" style="color: var(--color-text-secondary);">{{ customer.primary_category.name }}</a>
+        <a href="/categories/{{ customer.primary_category.id }}" style="color: var(--color-text-secondary);">{{
+            customer.primary_category.name }}</a>
         {% else %}
         <span style="color: var(--color-text-secondary);">No Category</span>
         {% endif %}
         <span style="margin: 0 var(--space-2); color: var(--color-text-tertiary);">/</span>
         <span style="color: var(--color-text);">{{ customer.name }}</span>
     </nav>
-    
+
     <div class="flex items-center justify-between mb-8">
         <div>
             <h1>{{ customer.name }}</h1>
             <p class="text-secondary">
                 {% if customer.categories and customer.categories|length > 0 %}
-                    {% for cat in customer.categories %}
-                    <a href="/categories/{{ cat.id }}">{{ cat.name }}</a>{% if not loop.last %}, {% endif %}
-                    {% endfor %}
+                {% for cat in customer.categories %}
+                <a href="/categories/{{ cat.id }}">{{ cat.name }}</a>{% if not loop.last %}, {% endif %}
+                {% endfor %}
                 {% elif customer.primary_category %}
-                    <a href="/categories/{{ customer.primary_category.id }}">{{ customer.primary_category.name }}</a>
+                <a href="/categories/{{ customer.primary_category.id }}">{{ customer.primary_category.name }}</a>
                 {% endif %}
                 {% if customer.groups and customer.groups|length > 0 %}
-                    / {% for grp in customer.groups %}
-                    <a href="/groups/{{ grp.id }}">{{ grp.name }}</a>{% if not loop.last %}, {% endif %}
-                    {% endfor %}
+                / {% for grp in customer.groups %}
+                <a href="/groups/{{ grp.id }}">{{ grp.name }}</a>{% if not loop.last %}, {% endif %}
+                {% endfor %}
                 {% elif customer.primary_group %}
-                    / <a href="/groups/{{ customer.primary_group.id }}">{{ customer.primary_group.name }}</a>
+                / <a href="/groups/{{ customer.primary_group.id }}">{{ customer.primary_group.name }}</a>
                 {% endif %}
             </p>
         </div>
@@ -47,7 +50,8 @@
             <button class="btn btn-secondary btn-sm" onclick="loadEditData('customer', {{ customer.id }})">
                 ✏️ Edit Customer
             </button>
-            <button class="btn btn-primary" onclick="openSubscriptionModalForCustomer({{ customer.category_id or customer.primary_category.id if customer.primary_category else 0 }}, {{ customer.id }}, '{{ customer.name|replace("'", "\\'") }}')">
+            <button class="btn btn-primary"
+                onclick="openSubscriptionModalForCustomer({{ customer.category_id or customer.primary_category.id if customer.primary_category else 0 }}, {{ customer.id }}, '{{ customer.name|replace("'", "\\'") }}')">
                 ➕ New Subscription
             </button>
         </div>
@@ -64,17 +68,17 @@
                     <div class="text-sm text-secondary mb-1">Category</div>
                     <div class="font-medium">
                         {% if customer.categories and customer.categories|length > 0 %}
-                            {% for cat in customer.categories %}
-                            <a href="/categories/{{ cat.id }}" class="badge badge-primary" style="margin-right: 4px;">
-                                📁 {{ cat.name }}
-                            </a>
-                            {% endfor %}
+                        {% for cat in customer.categories %}
+                        <a href="/categories/{{ cat.id }}" class="badge badge-primary" style="margin-right: 4px;">
+                            📁 {{ cat.name }}
+                        </a>
+                        {% endfor %}
                         {% elif customer.primary_category %}
-                            <a href="/categories/{{ customer.primary_category.id }}" class="badge badge-primary">
-                                📁 {{ customer.primary_category.name }}
-                            </a>
+                        <a href="/categories/{{ customer.primary_category.id }}" class="badge badge-primary">
+                            📁 {{ customer.primary_category.name }}
+                        </a>
                         {% else %}
-                            <span class="text-secondary">No category assigned</span>
+                        <span class="text-secondary">No category assigned</span>
                         {% endif %}
                     </div>
                 </div>
@@ -82,17 +86,17 @@
                     <div class="text-sm text-secondary mb-1">Group</div>
                     <div class="font-medium">
                         {% if customer.groups and customer.groups|length > 0 %}
-                            {% for grp in customer.groups %}
-                            <a href="/groups/{{ grp.id }}" class="badge badge-success" style="margin-right: 4px;">
-                                👥 {{ grp.name }}
-                            </a>
-                            {% endfor %}
+                        {% for grp in customer.groups %}
+                        <a href="/groups/{{ grp.id }}" class="badge badge-success" style="margin-right: 4px;">
+                            👥 {{ grp.name }}
+                        </a>
+                        {% endfor %}
                         {% elif customer.primary_group %}
-                            <a href="/groups/{{ customer.primary_group.id }}" class="badge badge-success">
-                                👥 {{ customer.primary_group.name }}
-                            </a>
+                        <a href="/groups/{{ customer.primary_group.id }}" class="badge badge-success">
+                            👥 {{ customer.primary_group.name }}
+                        </a>
                         {% else %}
-                            <span class="text-secondary">No group assigned</span>
+                        <span class="text-secondary">No group assigned</span>
                         {% endif %}
                     </div>
                 </div>
@@ -157,15 +161,16 @@
             <div class="card-header">
                 <h2 class="card-title">🔗 Connections</h2>
                 <button class="btn btn-secondary btn-sm"
-                        hx-get="/api/ai/links?source_type=customer&source_id={{ customer.id }}"
-                        hx-target="#connections-content">
+                    hx-get="/api/ai/links?source_type=customer&source_id={{ customer.id }}"
+                    hx-target="#connections-content">
                     Refresh
                 </button>
             </div>
             <div id="connections-content">
                 <div class="empty-state" style="padding: var(--space-8);">
                     <div class="empty-state-icon">🔗</div>
-                    <p class="empty-state-text">No connections found yet. Click Refresh to discover relationships with other customers.</p>
+                    <p class="empty-state-text">No connections found yet. Click Refresh to discover relationships with
+                        other customers.</p>
                 </div>
             </div>
         </div>
@@ -196,18 +201,22 @@
                         <td class="font-medium">{{ sub.vendor_name }}</td>
                         <td>{{ sub.plan_name or '-' }}</td>
                         <td>${{ "%.2f"|format(sub.cost) }} {{ sub.currency }}</td>
-                        <td>{{ sub.billing_cycle.value }}</td>
+                        <td>
+                            {% if sub.billing_cycle.value == 'custom' %}
+                            Every {{ sub.custom_billing_amount or 1 }} {{ (sub.custom_billing_unit or
+                            'months')|capitalize }}
+                            {% else %}
+                            {{ sub.billing_cycle.value|capitalize }}
+                            {% endif %}
+                        </td>
                         <td>
                             {% set days = sub.days_until_renewal() %}
-                            {% if days < 0 %}
-                            <span class="badge badge-danger">{{ -days }} days overdue</span>
-                            {% elif days <= 7 %}
-                            <span class="badge badge-danger">{{ days }} days</span>
-                            {% elif days <= 30 %}
-                            <span class="badge badge-warning">{{ days }} days</span>
-                            {% else %}
-                            <span class="badge badge-success">{{ days }} days</span>
-                            {% endif %}
+                            {% if days < 0 %} <span class="badge badge-danger">{{ -days }} days overdue</span>
+                                {% elif days <= 7 %} <span class="badge badge-danger">{{ days }} days</span>
+                                    {% elif days <= 30 %} <span class="badge badge-warning">{{ days }} days</span>
+                                        {% else %}
+                                        <span class="badge badge-success">{{ days }} days</span>
+                                        {% endif %}
                         </td>
                         <td>
                             <span class="badge badge-{{ 'success' if sub.status.value == 'active' else 'secondary' }}">
@@ -229,7 +238,8 @@
             <div class="empty-state-icon">📋</div>
             <h3 class="empty-state-title">No subscriptions yet</h3>
             <p class="empty-state-text">Add the first subscription for this customer.</p>
-            <button class="btn btn-primary" onclick="window.location.href='/subscriptions/new?customer_id={{ customer.id }}'">
+            <button class="btn btn-primary"
+                onclick="window.location.href='/subscriptions/new?customer_id={{ customer.id }}'">
                 Add Subscription
             </button>
         </div>
@@ -264,12 +274,14 @@
                             <td class="font-medium">{{ sub.vendor_name }}</td>
                             <td>{{ sub.plan_name or '-' }}</td>
                             <td>${{ "%.2f"|format(sub.cost) }}</td>
-                            <td><span class="badge badge-{{ 'success' if sub.status.value == 'active' else 'warning' if sub.status.value == 'paused' else 'secondary' }}">{{ sub.status.value }}</span></td>
+                            <td><span
+                                    class="badge badge-{{ 'success' if sub.status.value == 'active' else 'warning' if sub.status.value == 'paused' else 'secondary' }}">{{
+                                    sub.status.value }}</span></td>
                             <td>
                                 {% set days = sub.days_until_renewal() %}
-                                <span class="badge badge-{{ 'danger' if days < 0 else 'warning' if days <= 30 else 'success' }}">
-                                    {% if days < 0 %}{{ -days }}d overdue{% else %}{{ days }}d{% endif %}
-                                </span>
+                                <span
+                                    class="badge badge-{{ 'danger' if days < 0 else 'warning' if days <= 30 else 'success' }}">
+                                    {% if days < 0 %}{{ -days }}d overdue{% else %}{{ days }}d{% endif %} </span>
                             </td>
                             <td><a href="/subscriptions/{{ sub.id }}" class="btn btn-sm btn-secondary">View</a></td>
                         </tr>
@@ -295,21 +307,26 @@
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
                     <div class="text-sm text-secondary mb-1">Total Monthly</div>
-                    <div class="text-2xl font-bold text-success">${{ "%.2f"|format(subscriptions|sum(attribute='cost')) }}</div>
+                    <div class="text-2xl font-bold text-success">${{ "%.2f"|format(subscriptions|sum(attribute='cost'))
+                        }}</div>
                 </div>
                 <div class="card" style="background: var(--color-bg-secondary); padding: var(--space-4);">
                     <div class="text-sm text-secondary mb-1">Annual Projection</div>
-                    <div class="text-2xl font-bold text-info">${{ "%.2f"|format(subscriptions|sum(attribute='cost') * 12) }}</div>
+                    <div class="text-2xl font-bold text-info">${{ "%.2f"|format(subscriptions|sum(attribute='cost') *
+                        12) }}</div>
                 </div>
             </div>
             {% if subscriptions %}
             <h4 class="font-semibold mb-2">By Subscription</h4>
             <div class="space-y-2" style="max-height: 250px; overflow-y: auto;">
                 {% for sub in subscriptions|sort(attribute='cost', reverse=true) %}
-                <div class="flex justify-between items-center p-2 rounded" style="background: var(--color-bg-secondary);">
+                <div class="flex justify-between items-center p-2 rounded"
+                    style="background: var(--color-bg-secondary);">
                     <div>
                         <span class="font-medium">{{ sub.vendor_name }}</span>
-                        <span class="badge badge-{{ 'success' if sub.status.value == 'active' else 'secondary' }} ml-2">{{ sub.status.value }}</span>
+                        <span
+                            class="badge badge-{{ 'success' if sub.status.value == 'active' else 'secondary' }} ml-2">{{
+                            sub.status.value }}</span>
                     </div>
                     <span class="font-bold">${{ "%.2f"|format(sub.cost) }}</span>
                 </div>

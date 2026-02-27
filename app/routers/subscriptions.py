@@ -285,6 +285,19 @@ def renew_subscription(subscription_id: int, background_tasks: BackgroundTasks, 
         new_date = current_date + relativedelta(months=6)
     elif db_subscription.billing_cycle.value == 'yearly':
         new_date = current_date + relativedelta(years=1)
+    elif db_subscription.billing_cycle.value == 'custom':
+        amount = db_subscription.custom_billing_amount or 1
+        unit = (db_subscription.custom_billing_unit or 'months').lower()
+        if unit == 'days':
+            new_date = current_date + timedelta(days=amount)
+        elif unit == 'weeks':
+            new_date = current_date + timedelta(weeks=amount)
+        elif unit == 'months':
+            new_date = current_date + relativedelta(months=amount)
+        elif unit == 'years':
+            new_date = current_date + relativedelta(years=amount)
+        else:
+            new_date = current_date + relativedelta(months=amount)
     else:
         new_date = current_date + relativedelta(months=1)
     
