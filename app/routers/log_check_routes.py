@@ -403,3 +403,41 @@ async def delete_check_category(
     db.commit()
     
     return {"success": True, "message": "Category deleted"}
+
+
+@router.put("/api/log-check/categories/{category_id}")
+async def update_check_category(
+    category_id: int, 
+    request: CategoryRequest, 
+    db: Session = Depends(get_db),
+    user: User = Depends(require_auth)
+):
+    """Update a check category."""
+    cat = db.query(CheckCategory).filter(CheckCategory.id == category_id).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+        
+    # Security check: only allow updating own categories
+    if cat.user_id and cat.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this category")
+    
+    # Check if new name already exists for this user (if name changed)
+    if cat.name != request.name:
+        existing = db.query(CheckCategory).filter(
+            CheckCategory.name == request.name,
+            CheckCategory.user_id == user.id
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Category with this name already exists")
+            
+    cat.name = request.name
+    cat.description = request.description
+    db.commit()
+    
+    return {
+        "success": True, 
+        "message": "Category updated", 
+        "id": cat.id, 
+        "name": cat.name, 
+        "description": cat.description
+    }
