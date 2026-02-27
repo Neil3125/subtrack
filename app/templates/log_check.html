@@ -138,8 +138,9 @@
             <div class="form-group mb-4">
                 <div class="flex justify-between items-center mb-2">
                     <label class="form-label text-gray-300 mb-0">Category</label>
-                    <button class="text-xs text-blue-400 hover:text-blue-300 underline"
-                        onclick="openCategoryManageModal()">Manage Categories</button>
+                    <button class="btn btn-secondary btn-sm flex items-center gap-1"
+                        style="padding: 2px 8px; font-size: 0.75rem; border: 1px solid var(--color-glass-border); background: rgba(255,255,255,0.05);"
+                        onclick="openCategoryManageModal()">⚙️ Manage</button>
                 </div>
                 <div class="flex gap-2">
                     <select class="form-select flex-1 bg-gray-800 text-white border-gray-600" id="custom-category"
@@ -195,7 +196,7 @@
 </div>
 
 <!-- Category Management Modal -->
-<div id="categoryManageModal" class="modal" style="display: none; z-index: 1000;">
+<div id="categoryManageModal" class="modal" style="display: none; z-index: 10500;">
     <div class="modal-content glass-card" style="max-width: 600px; padding: 24px; background: #1e293b;">
         <div class="modal-header mb-4 flex justify-between items-center">
             <h2 class="modal-title text-white m-0">Manage Categories</h2>
@@ -211,7 +212,7 @@
 </div>
 
 <!-- Category Edit Modal -->
-<div id="categoryEditModal" class="modal" style="display: none; z-index: 1010;">
+<div id="categoryEditModal" class="modal" style="display: none; z-index: 10510;">
     <div class="modal-content glass-card"
         style="max-width: 400px; padding: 24px; background: #0f172a; border: 1px solid var(--color-glass-border);">
         <div class="modal-header mb-4 flex justify-between items-center">
