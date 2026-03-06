@@ -64,10 +64,6 @@ def upgrade() -> None:
         batch_op.alter_column('category_id',
                               existing_type=sa.Integer(),
                               nullable=True)
-        # Make country required
-        batch_op.alter_column('country',
-                              existing_type=sa.String(100),
-                              nullable=False)
 
 
 def downgrade() -> None:
@@ -109,7 +105,3 @@ def downgrade() -> None:
         batch_op.alter_column('category_id',
                               existing_type=sa.Integer(),
                               nullable=False)
-        # Make country optional again
-        batch_op.alter_column('country',
-                              existing_type=sa.String(100),
-                              nullable=True)
