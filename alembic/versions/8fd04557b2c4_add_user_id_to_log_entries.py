@@ -20,10 +20,27 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    with op.batch_alter_table('log_entries') as batch_op:
-        batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
-        batch_op.create_index('ix_log_entries_user_id', ['user_id'], unique=False)
-        batch_op.create_foreign_key('fk_log_entries_users', 'users', ['user_id'], ['id'])
+    bind = op.get_bind()
+    if bind.engine.name == 'postgresql':
+        op.execute("ALTER TABLE log_entries ADD COLUMN IF NOT EXISTS user_id INTEGER")
+        op.execute("CREATE INDEX IF NOT EXISTS ix_log_entries_user_id ON log_entries (user_id)")
+        
+        # Check if foreign key exists before adding
+        engine = sa.create_engine(bind.engine.url)
+        with engine.connect() as conn:
+            res = conn.execute(sa.text(
+                "SELECT conname FROM pg_constraint WHERE conname = 'fk_log_entries_users'"
+            )).fetchone()
+            if not res:
+                op.execute(
+                    "ALTER TABLE log_entries ADD CONSTRAINT fk_log_entries_users "
+                    "FOREIGN KEY(user_id) REFERENCES users(id)"
+                )
+    else:
+        with op.batch_alter_table('log_entries') as batch_op:
+            batch_op.add_column(sa.Column('user_id', sa.Integer(), nullable=True))
+            batch_op.create_index('ix_log_entries_user_id', ['user_id'], unique=False)
+            batch_op.create_foreign_key('fk_log_entries_users', 'users', ['user_id'], ['id'])
     # ### end Alembic commands ###
 
 
