@@ -15,6 +15,17 @@ from app.routers.auth_routes import get_session
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan - runs on startup and shutdown."""
+    # Startup: Run database migrations programmatically to bypass bash CRLF script issues
+    try:
+        import alembic.config
+        import alembic.command
+        print("[Startup] Running database migrations...")
+        alembic_cfg = alembic.config.Config("alembic.ini")
+        alembic.command.upgrade(alembic_cfg, "head")
+        print("[Startup] Database migrations completed successfully.")
+    except Exception as e:
+        print(f"[Startup] ERROR: Database migrations failed: {e}")
+
     # Startup: Initialize data persistence (restore data if DB is empty)
     from app.database import engine, Base
     # Explicitly import models to ensure they are registered with Base.metadata
