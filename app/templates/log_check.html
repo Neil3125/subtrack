@@ -544,7 +544,10 @@
             document.getElementById('log-preview').value = data.full_entry;
             showToast("On-Site log generated!");
             closeModal('onSiteModal');
-        } catch (e) { }
+        } catch (e) {
+            console.error("Error generating On-Site log:", e);
+            showToast("Error generating log: Network or API failure", "error");
+        }
     }
 
     // --- Utilities ---

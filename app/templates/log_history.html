@@ -73,6 +73,10 @@
                 </div>
                 <div class="flex gap-2">
                     <button class="btn btn-secondary btn-sm rounded" style="padding: 2px 8px;"
+                        onclick="openEditModal({{ log.id }}, '{{ log.full_entry|escapejs }}', this)">
+                        ✏️ Edit
+                    </button>
+                    <button class="btn btn-secondary btn-sm rounded" style="padding: 2px 8px;"
                         onclick="copyLog('{{ log.full_entry|escapejs }}')">
                         📋 Copy
                     </button>
@@ -95,6 +99,29 @@
     </div>
 </div>
 
+<!-- Edit Log Modal -->
+<div id="editLogModal" class="modal" style="display: none; z-index: 10500;">
+    <div class="modal-content glass-card" style="max-width: 600px; padding: 24px; background: #1e293b;">
+        <div class="modal-header mb-4 flex justify-between items-center">
+            <h2 class="modal-title text-white m-0">Edit Log Entry</h2>
+            <button class="modal-close text-white text-2xl" onclick="closeModal('editLogModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="edit-log-id">
+            <div class="form-group mb-3 mt-4">
+                <label class="form-label text-gray-300 mb-1 block">Full Entry Text</label>
+                <textarea id="edit-log-text"
+                    class="pro-preview w-full bg-gray-800 text-white border border-gray-600 p-2 rounded" rows="6"
+                    style="min-height: 120px"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer mt-4 flex justify-end gap-2">
+            <button class="btn btn-secondary" onclick="closeModal('editLogModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="submitEditLog()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
 <div id="status-toast" class="status-toast"
     style="display: none; position: fixed; bottom: 20px; right: 20px; background: #1e293b; color: white; padding: 12px 24px; border-radius: 8px; z-index: 10000; border-left: 4px solid #10b981; transition: opacity 0.3s; opacity: 0;">
     <span class="text-xl">✅</span>
@@ -113,6 +140,58 @@
             toast.style.opacity = '0';
             setTimeout(() => toast.style.display = 'none', 300);
         }, 3000);
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    let currentEditCard = null;
+
+    function openEditModal(id, text, btn) {
+        document.getElementById('edit-log-id').value = id;
+        document.getElementById('edit-log-text').value = text;
+        currentEditCard = btn.closest('.log-item');
+        document.getElementById('editLogModal').style.display = 'flex';
+    }
+
+    async function submitEditLog() {
+        const id = document.getElementById('edit-log-id').value;
+        const newText = document.getElementById('edit-log-text').value;
+
+        try {
+            const res = await fetch(`/api/log-check/logs/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ full_entry: newText })
+            });
+
+            if (res.ok) {
+                // Update UI optimistically
+                if (currentEditCard) {
+                    const textContainer = currentEditCard.querySelector('.whitespace-pre-wrap');
+                    if (textContainer) {
+                        textContainer.textContent = newText;
+                    }
+                    const safeText = newText.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
+                    const copyBtn = currentEditCard.querySelector('button[onclick^="copyLog"]');
+                    if (copyBtn) {
+                        copyBtn.setAttribute('onclick', `copyLog('${safeText}')`);
+                    }
+                    const editBtn = currentEditCard.querySelector('button[onclick^="openEditModal"]');
+                    if (editBtn) {
+                        editBtn.setAttribute('onclick', `openEditModal(${id}, '${safeText}', this)`);
+                    }
+                }
+                showToast("Log updated successfully");
+                closeModal('editLogModal');
+            } else {
+                showToast("Failed to update log", "error");
+            }
+        } catch (e) {
+            console.error(e);
+            showToast("Error updating log", "error");
+        }
     }
 
     function filterLogs() {

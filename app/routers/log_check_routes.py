@@ -165,17 +165,20 @@ async def log_check_page(request: Request, db: Session = Depends(get_db), user: 
 
 
 @router.get("/log-check/history", response_class=HTMLResponse)
-async def log_history_page(request: Request, db: Session = Depends(get_db)):
+async def log_history_page(request: Request, db: Session = Depends(get_db), user: User = Depends(require_auth)):
     """Render log history page."""
-    logs = db.query(LogEntry).order_by(desc(LogEntry.created_at)).all()
+    logs = db.query(LogEntry).filter(LogEntry.user_id == user.id).order_by(desc(LogEntry.created_at)).all()
     
     # Need to fetch categories for filtering dropdown in history if needed
-    categories = db.query(CheckCategory).all()
+    categories = db.query(CheckCategory).filter(
+        (CheckCategory.user_id == user.id) | (CheckCategory.user_id.is_(None))
+    ).all()
     
     return templates.TemplateResponse("log_history.html", {
         "request": request,
         "logs": logs,
-        "check_categories": categories
+        "check_categories": categories,
+        "user": user
     })
 
 
@@ -185,7 +188,7 @@ async def log_history_page(request: Request, db: Session = Depends(get_db)):
 async def generate_log(
     request: LogGenerateRequest, 
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_user) # Optional auth for API
+    user: User = Depends(require_auth)
 ):
     """Generate and save a log entry."""
     now = datetime.now()
@@ -216,8 +219,8 @@ async def generate_log(
         total_minutes = request.hours * 60 + request.minutes
         duration_minutes = total_minutes
         
-        start_dt = now
-        end_dt = now + timedelta(minutes=total_minutes)
+        start_dt = now - timedelta(minutes=total_minutes)
+        end_dt = now
         
         # Override date if provided, otherwise use today
         if request.date_str:
@@ -256,7 +259,8 @@ async def generate_log(
         check_type=request.check_type,
         category_name=request.category_name,
         message=message,
-        full_entry=full_entry
+        full_entry=full_entry,
+        user_id=user.id
     )
     
     db.add(log_entry)
@@ -277,10 +281,11 @@ async def get_logs(
     check_type: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(require_auth)
 ):
     """Get log entries with optional filters."""
-    query = db.query(LogEntry)
+    query = db.query(LogEntry).filter(LogEntry.user_id == user.id)
     
     if search:
         query = query.filter(LogEntry.full_entry.ilike(f"%{search}%"))
@@ -308,9 +313,14 @@ async def get_logs(
 
 
 @router.put("/api/log-check/logs/{log_id}")
-async def update_log(log_id: int, request: LogUpdateRequest, db: Session = Depends(get_db)):
+async def update_log(
+    log_id: int, 
+    request: LogUpdateRequest, 
+    db: Session = Depends(get_db),
+    user: User = Depends(require_auth)
+):
     """Update a log entry."""
-    log = db.query(LogEntry).filter(LogEntry.id == log_id).first()
+    log = db.query(LogEntry).filter(LogEntry.id == log_id, LogEntry.user_id == user.id).first()
     if not log:
         raise HTTPException(status_code=404, detail="Log entry not found")
     
@@ -321,9 +331,9 @@ async def update_log(log_id: int, request: LogUpdateRequest, db: Session = Depen
 
 
 @router.delete("/api/log-check/logs/{log_id}")
-async def delete_log(log_id: int, db: Session = Depends(get_db)):
+async def delete_log(log_id: int, db: Session = Depends(get_db), user: User = Depends(require_auth)):
     """Delete a log entry."""
-    log = db.query(LogEntry).filter(LogEntry.id == log_id).first()
+    log = db.query(LogEntry).filter(LogEntry.id == log_id, LogEntry.user_id == user.id).first()
     if not log:
         raise HTTPException(status_code=404, detail="Log entry not found")
     

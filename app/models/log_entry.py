@@ -12,7 +12,11 @@ class LogEntry(Base):
     __tablename__ = "log_entries"
     
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    user = relationship("app.models.user.User", backref="log_entries")
     
     # Log details
     date_str = Column(String(20), nullable=False)  # e.g., "1/23/2026"
