@@ -32,6 +32,39 @@ async def lifespan(app: FastAPI):
     from app.models.subscription_template import SubscriptionTemplate
     Base.metadata.create_all(bind=engine)
     
+    # FORCE PATCH: Ensure new columns exist on Railway regardless of Alembic state
+    try:
+        from sqlalchemy import text
+        print("[Startup] Executing emergency schema patches...")
+        with engine.begin() as conn:
+            if engine.name == 'postgresql':
+                conn.execute(text("ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS custom_billing_amount INTEGER"))
+                conn.execute(text("ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS custom_billing_unit VARCHAR(20)"))
+                conn.execute(text("ALTER TABLE log_entries ADD COLUMN IF NOT EXISTS user_id INTEGER"))
+            else:
+                # SQLite fallback
+                for col_query in [
+                    "ALTER TABLE subscriptions ADD COLUMN custom_billing_amount INTEGER",
+                    "ALTER TABLE subscriptions ADD COLUMN custom_billing_unit VARCHAR(20)",
+                    "ALTER TABLE log_entries ADD COLUMN user_id INTEGER"
+                ]:
+                    try:
+                        conn.execute(text(col_query))
+                    except Exception:
+                        pass
+                        
+        if engine.name == 'postgresql':
+            import sqlalchemy as sa
+            autocommit_engine = sa.create_engine(engine.url, isolation_level="AUTOCOMMIT")
+            with autocommit_engine.connect() as auto_conn:
+                try:
+                    auto_conn.execute(text("ALTER TYPE billingcycle ADD VALUE IF NOT EXISTS 'custom'"))
+                except Exception:
+                    pass
+        print("[Startup] Emergency patches applied.")
+    except Exception as e:
+        print(f"[Startup] ERROR: Emergency patch failed: {e}")
+        
     from app.data_persistence import init_data_persistence
     print("[Startup] Initializing data persistence...")
     init_data_persistence()
