@@ -28,7 +28,9 @@ def upgrade() -> None:
     # Add new ENUM value for postgres specifically
     bind = op.get_bind()
     if bind.engine.name == 'postgresql':
+        op.execute("COMMIT")
         op.execute("ALTER TYPE billingcycle ADD VALUE IF NOT EXISTS 'custom'")
+        op.execute("BEGIN")
     # ### end Alembic commands ###
     # ### end Alembic commands ###
 
