@@ -56,7 +56,8 @@
     <div class="flex flex-col gap-4" id="log-list">
         {% for log in logs %}
         <div class="glass-card p-0 log-item overflow-hidden mb-2" data-type="{{ log.check_type }}"
-            data-text="{{ log.full_entry|lower }}" data-date="{{ log.created_at }}">
+            data-text="{{ log.full_entry|lower }}" data-date="{{ log.created_at }}"
+            data-full-text="{{ log.full_entry|e }}">
             <div class="p-4 border-b border-gray-700 flex justify-between items-center"
                 style="background: rgba(0,0,0,0.2);">
                 <div class="flex items-center gap-3">
@@ -73,11 +74,11 @@
                 </div>
                 <div class="flex gap-2">
                     <button class="btn btn-secondary btn-sm rounded" style="padding: 2px 8px;"
-                        onclick="openEditModal({{ log.id }}, '{{ log.full_entry|escapejs }}', this)">
+                        onclick="openEditModal({{ log.id }}, this)">
                         ✏️ Edit
                     </button>
                     <button class="btn btn-secondary btn-sm rounded" style="padding: 2px 8px;"
-                        onclick="copyLog('{{ log.full_entry|escapejs }}')">
+                        onclick="copyLogCard(this)">
                         📋 Copy
                     </button>
                     <button class="btn btn-secondary btn-sm text-red-400 border-red-900 rounded"
@@ -148,10 +149,11 @@
 
     let currentEditCard = null;
 
-    function openEditModal(id, text, btn) {
+    function openEditModal(id, btn) {
+        currentEditCard = btn.closest('.log-item');
+        const text = currentEditCard.getAttribute('data-full-text');
         document.getElementById('edit-log-id').value = id;
         document.getElementById('edit-log-text').value = text;
-        currentEditCard = btn.closest('.log-item');
         document.getElementById('editLogModal').style.display = 'flex';
     }
 
@@ -173,15 +175,8 @@
                     if (textContainer) {
                         textContainer.textContent = newText;
                     }
-                    const safeText = newText.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
-                    const copyBtn = currentEditCard.querySelector('button[onclick^="copyLog"]');
-                    if (copyBtn) {
-                        copyBtn.setAttribute('onclick', `copyLog('${safeText}')`);
-                    }
-                    const editBtn = currentEditCard.querySelector('button[onclick^="openEditModal"]');
-                    if (editBtn) {
-                        editBtn.setAttribute('onclick', `openEditModal(${id}, '${safeText}', this)`);
-                    }
+                    currentEditCard.setAttribute('data-full-text', newText);
+                    currentEditCard.setAttribute('data-text', newText.toLowerCase());
                 }
                 showToast("Log updated successfully");
                 closeModal('editLogModal');
@@ -228,6 +223,12 @@
             console.error(e);
             showToast('Error deleting log', 'error');
         }
+    }
+
+    function copyLogCard(btn) {
+        const card = btn.closest('.log-item');
+        const text = card.getAttribute('data-full-text');
+        copyLog(text);
     }
 
     function copyLog(text) {
