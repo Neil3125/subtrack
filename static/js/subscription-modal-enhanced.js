@@ -1272,6 +1272,9 @@ window.saveEnhancedSubscription = function (formData, itemId = null) {
       formData.custom_billing_amount = parseInt(amountInput.value, 10) || 1;
       formData.custom_billing_unit = unitInput.value || 'months';
     }
+  } else {
+    formData.custom_billing_amount = null;
+    formData.custom_billing_unit = null;
   }
 
   // Handle customer_id (ensure integer)
