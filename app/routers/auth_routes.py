@@ -4,6 +4,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+import json
+import os
 from typing import Optional
 import secrets
 
@@ -15,8 +17,40 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 # Session storage (in production, use Redis or database sessions)
-sessions = {}
+SESSION_FILE = "app/sessions.json"
 
+def load_sessions():
+    if os.path.exists(SESSION_FILE):
+        try:
+            with open(SESSION_FILE, "r") as f:
+                data = json.load(f)
+                sessions = {}
+                for k, v in data.items():
+                    sessions[k] = {
+                        "user_id": v["user_id"],
+                        "created_at": datetime.fromisoformat(v["created_at"]),
+                        "expires_at": datetime.fromisoformat(v["expires_at"])
+                    }
+                return sessions
+        except Exception:
+            return {}
+    return {}
+
+def save_sessions(sess):
+    try:
+        data = {}
+        for k, v in sess.items():
+            data[k] = {
+                "user_id": v["user_id"],
+                "created_at": v["created_at"].isoformat(),
+                "expires_at": v["expires_at"].isoformat()
+            }
+        with open(SESSION_FILE, "w") as f:
+            json.dump(data, f)
+    except Exception:
+        pass
+
+sessions = load_sessions()
 
 def create_session(user_id: int) -> str:
     """Create a new session for a user."""
@@ -26,6 +60,7 @@ def create_session(user_id: int) -> str:
         "created_at": datetime.now(),
         "expires_at": datetime.now() + timedelta(days=7)
     }
+    save_sessions(sessions)
     return session_id
 
 
@@ -38,6 +73,7 @@ def get_session(session_id: str) -> Optional[dict]:
         else:
             # Clean up expired session
             del sessions[session_id]
+            save_sessions(sessions)
     return None
 
 
@@ -45,6 +81,7 @@ def delete_session(session_id: str):
     """Delete a session."""
     if session_id in sessions:
         del sessions[session_id]
+        save_sessions(sessions)
 
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
