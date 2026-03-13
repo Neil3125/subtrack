@@ -499,31 +499,35 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         for user_data in data.get("users", []):
             try:
                 existing = db.query(User).filter(User.id == user_data["id"]).first()
+                if not existing:
+                    existing_by_username = db.query(User).filter(User.username == user_data.get("username")).first()
+                    if existing_by_username:
+                        existing = existing_by_username
+                
                 if existing:
+                    existing.username = user_data["username"]
+                    existing.email = user_data.get("email")
+                    existing.password_hash = user_data["password_hash"]
+                    existing.is_active = user_data.get("is_active", True)
+                    existing.is_admin = user_data.get("is_admin", False)
                     id_map["users"][user_data["id"]] = existing.id
-                    continue
-                # Check by username
-                existing_by_username = db.query(User).filter(User.username == user_data.get("username")).first()
-                if existing_by_username:
-                    id_map["users"][user_data["id"]] = existing_by_username.id
-                    warnings.append(f"User '{user_data.get('username')}' already exists. Using existing ID.")
-                    continue
-                # Add
-                user = User(
-                    username=user_data["username"],
-                    email=user_data.get("email"),
-                    password_hash=user_data["password_hash"], # Warning: preserving exact hash
-                    is_active=user_data.get("is_active", True),
-                    is_admin=user_data.get("is_admin", False)
-                )
-                if user_data.get("created_at"):
-                    user.created_at = datetime.fromisoformat(user_data["created_at"])
-                if user_data.get("updated_at"):
-                    user.updated_at = datetime.fromisoformat(user_data["updated_at"])
-                db.add(user)
-                db.flush()
-                imported_counts["users"] += 1
-                id_map["users"][user_data["id"]] = user.id
+                    imported_counts["users"] += 1
+                else:
+                    user = User(
+                        username=user_data["username"],
+                        email=user_data.get("email"),
+                        password_hash=user_data["password_hash"],
+                        is_active=user_data.get("is_active", True),
+                        is_admin=user_data.get("is_admin", False)
+                    )
+                    if user_data.get("created_at"):
+                        user.created_at = datetime.fromisoformat(user_data["created_at"])
+                    if user_data.get("updated_at"):
+                        user.updated_at = datetime.fromisoformat(user_data["updated_at"])
+                    db.add(user)
+                    db.flush()
+                    id_map["users"][user_data["id"]] = user.id
+                    imported_counts["users"] += 1
                 db.commit()
             except IntegrityError as e:
                 warnings.append(f"User {user_data.get('id')} skipped: {str(e)}")
@@ -535,24 +539,25 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         for cat_data in data.get("categories", []):
             try:
                 existing = db.query(Category).filter(Category.id == cat_data["id"]).first()
+                if not existing:
+                    existing_by_name = db.query(Category).filter(Category.name == cat_data.get("name")).first()
+                    if existing_by_name:
+                        existing = existing_by_name
+                
                 if existing:
+                    existing.name = cat_data["name"]
+                    existing.description = cat_data.get("description")
                     id_map["categories"][cat_data["id"]] = existing.id
-                    continue
-                # Check for unique name conflicts
-                existing_by_name = db.query(Category).filter(Category.name == cat_data.get("name")).first()
-                if existing_by_name:
-                    id_map["categories"][cat_data["id"]] = existing_by_name.id
-                    warnings.append(f"Category '{cat_data.get('name')}' already exists. Using existing category ID {existing_by_name.id}.")
-                    continue
-                # Create without explicit ID - let DB auto-generate
-                cat = Category(
-                    name=cat_data["name"],
-                    description=cat_data.get("description")
-                )
-                db.add(cat)
-                db.flush()  # Get the new ID
-                imported_counts["categories"] += 1
-                id_map["categories"][cat_data["id"]] = cat.id
+                    imported_counts["categories"] += 1
+                else:
+                    cat = Category(
+                        name=cat_data["name"],
+                        description=cat_data.get("description")
+                    )
+                    db.add(cat)
+                    db.flush()
+                    id_map["categories"][cat_data["id"]] = cat.id
+                    imported_counts["categories"] += 1
                 db.commit()
             except IntegrityError as e:
                 warnings.append(f"Category {cat_data.get('id')} skipped: {str(e)}")
@@ -565,25 +570,29 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         for group_data in data.get("groups", []):
             try:
                 existing = db.query(Group).filter(Group.id == group_data["id"]).first()
-                if existing:
-                    id_map["groups"][group_data["id"]] = existing.id
-                    continue
-                # Skip if referenced category missing
+                
                 category_id = group_data.get("category_id")
                 mapped_category_id = id_map["categories"].get(category_id, category_id)
                 if mapped_category_id and not db.query(Category).filter(Category.id == mapped_category_id).first():
                     warnings.append(f"Group {group_data.get('id')} skipped: missing category {mapped_category_id}")
                     continue
-                # Create without explicit ID
-                group = Group(
-                    category_id=mapped_category_id,
-                    name=group_data["name"],
-                    notes=group_data.get("notes")
-                )
-                db.add(group)
-                db.flush()
-                imported_counts["groups"] += 1
-                id_map["groups"][group_data["id"]] = group.id
+                    
+                if existing:
+                    existing.category_id = mapped_category_id
+                    existing.name = group_data["name"]
+                    existing.notes = group_data.get("notes")
+                    id_map["groups"][group_data["id"]] = existing.id
+                    imported_counts["groups"] += 1
+                else:
+                    group = Group(
+                        category_id=mapped_category_id,
+                        name=group_data["name"],
+                        notes=group_data.get("notes")
+                    )
+                    db.add(group)
+                    db.flush()
+                    id_map["groups"][group_data["id"]] = group.id
+                    imported_counts["groups"] += 1
                 db.commit()
             except IntegrityError as e:
                 warnings.append(f"Group {group_data.get('id')} skipped: {str(e)}")
@@ -596,34 +605,45 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         for customer_data in data.get("customers", []):
             try:
                 existing = db.query(Customer).filter(Customer.id == customer_data["id"]).first()
-                if existing:
-                    id_map["customers"][customer_data["id"]] = existing.id
-                    continue
+                
                 mapped_category_id = id_map["categories"].get(customer_data.get("category_id"), customer_data.get("category_id"))
                 mapped_group_id = id_map["groups"].get(customer_data.get("group_id"), customer_data.get("group_id"))
+                
                 if mapped_category_id and not db.query(Category).filter(Category.id == mapped_category_id).first():
-                    warnings.append(f"Customer {customer_data.get('id')} skipped: missing category {mapped_category_id}")
-                    continue
+                    warnings.append(f"Customer {customer_data.get('id')} WARNING: missing category {mapped_category_id}")
+                    mapped_category_id = None
                 if mapped_group_id and not db.query(Group).filter(Group.id == mapped_group_id).first():
-                    warnings.append(f"Customer {customer_data.get('id')} skipped: missing group {mapped_group_id}")
-                    continue
-                # Create without explicit ID
-                customer = Customer(
-                    category_id=mapped_category_id,
-                    group_id=mapped_group_id,
-                    name=customer_data["name"],
-                    email=customer_data.get("email"),
-                    phone=customer_data.get("phone"),
-                    tags=customer_data.get("tags"),
-                    notes=customer_data.get("notes")
-                )
-                # Set country if available
-                if "country" in customer_data and hasattr(customer, 'country'):
-                    customer.country = customer_data["country"]
-                db.add(customer)
-                db.flush()
-                imported_counts["customers"] += 1
-                id_map["customers"][customer_data["id"]] = customer.id
+                    warnings.append(f"Customer {customer_data.get('id')} WARNING: missing group {mapped_group_id}")
+                    mapped_group_id = None
+                    
+                if existing:
+                    existing.category_id = mapped_category_id
+                    existing.group_id = mapped_group_id
+                    existing.name = customer_data["name"]
+                    existing.email = customer_data.get("email")
+                    existing.phone = customer_data.get("phone")
+                    existing.tags = customer_data.get("tags")
+                    existing.notes = customer_data.get("notes")
+                    if "country" in customer_data and hasattr(existing, 'country'):
+                        existing.country = customer_data["country"]
+                    id_map["customers"][customer_data["id"]] = existing.id
+                    imported_counts["customers"] += 1
+                else:
+                    customer = Customer(
+                        category_id=mapped_category_id,
+                        group_id=mapped_group_id,
+                        name=customer_data["name"],
+                        email=customer_data.get("email"),
+                        phone=customer_data.get("phone"),
+                        tags=customer_data.get("tags"),
+                        notes=customer_data.get("notes")
+                    )
+                    if "country" in customer_data and hasattr(customer, 'country'):
+                        customer.country = customer_data["country"]
+                    db.add(customer)
+                    db.flush()
+                    id_map["customers"][customer_data["id"]] = customer.id
+                    imported_counts["customers"] += 1
                 db.commit()
             except IntegrityError as e:
                 warnings.append(f"Customer {customer_data.get('id')} skipped: {str(e)}")
@@ -636,57 +656,70 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         for sub_data in data.get("subscriptions", []):
             try:
                 existing = db.query(Subscription).filter(Subscription.id == sub_data["id"]).first()
-                if existing:
-                    continue
-                # Skip if referenced customer/category missing
+                
                 mapped_customer_id = id_map["customers"].get(sub_data.get("customer_id"), sub_data.get("customer_id"))
                 mapped_category_id = id_map["categories"].get(sub_data.get("category_id"), sub_data.get("category_id"))
+                
                 if mapped_customer_id and not db.query(Customer).filter(Customer.id == mapped_customer_id).first():
-                    warnings.append(f"Subscription {sub_data.get('id')} skipped: missing customer {mapped_customer_id}")
-                    continue
+                    warnings.append(f"Subscription {sub_data.get('id')} WARNING: missing customer {mapped_customer_id}")
+                    mapped_customer_id = None
                 if mapped_category_id and not db.query(Category).filter(Category.id == mapped_category_id).first():
-                    warnings.append(f"Subscription {sub_data.get('id')} skipped: missing category {mapped_category_id}")
-                    continue
-                # Normalize enum values (handle uppercase Postgres exports)
+                    warnings.append(f"Subscription {sub_data.get('id')} WARNING: missing category {mapped_category_id}")
+                    mapped_category_id = None
+                    
                 raw_billing_cycle = sub_data.get("billing_cycle", "monthly")
                 raw_status = sub_data.get("status", "active")
                 
                 billing_cycle_value = raw_billing_cycle.lower() if isinstance(raw_billing_cycle, str) else "monthly"
                 status_value = raw_status.lower() if isinstance(raw_status, str) else "active"
                 
-                # Validate enum values with safe fallbacks
                 try:
                     billing_cycle_enum = BillingCycle(billing_cycle_value)
                 except Exception:
-                    warnings.append(f"Subscription {sub_data.get('id')} invalid billing_cycle '{raw_billing_cycle}', defaulted to monthly")
                     billing_cycle_enum = BillingCycle.MONTHLY
                 
                 try:
                     status_enum = SubscriptionStatus(status_value)
                 except Exception:
-                    warnings.append(f"Subscription {sub_data.get('id')} invalid status '{raw_status}', defaulted to active")
                     status_enum = SubscriptionStatus.ACTIVE
                 
-                # Create without explicit ID
-                sub = Subscription(
-                    customer_id=mapped_customer_id,
-                    category_id=mapped_category_id,
-                    vendor_name=sub_data["vendor_name"],
-                    plan_name=sub_data.get("plan_name"),
-                    cost=sub_data.get("cost", 0),
-                    currency=sub_data.get("currency", "USD"),
-                    billing_cycle=billing_cycle_enum,
-                    start_date=datetime.fromisoformat(sub_data["start_date"]).date() if sub_data.get("start_date") else None,
-                    next_renewal_date=datetime.fromisoformat(sub_data["next_renewal_date"]).date() if sub_data.get("next_renewal_date") else None,
-                    status=status_enum,
-                    notes=sub_data.get("notes")
-                )
-                # Set country if available
-                if "country" in sub_data and hasattr(sub, 'country'):
-                    sub.country = sub_data["country"]
-                db.add(sub)
-                db.flush()
-                imported_counts["subscriptions"] += 1
+                start_d = datetime.fromisoformat(sub_data["start_date"]).date() if sub_data.get("start_date") else None
+                next_d = datetime.fromisoformat(sub_data["next_renewal_date"]).date() if sub_data.get("next_renewal_date") else None
+                
+                if existing:
+                    existing.customer_id = mapped_customer_id
+                    existing.category_id = mapped_category_id
+                    existing.vendor_name = sub_data["vendor_name"]
+                    existing.plan_name = sub_data.get("plan_name")
+                    existing.cost = sub_data.get("cost", 0)
+                    existing.currency = sub_data.get("currency", "USD")
+                    existing.billing_cycle = billing_cycle_enum
+                    existing.start_date = start_d
+                    existing.next_renewal_date = next_d
+                    existing.status = status_enum
+                    existing.notes = sub_data.get("notes")
+                    if "country" in sub_data and hasattr(existing, 'country'):
+                        existing.country = sub_data["country"]
+                    imported_counts["subscriptions"] += 1
+                else:
+                    sub = Subscription(
+                        customer_id=mapped_customer_id,
+                        category_id=mapped_category_id,
+                        vendor_name=sub_data["vendor_name"],
+                        plan_name=sub_data.get("plan_name"),
+                        cost=sub_data.get("cost", 0),
+                        currency=sub_data.get("currency", "USD"),
+                        billing_cycle=billing_cycle_enum,
+                        start_date=start_d,
+                        next_renewal_date=next_d,
+                        status=status_enum,
+                        notes=sub_data.get("notes")
+                    )
+                    if "country" in sub_data and hasattr(sub, 'country'):
+                        sub.country = sub_data["country"]
+                    db.add(sub)
+                    db.flush()
+                    imported_counts["subscriptions"] += 1
                 db.commit()
             except IntegrityError as e:
                 warnings.append(f"Subscription {sub_data.get('id')} skipped: {str(e)}")
@@ -699,7 +732,12 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         for link_data in data.get("links", []):
             try:
                 existing = db.query(Link).filter(Link.id == link_data["id"]).first()
-                if not existing:
+                if existing:
+                    existing.title = link_data.get("title")
+                    existing.url = link_data["url"]
+                    existing.link_type = link_data.get("link_type")
+                    existing.notes = link_data.get("notes")
+                else:
                     link = Link(
                         id=link_data["id"],
                         subscription_id=link_data["subscription_id"],
@@ -709,8 +747,8 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                         notes=link_data.get("notes")
                     )
                     db.add(link)
-                    imported_counts["links"] += 1
-                    db.commit()
+                imported_counts["links"] += 1
+                db.commit()
             except IntegrityError as e:
                 warnings.append(f"Link {link_data.get('id')} skipped: {str(e)}")
                 db.rollback()
@@ -721,7 +759,11 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         for report_data in data.get("saved_reports", []):
             try:
                 existing = db.query(SavedReport).filter(SavedReport.id == report_data["id"]).first()
-                if not existing:
+                if existing:
+                    existing.name = report_data["name"]
+                    existing.report_type = report_data.get("report_type")
+                    existing.filters = report_data.get("filters")
+                else:
                     report = SavedReport(
                         id=report_data["id"],
                         name=report_data["name"],
@@ -729,8 +771,8 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                         filters=report_data.get("filters")
                     )
                     db.add(report)
-                    imported_counts["saved_reports"] += 1
-                    db.commit()
+                imported_counts["saved_reports"] += 1
+                db.commit()
             except IntegrityError as e:
                 warnings.append(f"Saved report {report_data.get('id')} skipped: {str(e)}")
                 db.rollback()
@@ -741,14 +783,21 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         for st_data in data.get("subscription_templates", []):
             try:
                 existing = db.query(SubscriptionTemplate).filter(SubscriptionTemplate.id == st_data["id"]).first()
-                if not existing:
-                    mapped_cat_id = id_map["categories"].get(st_data.get("category_id"), st_data.get("category_id"))
-                    
-                    try:
-                        billing_cycle_enum = BillingCycle(st_data.get("billing_cycle", "monthly").lower())
-                    except Exception:
-                        billing_cycle_enum = BillingCycle.MONTHLY
+                mapped_cat_id = id_map["categories"].get(st_data.get("category_id"), st_data.get("category_id"))
+                
+                try:
+                    billing_cycle_enum = BillingCycle(st_data.get("billing_cycle", "monthly").lower())
+                except Exception:
+                    billing_cycle_enum = BillingCycle.MONTHLY
 
+                if existing:
+                    existing.vendor_name = st_data["vendor_name"]
+                    existing.plan_name = st_data.get("plan_name")
+                    existing.cost = st_data.get("cost", 0)
+                    existing.currency = st_data.get("currency", "USD")
+                    existing.billing_cycle = billing_cycle_enum
+                    existing.category_id = mapped_cat_id
+                else:
                     st = SubscriptionTemplate(
                         id=st_data["id"],
                         vendor_name=st_data["vendor_name"],
@@ -759,8 +808,8 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                         category_id=mapped_cat_id
                     )
                     db.add(st)
-                    imported_counts["subscription_templates"] += 1
-                    db.commit()
+                imported_counts["subscription_templates"] += 1
+                db.commit()
             except Exception as e:
                 warnings.append(f"SubscriptionTemplate {st_data.get('id')} skipped: {str(e)}")
                 db.rollback()
@@ -769,8 +818,13 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         for cc_data in data.get("check_categories", []):
             try:
                 existing = db.query(CheckCategory).filter(CheckCategory.id == cc_data["id"]).first()
-                if not existing:
-                    mapped_user_id = id_map["users"].get(cc_data.get("user_id"), cc_data.get("user_id"))
+                mapped_user_id = id_map["users"].get(cc_data.get("user_id"), cc_data.get("user_id"))
+                
+                if existing:
+                    existing.user_id = mapped_user_id
+                    existing.name = cc_data["name"]
+                    existing.description = cc_data.get("description")
+                else:
                     cc = CheckCategory(
                         id=cc_data["id"],
                         user_id=mapped_user_id,
@@ -780,8 +834,8 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                     if cc_data.get("created_at"):
                         cc.created_at = datetime.fromisoformat(cc_data["created_at"])
                     db.add(cc)
-                    imported_counts["check_categories"] += 1
-                    db.commit()
+                imported_counts["check_categories"] += 1
+                db.commit()
             except Exception as e:
                 warnings.append(f"CheckCategory {cc_data.get('id')} skipped: {str(e)}")
                 db.rollback()
@@ -790,8 +844,19 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         for le_data in data.get("log_entries", []):
             try:
                 existing = db.query(LogEntry).filter(LogEntry.id == le_data["id"]).first()
-                if not existing:
-                    mapped_user_id = id_map["users"].get(le_data.get("user_id"), le_data.get("user_id"))
+                mapped_user_id = id_map["users"].get(le_data.get("user_id"), le_data.get("user_id"))
+                
+                if existing:
+                    existing.user_id = mapped_user_id
+                    existing.date_str = le_data["date_str"]
+                    existing.start_time = le_data["start_time"]
+                    existing.end_time = le_data["end_time"]
+                    existing.duration_minutes = le_data.get("duration_minutes", 0)
+                    existing.check_type = le_data["check_type"]
+                    existing.category_name = le_data.get("category_name")
+                    existing.message = le_data["message"]
+                    existing.full_entry = le_data["full_entry"]
+                else:
                     le = LogEntry(
                         id=le_data["id"],
                         user_id=mapped_user_id,
@@ -807,8 +872,8 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                     if le_data.get("created_at"):
                         le.created_at = datetime.fromisoformat(le_data["created_at"])
                     db.add(le)
-                    imported_counts["log_entries"] += 1
-                    db.commit()
+                imported_counts["log_entries"] += 1
+                db.commit()
             except Exception as e:
                 warnings.append(f"LogEntry {le_data.get('id')} skipped: {str(e)}")
                 db.rollback()
@@ -817,8 +882,16 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         for rn_data in data.get("renewal_notices", []):
             try:
                 existing = db.query(RenewalNotice).filter(RenewalNotice.id == rn_data["id"]).first()
-                if not existing:
-                    mapped_cust_id = id_map["customers"].get(rn_data.get("customer_id"), rn_data.get("customer_id"))
+                mapped_cust_id = id_map["customers"].get(rn_data.get("customer_id"), rn_data.get("customer_id"))
+                
+                if existing:
+                    existing.customer_id = mapped_cust_id
+                    existing.recipient_email = rn_data.get("recipient_email")
+                    existing.subject = rn_data.get("subject")
+                    existing.success = rn_data.get("success", False)
+                    existing.error_message = rn_data.get("error_message")
+                    existing.notice_type = rn_data.get("notice_type", "manual")
+                else:
                     rn = RenewalNotice(
                         id=rn_data["id"],
                         subscription_id=rn_data["subscription_id"],
@@ -834,8 +907,8 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                     if rn_data.get("renewal_date_at_send"):
                         rn.renewal_date_at_send = datetime.fromisoformat(rn_data["renewal_date_at_send"])
                     db.add(rn)
-                    imported_counts["renewal_notices"] += 1
-                    db.commit()
+                imported_counts["renewal_notices"] += 1
+                db.commit()
             except Exception as e:
                 warnings.append(f"RenewalNotice {rn_data.get('id')} skipped: {str(e)}")
                 db.rollback()
@@ -844,8 +917,19 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         for log_data in data.get("activity_logs", []):
             try:
                 existing = db.query(ActivityLog).filter(ActivityLog.id == log_data["id"]).first()
-                if not existing:
-                    mapped_user_id = id_map["users"].get(log_data.get("user_id"), log_data.get("user_id"))
+                mapped_user_id = id_map["users"].get(log_data.get("user_id"), log_data.get("user_id"))
+                
+                if existing:
+                    existing.action_type = log_data["action_type"]
+                    existing.entity_type = log_data["entity_type"]
+                    existing.entity_id = log_data.get("entity_id")
+                    existing.description = log_data["description"]
+                    existing.changes = log_data.get("changes")
+                    existing.extra_data = log_data.get("extra_data")
+                    existing.user_id = mapped_user_id
+                    existing.entity_name = log_data.get("entity_name")
+                    existing.icon = log_data.get("icon")
+                else:
                     al = ActivityLog(
                         id=log_data["id"],
                         action_type=log_data["action_type"],
@@ -861,8 +945,8 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                     if log_data.get("created_at"):
                         al.created_at = datetime.fromisoformat(log_data["created_at"])
                     db.add(al)
-                    imported_counts["activity_logs"] += 1
-                    db.commit()
+                imported_counts["activity_logs"] += 1
+                db.commit()
             except Exception as e:
                 warnings.append(f"ActivityLog {log_data.get('id')} skipped: {str(e)}")
                 db.rollback()
@@ -871,7 +955,14 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
         for aic_data in data.get("ai_request_caches", []):
             try:
                 existing = db.query(AIRequestCache).filter(AIRequestCache.id == aic_data["id"]).first()
-                if not existing:
+                if existing:
+                    existing.request_hash = aic_data["request_hash"]
+                    existing.request_type = aic_data["request_type"]
+                    existing.prompt = aic_data["prompt"]
+                    existing.response = aic_data["response"]
+                    existing.tokens_used = aic_data.get("tokens_used", 0)
+                    existing.hit_count = aic_data.get("hit_count", 0)
+                else:
                     aic = AIRequestCache(
                         id=aic_data["id"],
                         request_hash=aic_data["request_hash"],
@@ -886,8 +977,8 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
                     if aic_data.get("expires_at"):
                         aic.expires_at = datetime.fromisoformat(aic_data["expires_at"])
                     db.add(aic)
-                    imported_counts["ai_request_caches"] += 1
-                    db.commit()
+                imported_counts["ai_request_caches"] += 1
+                db.commit()
             except Exception as e:
                 warnings.append(f"AIRequestCache {aic_data.get('id')} skipped: {str(e)}")
                 db.rollback()

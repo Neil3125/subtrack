@@ -1,5 +1,37 @@
 {
-  "exported_at": "2026-03-06T11:30:34.495965",
+  "exported_at": "2026-03-13T12:52:38.697600",
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "email": "admin@subtrack.local",
+      "password_hash": "322b8a6d7cecc27d48a95da1030a7617bdb9880bffb56893ffed08ed719006e1",
+      "is_active": true,
+      "is_admin": true,
+      "created_at": "2026-01-10T20:57:19",
+      "updated_at": "2026-01-10T20:57:19"
+    },
+    {
+      "id": 2,
+      "username": "testadmin",
+      "email": "admin@test.com",
+      "password_hash": "f9f148727d9b1629bce24b860e8e17abe87a5bb56a0495d21cac8de3e1507ee8",
+      "is_active": true,
+      "is_admin": false,
+      "created_at": "2026-01-15T20:55:26",
+      "updated_at": "2026-01-15T20:55:26"
+    },
+    {
+      "id": 3,
+      "username": "test@example.com",
+      "email": "test@example.com",
+      "password_hash": "b5e7b96bff3438de6aa7f2f43fe64ba1dc89fb47dfa0c355ae6efe42f43bd475",
+      "is_active": true,
+      "is_admin": false,
+      "created_at": "2026-03-06T16:26:05",
+      "updated_at": "2026-03-06T16:26:05"
+    }
+  ],
   "categories": [
     {
       "id": 1,
@@ -30,6 +62,31 @@
       "id": 6,
       "name": "Marketing & Analytics",
       "description": "Marketing automation and analytics platforms"
+    },
+    {
+      "id": 7,
+      "name": "Software Development Tools",
+      "description": "Tools for software development teams"
+    },
+    {
+      "id": 8,
+      "name": "Cloud Infrastructure",
+      "description": "Cloud hosting and infrastructure services"
+    },
+    {
+      "id": 9,
+      "name": "Cybersecurity",
+      "description": "Security tools and services"
+    },
+    {
+      "id": 10,
+      "name": "Communication & Collaboration",
+      "description": "Team communication and project management"
+    },
+    {
+      "id": 11,
+      "name": "ESET",
+      "description": ""
     }
   ],
   "groups": [
@@ -56,6 +113,42 @@
       "category_id": 5,
       "name": "Development Team",
       "notes": "Developer tools and services"
+    },
+    {
+      "id": 5,
+      "category_id": 7,
+      "name": "Frontend Team",
+      "notes": "Tools used by the frontend development team"
+    },
+    {
+      "id": 6,
+      "category_id": 7,
+      "name": "Backend Team",
+      "notes": "Server-side development tools"
+    },
+    {
+      "id": 7,
+      "category_id": 8,
+      "name": "Production Servers",
+      "notes": "Production environment infrastructure"
+    },
+    {
+      "id": 8,
+      "category_id": 8,
+      "name": "Development Servers",
+      "notes": "Dev/staging environment"
+    },
+    {
+      "id": 9,
+      "category_id": 9,
+      "name": "Endpoint Protection",
+      "notes": "Antivirus and endpoint security"
+    },
+    {
+      "id": 10,
+      "category_id": 10,
+      "name": "Executive Team",
+      "notes": "Tools for leadership"
     }
   ],
   "customers": [
@@ -430,6 +523,334 @@
   ],
   "links": [],
   "saved_reports": [],
+  "activity_logs": [
+    {
+      "id": 1,
+      "created_at": "2026-01-15T20:55:26.554272",
+      "action_type": "created",
+      "entity_type": "category",
+      "entity_id": 7,
+      "description": "Created category 'Test Cat Verify'",
+      "changes": null,
+      "extra_data": null,
+      "user_id": null,
+      "entity_name": "Test Cat Verify",
+      "icon": "\u2795"
+    },
+    {
+      "id": 2,
+      "created_at": "2026-01-15T20:55:26.627215",
+      "action_type": "created",
+      "entity_type": "customer",
+      "entity_id": 7,
+      "description": "Created customer 'Test Customer Multi'",
+      "changes": null,
+      "extra_data": {
+        "email": "test_verify@example.com",
+        "country": "US",
+        "category": "Test Cat Verify",
+        "groups": "None"
+      },
+      "user_id": null,
+      "entity_name": "Test Customer Multi",
+      "icon": "\u2795"
+    },
+    {
+      "id": 3,
+      "created_at": "2026-01-15T20:55:26.676990",
+      "action_type": "deleted",
+      "entity_type": "customer",
+      "entity_id": 7,
+      "description": "Deleted customer 'Test Customer Multi'",
+      "changes": null,
+      "extra_data": {
+        "email": "test_verify@example.com",
+        "category": "Test Cat Verify"
+      },
+      "user_id": null,
+      "entity_name": "Test Customer Multi",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 4,
+      "created_at": "2026-01-15T20:55:26.703425",
+      "action_type": "deleted",
+      "entity_type": "category",
+      "entity_id": 7,
+      "description": "Deleted category 'Test Cat Verify'",
+      "changes": null,
+      "extra_data": null,
+      "user_id": null,
+      "entity_name": "Test Cat Verify",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 5,
+      "created_at": "2026-01-15T20:55:26.753293",
+      "action_type": "created",
+      "entity_type": "category",
+      "entity_id": 7,
+      "description": "Created category 'Cat A Verify'",
+      "changes": null,
+      "extra_data": null,
+      "user_id": null,
+      "entity_name": "Cat A Verify",
+      "icon": "\u2795"
+    },
+    {
+      "id": 6,
+      "created_at": "2026-01-15T20:55:26.790846",
+      "action_type": "created",
+      "entity_type": "category",
+      "entity_id": 8,
+      "description": "Created category 'Cat B Verify'",
+      "changes": null,
+      "extra_data": null,
+      "user_id": null,
+      "entity_name": "Cat B Verify",
+      "icon": "\u2795"
+    },
+    {
+      "id": 7,
+      "created_at": "2026-01-15T20:55:26.834088",
+      "action_type": "created",
+      "entity_type": "group",
+      "entity_id": 5,
+      "description": "Created group 'Group A Verify' in category 'Cat A Verify'",
+      "changes": null,
+      "extra_data": {
+        "category_name": "Cat A Verify"
+      },
+      "user_id": null,
+      "entity_name": "Group A Verify",
+      "icon": "\u2795"
+    },
+    {
+      "id": 8,
+      "created_at": "2026-01-15T20:55:26.885435",
+      "action_type": "created",
+      "entity_type": "group",
+      "entity_id": 6,
+      "description": "Created group 'Group B Verify' in category 'Cat B Verify'",
+      "changes": null,
+      "extra_data": {
+        "category_name": "Cat B Verify"
+      },
+      "user_id": null,
+      "entity_name": "Group B Verify",
+      "icon": "\u2795"
+    },
+    {
+      "id": 9,
+      "created_at": "2026-01-15T20:55:26.951781",
+      "action_type": "deleted",
+      "entity_type": "group",
+      "entity_id": 5,
+      "description": "Deleted group 'Group A Verify' from category 'Cat A Verify'",
+      "changes": null,
+      "extra_data": {
+        "category_name": "Cat A Verify"
+      },
+      "user_id": null,
+      "entity_name": "Group A Verify",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 10,
+      "created_at": "2026-01-15T20:55:26.978515",
+      "action_type": "deleted",
+      "entity_type": "group",
+      "entity_id": 6,
+      "description": "Deleted group 'Group B Verify' from category 'Cat B Verify'",
+      "changes": null,
+      "extra_data": {
+        "category_name": "Cat B Verify"
+      },
+      "user_id": null,
+      "entity_name": "Group B Verify",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 11,
+      "created_at": "2026-01-15T20:55:27.021029",
+      "action_type": "deleted",
+      "entity_type": "category",
+      "entity_id": 7,
+      "description": "Deleted category 'Cat A Verify'",
+      "changes": null,
+      "extra_data": null,
+      "user_id": null,
+      "entity_name": "Cat A Verify",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 12,
+      "created_at": "2026-01-15T20:55:27.069325",
+      "action_type": "deleted",
+      "entity_type": "category",
+      "entity_id": 8,
+      "description": "Deleted category 'Cat B Verify'",
+      "changes": null,
+      "extra_data": null,
+      "user_id": null,
+      "entity_name": "Cat B Verify",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 13,
+      "created_at": "2026-02-27T19:45:06.338672",
+      "action_type": "created",
+      "entity_type": "subscription",
+      "entity_id": 20,
+      "description": "Created subscription 'Test Vendor' for TechCorp Industries",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "TechCorp Industries",
+        "cost": "99.99",
+        "currency": "USD",
+        "category_ids": [
+          1
+        ]
+      },
+      "user_id": null,
+      "entity_name": "Test Vendor",
+      "icon": "\u2795"
+    },
+    {
+      "id": 14,
+      "created_at": "2026-02-27T19:46:26.500291",
+      "action_type": "updated",
+      "entity_type": "subscription",
+      "entity_id": 20,
+      "description": "Updated subscription 'Test Vendor'",
+      "changes": {
+        "category_ids": {
+          "old": "[1]",
+          "new": "[1]"
+        },
+        "custom_billing_amount": {
+          "old": "2",
+          "new": "3"
+        },
+        "custom_billing_unit": {
+          "old": "months",
+          "new": "weeks"
+        }
+      },
+      "extra_data": null,
+      "user_id": null,
+      "entity_name": "Test Vendor",
+      "icon": "\u270f\ufe0f"
+    }
+  ],
+  "renewal_notices": [],
+  "log_entries": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "created_at": "2026-03-06T16:11:29.673430",
+      "date_str": "3/6/2026",
+      "start_time": "11:41 a.m",
+      "end_time": "12:11 p.m",
+      "duration_minutes": 30,
+      "check_type": "service",
+      "category_name": null,
+      "message": "Logged onto Servers. Checked system logs, DNS and DHCP entries, disk health and usage. Checked ESET logs. Checked volume shadow copies.",
+      "full_entry": "[3/6/2026][Start: 11:41 a.m][Service Check] Logged onto Servers. Checked system logs, DNS and DHCP entries, disk health and usage. Checked ESET logs. Checked volume shadow copies. [End: 12:11 p.m] [Duration: 30 mins]"
+    }
+  ],
+  "check_categories": [],
+  "subscription_templates": [],
+  "ai_request_caches": [
+    {
+      "id": 1,
+      "request_hash": "d676ca8fe241ec8fe7586259b966385dbfada020921021d86a78accec0326b63",
+      "request_type": "budget_surgeon",
+      "prompt": "Analyze these subscriptions for cost-saving opportunities:\n\nCurrent Monthly Total: $12052.48\n\nSubscriptions:\n[\n  {\n    \"id\": 1,\n    \"vendor\": \"ESET\",\n    \"plan\": \"ESET PROTECT Advanced\",\n    \"cost\": 1899.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 158.25,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 2,\n    \"vendor\": \"Cloudflare\",\n    \"plan\": \"Business Plan\",\n    \"cost\": 200.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 200.0,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 3,\n    \"vendor\": \"Microsoft\",\n    \"plan\": \"Microsoft 365 E3\",\n    \"cost\": 36.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 36.0,\n    \"category\": \"Productivity & Collaboration\"\n  },\n  {\n    \"id\": 4,\n    \"vendor\": \"Intuit\",\n    \"plan\": \"QuickBooks Online Advanced\",\n    \"cost\": 180.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 180.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 5,\n    \"vendor\": \"Salesforce\",\n    \"plan\": \"Professional Edition\",\n    \"cost\": 75.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 75.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 6,\n    \"vendor\": \"Malwarebytes\",\n    \"plan\": \"Endpoint Protection\",\n    \"cost\": 479.88,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 39.99,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 7,\n    \"vendor\": \"Google\",\n    \"plan\": \"Google Workspace Business Standard\",\n    \"cost\": 12.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 12.0,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 8,\n    \"vendor\": \"HubSpot\",\n    \"plan\": \"Marketing Hub Professional\",\n    \"cost\": 890.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 890.0,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 9,\n    \"vendor\": \"Adobe\",\n    \"plan\": \"Creative Cloud All Apps\",\n    \"cost\": 54.99,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 54.99,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 10,\n    \"vendor\": \"GitHub\",\n    \"plan\": \"Enterprise Cloud\",\n    \"cost\": 21.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 21.0,\n    \"category\": \"Development Tools\"\n  },\n  {\n    \"id\": 11,\n    \"vendor\": \"Amazon Web Services\",\n    \"plan\": \"Business Support\",\n    \"cost\": 2500.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 2500.0,\n    \"category\": \"Cloud & Infrastructure\"\n  },\n  {\n    \"id\": 12,\n    \"vendor\": \"JetBrains\",\n    \"plan\": \"All Products Pack\",\n    \"cost\": 649.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 54.08,\n    \"category\": \"Development Tools\"\n  },\n  {\n    \"id\": 13,\n    \"vendor\": \"Square\",\n    \"plan\": \"Square for Retail Plus\",\n    \"cost\": 60.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 60.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 14,\n    \"vendor\": \"Intuit\",\n    \"plan\": \"QuickBooks Online Plus\",\n    \"cost\": 90.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 90.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 15,\n    \"vendor\": \"Slack\",\n    \"plan\": \"Pro Plan\",\n    \"cost\": 7.25,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 7.25,\n    \"category\": \"Productivity & Collaboration\"\n  },\n  {\n    \"id\": 16,\n    \"vendor\": \"ESET\",\n    \"plan\": \"ESET PROTECT Complete\",\n    \"cost\": 3299.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 274.92,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 17,\n    \"vendor\": \"Cisco\",\n    \"plan\": \"Cisco Umbrella\",\n    \"cost\": 399.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 399.0,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 18,\n    \"vendor\": \"Bloomberg\",\n    \"plan\": \"Bloomberg Terminal\",\n    \"cost\": 2000.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 2000.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 19,\n    \"vendor\": \"Microsoft Azure\",\n    \"plan\": \"Enterprise Agreement\",\n    \"cost\": 5000.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 5000.0,\n    \"category\": \"Cloud & Infrastructure\"\n  }\n]\n\nFind:\n1. Duplicate vendors (same company, multiple subscriptions)\n2. Overlapping services (different vendors, similar functionality)\n3. Downgrade opportunities (premium plans that could be basic)\n4. Bundle opportunities (services that could be combined)\n\nRespond with JSON only:\n{\n    \"duplicates\": [\n        {\n            \"type\": \"duplicate_vendor\" | \"overlapping_service\" | \"downgrade_opportunity\" | \"bundle_available\",\n            \"subscriptions\": [\"vendor1\", \"vendor2\"],\n            \"subscription_ids\": [1, 2],\n            \"potential_savings\": 0.00,\n            \"recommendation\": \"Specific action to take\",\n            \"reasoning\": \"Why this saves money\",\n            \"priority\": \"high\" | \"medium\" | \"low\"\n        }\n    ],\n    \"total_potential_savings\": 0.00,\n    \"savings_percentage\": 0,\n    \"summary\": \"Brief overview of findings\"\n}",
+      "response": "```json\n{\n  \"duplicates\": [\n    {\n      \"type\": \"duplicate_vendor\",\n      \"subscriptions\": [\"ESET\", \"ESET\"],\n      \"subscription_ids\": [1, 16],\n      \"potential_savings\": 4647.25,\n      \"recommendation\": \"Consolidate ESET subscriptions. Evaluate if 'ESET PROTECT Complete' fully justifies the cost difference over 'ESET PROTECT Advanced'. If not, cancel 'ESET PROTECT Complete'.\",\n      \"reasoning\": \"Having two separate subscriptions from the same vendor for similar security services is redundant. Consolidating will eliminate duplicate costs.\",\n      \"priority\": \"high\"\n    },\n    {\n      \"type\": \"overlapping_service\",\n      \"subscriptions\": [\"ESET\", \"Malwarebytes\", \"Cloudflare\"],\n      \"subscription_ids\": [1, 6, 2],\n      \"potential_savings\": 658.25,\n      \"recommendation\": \"Evaluate overlap between ESET, Malwarebytes, and Cloudflare. Consider consolidating to a single robust security solution. Cloudflare's Business plan may provide sufficient security features, potentially allowing cancellation of Malwarebytes and re-evaluation of ESET.\",\n      \"reasoning\": \"Multiple subscriptions providing similar security features (antivirus, endpoint protection, web security) create redundancy. Consolidating reduces costs without compromising security.\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"type\": \"downgrade_opportunity\",\n      \"subscriptions\": [\"Intuit\", \"Intuit\"],\n      \"subscription_ids\": [4, 14],\n      \"potential_savings\": 90.0,\n      \"recommendation\": \"Assess if the features of 'QuickBooks Online Advanced' are fully utilized. If not, downgrade to 'QuickBooks Online Plus' to save costs.\",\n      \"reasoning\": \"Paying for features that aren't used is a waste of money. Downgrading to a lower tier plan can significantly reduce costs without impacting essential functionality.\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"type\": \"bundle_available\",\n      \"subscriptions\": [\"Microsoft\", \"Slack\"],\n      \"subscription_ids\": [3, 15],\n      \"potential_savings\": 24.0,\n      \"recommendation\": \"Microsoft 365 E3 includes Teams, which offers similar functionality to Slack. Evaluate if Teams can replace Slack to eliminate the Slack subscription.\",\n      \"reasoning\": \"Avoiding redundant communication and collaboration tools reduces costs and simplifies IT management.\",\n      \"priority\": \"low\"\n    }\n  ],\n  \"total_potential_savings\": 5419.50,\n  \"savings_percentage\": 45.18,\n  \"summary\": \"Significant savings opportunities exist by consolidating ESET subscriptions, evaluating overlapping security services, and optimizing QuickBooks and communication tools. A thorough review of feature utilization is recommended to maximize cost savings.\"\n}\n```",
+      "tokens_used": 0,
+      "hit_count": 1,
+      "created_at": "2026-01-10T23:48:43.238164",
+      "expires_at": "2026-01-11T23:48:43.237121"
+    },
+    {
+      "id": 2,
+      "request_hash": "8a4689aba6ad45881b779d77aa078791ea1ea3faacc8c119ff79a87eec559c45",
+      "request_type": "budget_surgeon",
+      "prompt": "Analyze these subscriptions for cost-saving opportunities:\n\nCurrent Monthly Total: $12052.48\n\nSubscriptions:\n[\n  {\n    \"id\": 1,\n    \"vendor\": \"ESET\",\n    \"plan\": \"ESET PROTECT Advanced\",\n    \"cost\": 1899.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 158.25,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 2,\n    \"vendor\": \"Cloudflare\",\n    \"plan\": \"Business Plan\",\n    \"cost\": 200.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 200.0,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 3,\n    \"vendor\": \"Microsoft\",\n    \"plan\": \"Microsoft 365 E3\",\n    \"cost\": 36.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 36.0,\n    \"category\": \"Productivity & Collaboration\"\n  },\n  {\n    \"id\": 4,\n    \"vendor\": \"Intuit\",\n    \"plan\": \"QuickBooks Online Advanced\",\n    \"cost\": 180.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 180.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 5,\n    \"vendor\": \"Salesforce\",\n    \"plan\": \"Professional Edition\",\n    \"cost\": 75.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 75.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 6,\n    \"vendor\": \"Malwarebytes\",\n    \"plan\": \"Endpoint Protection\",\n    \"cost\": 479.88,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 39.99,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 7,\n    \"vendor\": \"Google\",\n    \"plan\": \"Google Workspace Business Standard\",\n    \"cost\": 12.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 12.0,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 8,\n    \"vendor\": \"HubSpot\",\n    \"plan\": \"Marketing Hub Professional\",\n    \"cost\": 890.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 890.0,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 9,\n    \"vendor\": \"Adobe\",\n    \"plan\": \"Creative Cloud All Apps\",\n    \"cost\": 54.99,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 54.99,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 10,\n    \"vendor\": \"GitHub\",\n    \"plan\": \"Enterprise Cloud\",\n    \"cost\": 21.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 21.0,\n    \"category\": \"Development Tools\"\n  },\n  {\n    \"id\": 11,\n    \"vendor\": \"Amazon Web Services\",\n    \"plan\": \"Business Support\",\n    \"cost\": 2500.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 2500.0,\n    \"category\": \"Cloud & Infrastructure\"\n  },\n  {\n    \"id\": 12,\n    \"vendor\": \"JetBrains\",\n    \"plan\": \"All Products Pack\",\n    \"cost\": 649.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 54.08,\n    \"category\": \"Development Tools\"\n  },\n  {\n    \"id\": 13,\n    \"vendor\": \"Square\",\n    \"plan\": \"Square for Retail Plus\",\n    \"cost\": 60.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 60.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 14,\n    \"vendor\": \"Intuit\",\n    \"plan\": \"QuickBooks Online Plus\",\n    \"cost\": 90.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 90.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 15,\n    \"vendor\": \"Slack\",\n    \"plan\": \"Pro Plan\",\n    \"cost\": 7.25,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 7.25,\n    \"category\": \"Productivity & Collaboration\"\n  },\n  {\n    \"id\": 16,\n    \"vendor\": \"ESET\",\n    \"plan\": \"ESET PROTECT Complete\",\n    \"cost\": 3299.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 274.92,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 17,\n    \"vendor\": \"Cisco\",\n    \"plan\": \"Cisco Umbrella\",\n    \"cost\": 399.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 399.0,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 18,\n    \"vendor\": \"Bloomberg\",\n    \"plan\": \"Bloomberg Terminal\",\n    \"cost\": 2000.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 2000.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 19,\n    \"vendor\": \"Microsoft Azure\",\n    \"plan\": \"Enterprise Agreement\",\n    \"cost\": 5000.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 5000.0,\n    \"category\": \"Cloud & Infrastructure\"\n  }\n]\n\nFind:\n1. Duplicate vendors (same company, multiple subscriptions)\n2. Overlapping services (different vendors, similar functionality)\n3. Downgrade opportunities (premium plans that could be basic)\n4. Bundle opportunities (services that could be combined)\n\nRespond with JSON only:\n{\n    \"duplicates\": [\n        {\n            \"type\": \"duplicate_vendor\" | \"overlapping_service\" | \"downgrade_opportunity\" | \"bundle_available\",\n            \"subscriptions\": [\"vendor1\", \"vendor2\"],\n            \"subscription_ids\": [1, 2],\n            \"potential_savings\": 0.00,\n            \"recommendation\": \"Specific action to take\",\n            \"reasoning\": \"Why this saves money\",\n            \"priority\": \"high\" | \"medium\" | \"low\"\n        }\n    ],\n    \"total_potential_savings\": 0.00,\n    \"savings_percentage\": 0,\n    \"summary\": \"Brief overview of findings\"\n}",
+      "response": "```json\n{\n  \"duplicates\": [\n    {\n      \"type\": \"duplicate_vendor\",\n      \"subscriptions\": [\"ESET\", \"ESET\"],\n      \"subscription_ids\": [1, 16],\n      \"potential_savings\": 4647.25,\n      \"recommendation\": \"Consolidate ESET subscriptions. Evaluate if 'ESET PROTECT Complete' fully justifies the cost difference over 'ESET PROTECT Advanced'. If not, cancel 'ESET PROTECT Complete'.\",\n      \"reasoning\": \"Having two separate subscriptions from the same vendor for similar security services is redundant. Consolidating will eliminate duplicate costs.\",\n      \"priority\": \"high\"\n    },\n    {\n      \"type\": \"overlapping_service\",\n      \"subscriptions\": [\"ESET\", \"Malwarebytes\", \"Cloudflare\"],\n      \"subscription_ids\": [1, 6, 2],\n      \"potential_savings\": 658.24,\n      \"recommendation\": \"Evaluate if 'ESET PROTECT Advanced' and 'Malwarebytes Endpoint Protection' provide overlapping functionality with 'Cloudflare Business Plan'. Consider consolidating to one robust security solution.\",\n      \"reasoning\": \"Multiple subscriptions covering similar security functions (antivirus, endpoint protection, web security) can be streamlined. Cloudflare offers some overlapping features.\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"type\": \"downgrade_opportunity\",\n      \"subscriptions\": [\"HubSpot\"],\n      \"subscription_ids\": [8],\n      \"potential_savings\": 500.0,\n      \"recommendation\": \"Assess HubSpot usage. If not fully utilizing 'Marketing Hub Professional' features, downgrade to a lower tier (e.g., Marketing Hub Standard) to reduce costs.\",\n      \"reasoning\": \"Premium features may be unused, making the higher cost unnecessary.\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"type\": \"overlapping_service\",\n      \"subscriptions\": [\"Microsoft 365 E3\", \"Google Workspace Business Standard\"],\n      \"subscription_ids\": [3, 7],\n      \"potential_savings\": 24.0,\n      \"recommendation\": \"Evaluate if both Microsoft 365 and Google Workspace are necessary. Consolidate to one productivity suite to avoid redundant costs.\",\n      \"reasoning\": \"Both suites offer similar functionality (email, office applications, collaboration tools).\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"type\": \"bundle_available\",\n      \"subscriptions\": [\"QuickBooks Online Advanced\", \"QuickBooks Online Plus\"],\n      \"subscription_ids\": [4, 14],\n      \"potential_savings\": 90.0,\n      \"recommendation\": \"Determine if the features of 'QuickBooks Online Advanced' are essential. If not, downgrade to 'QuickBooks Online Plus' to save costs.\",\n      \"reasoning\": \"Having two different QuickBooks subscriptions suggests potential redundancy. Evaluate if the advanced features justify the additional cost.\",\n      \"priority\": \"low\"\n    }\n  ],\n  \"total_potential_savings\": 5919.49,\n  \"savings_percentage\": 49.24,\n  \"summary\": \"Significant savings opportunities exist by consolidating ESET subscriptions, evaluating overlapping security services, and assessing the utilization of premium features in HubSpot and QuickBooks. Consolidating productivity suites could also yield savings. A thorough review of usage patterns is recommended to maximize cost optimization.\"\n}\n```",
+      "tokens_used": 0,
+      "hit_count": 1,
+      "created_at": "2026-01-10T23:59:28.946436",
+      "expires_at": "2026-01-11T23:59:28.944371"
+    },
+    {
+      "id": 3,
+      "request_hash": "be9f65e4825f50a148f83495ce700a4c0d523143f4da8aae06ef48ec543e2fa2",
+      "request_type": "link_intelligence",
+      "prompt": "Analyze this subscription/pricing URL and extract the details:\n\nURL: https://example.com/pricing\n\nBased on the URL and your knowledge of this service, extract:\n1. The vendor/company name\n2. Common plan names and their prices\n3. Default billing cycle\n\nRespond with JSON only:\n{\n    \"vendor_name\": \"Company name\",\n    \"plan_name\": \"Most common plan name or null\",\n    \"cost\": numeric cost or null,\n    \"currency\": \"USD\" or appropriate currency code,\n    \"billing_cycle\": \"monthly\" | \"yearly\" | \"quarterly\" | \"weekly\" | null,\n    \"confidence\": 0-100,\n    \"notes\": \"Any relevant notes about pricing\",\n    \"alternative_plans\": [\n        {\"name\": \"plan name\", \"cost\": 0, \"cycle\": \"monthly\"}\n    ]\n}",
+      "response": "```json\n{\n    \"vendor_name\": \"Example Company\",\n    \"plan_name\": null,\n    \"cost\": null,\n    \"currency\": null,\n    \"billing_cycle\": null,\n    \"confidence\": 0,\n    \"notes\": \"The provided URL 'https://example.com/pricing' is a placeholder domain and does not contain actual pricing information. Therefore, no specific pricing details could be extracted.\",\n    \"alternative_plans\": []\n}\n```",
+      "tokens_used": 0,
+      "hit_count": 13,
+      "created_at": "2026-01-11T00:26:54.415334",
+      "expires_at": "2026-03-07T14:22:42.239508"
+    },
+    {
+      "id": 4,
+      "request_hash": "af8cf3203d80209877eb7f12809df34f46ef57242ec95b3828c9c4ca2c7ce0b9",
+      "request_type": "auto_categorizer",
+      "prompt": "Categorize this subscription:\n\nVendor: Adobe\nPlan: Creative Cloud\n\nAvailable categories:\n[\n  {\n    \"id\": 1,\n    \"name\": \"Security & Antivirus\",\n    \"description\": \"Security software, antivirus, and endpoint protection\"\n  },\n  {\n    \"id\": 2,\n    \"name\": \"Business Software\",\n    \"description\": \"Accounting, CRM, and business management tools\"\n  },\n  {\n    \"id\": 3,\n    \"name\": \"Cloud & Infrastructure\",\n    \"description\": \"Hosting, cloud services, and infrastructure\"\n  },\n  {\n    \"id\": 4,\n    \"name\": \"Productivity & Collaboration\",\n    \"description\": \"Office suites, email, and team collaboration\"\n  },\n  {\n    \"id\": 5,\n    \"name\": \"Development Tools\",\n    \"description\": \"Developer platforms and version control\"\n  },\n  {\n    \"id\": 6,\n    \"name\": \"Marketing & Analytics\",\n    \"description\": \"Marketing automation and analytics platforms\"\n  }\n]\n\nChoose the best matching category from the list above.\nProvide a confidence score (0-100) and reasoning.\n\nRespond with JSON only:\n{\n    \"suggested_category\": \"exact category name from list\",\n    \"suggested_category_id\": category_id_number,\n    \"confidence\": 0-100,\n    \"reasoning\": \"Brief explanation of why this category fits\",\n    \"alternatives\": [\n        {\"category\": \"name\", \"category_id\": id, \"confidence\": 0-100}\n    ]\n}",
+      "response": "```json\n{\n    \"suggested_category\": \"Productivity & Collaboration\",\n    \"suggested_category_id\": 4,\n    \"confidence\": 95,\n    \"reasoning\": \"Adobe Creative Cloud, while used for creative tasks, fundamentally enhances productivity and often involves collaboration on projects. Many of its applications (Photoshop, Illustrator, Premiere Pro, etc.) are used to *produce* content that supports broader business and communication goals, fitting within the scope of productivity tools.\",\n    \"alternatives\": [\n        {\"category\": \"Marketing & Analytics\", \"category_id\": 6, \"confidence\": 60},\n        {\"category\": \"Business Software\", \"category_id\": 2, \"confidence\": 30}\n    ]\n}\n```",
+      "tokens_used": 0,
+      "hit_count": 8,
+      "created_at": "2026-01-11T00:27:01.907826",
+      "expires_at": "2026-01-12T00:27:01.907826"
+    },
+    {
+      "id": 5,
+      "request_hash": "4328f71f6dcc22b56e693fdf23b1c27f00fe36727933033f075f415b38a72e1f",
+      "request_type": "budget_surgeon",
+      "prompt": "Analyze these subscriptions for cost-saving opportunities:\n\nCurrent Monthly Total: $12052.48\n\nSubscriptions:\n[\n  {\n    \"id\": 1,\n    \"vendor\": \"ESET\",\n    \"plan\": \"ESET PROTECT Advanced\",\n    \"cost\": 1899.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 158.25,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 2,\n    \"vendor\": \"Cloudflare\",\n    \"plan\": \"Business Plan\",\n    \"cost\": 200.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 200.0,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 3,\n    \"vendor\": \"Microsoft\",\n    \"plan\": \"Microsoft 365 E3\",\n    \"cost\": 36.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 36.0,\n    \"category\": \"Productivity & Collaboration\"\n  },\n  {\n    \"id\": 4,\n    \"vendor\": \"Intuit\",\n    \"plan\": \"QuickBooks Online Advanced\",\n    \"cost\": 180.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 180.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 5,\n    \"vendor\": \"Salesforce\",\n    \"plan\": \"Professional Edition\",\n    \"cost\": 75.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 75.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 6,\n    \"vendor\": \"Malwarebytes\",\n    \"plan\": \"Endpoint Protection\",\n    \"cost\": 479.88,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 39.99,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 7,\n    \"vendor\": \"Google\",\n    \"plan\": \"Google Workspace Business Standard\",\n    \"cost\": 12.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 12.0,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 8,\n    \"vendor\": \"HubSpot\",\n    \"plan\": \"Marketing Hub Professional\",\n    \"cost\": 890.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 890.0,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 9,\n    \"vendor\": \"Adobe\",\n    \"plan\": \"Creative Cloud All Apps\",\n    \"cost\": 54.99,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 54.99,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 10,\n    \"vendor\": \"GitHub\",\n    \"plan\": \"Enterprise Cloud\",\n    \"cost\": 21.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 21.0,\n    \"category\": \"Development Tools\"\n  },\n  {\n    \"id\": 11,\n    \"vendor\": \"Amazon Web Services\",\n    \"plan\": \"Business Support\",\n    \"cost\": 2500.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 2500.0,\n    \"category\": \"Cloud & Infrastructure\"\n  },\n  {\n    \"id\": 12,\n    \"vendor\": \"JetBrains\",\n    \"plan\": \"All Products Pack\",\n    \"cost\": 649.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 54.08,\n    \"category\": \"Development Tools\"\n  },\n  {\n    \"id\": 13,\n    \"vendor\": \"Square\",\n    \"plan\": \"Square for Retail Plus\",\n    \"cost\": 60.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 60.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 14,\n    \"vendor\": \"Intuit\",\n    \"plan\": \"QuickBooks Online Plus\",\n    \"cost\": 90.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 90.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 15,\n    \"vendor\": \"Slack\",\n    \"plan\": \"Pro Plan\",\n    \"cost\": 7.25,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 7.25,\n    \"category\": \"Productivity & Collaboration\"\n  },\n  {\n    \"id\": 16,\n    \"vendor\": \"ESET\",\n    \"plan\": \"ESET PROTECT Complete\",\n    \"cost\": 3299.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 274.92,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 17,\n    \"vendor\": \"Cisco\",\n    \"plan\": \"Cisco Umbrella\",\n    \"cost\": 399.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 399.0,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 18,\n    \"vendor\": \"Bloomberg\",\n    \"plan\": \"Bloomberg Terminal\",\n    \"cost\": 2000.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 2000.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 19,\n    \"vendor\": \"Microsoft Azure\",\n    \"plan\": \"Enterprise Agreement\",\n    \"cost\": 5000.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 5000.0,\n    \"category\": \"Cloud & Infrastructure\"\n  }\n]\n\nFind:\n1. Duplicate vendors (same company, multiple subscriptions)\n2. Overlapping services (different vendors, similar functionality)\n3. Downgrade opportunities (premium plans that could be basic)\n4. Bundle opportunities (services that could be combined)\n\nRespond with JSON only:\n{\n    \"duplicates\": [\n        {\n            \"type\": \"duplicate_vendor\" | \"overlapping_service\" | \"downgrade_opportunity\" | \"bundle_available\",\n            \"subscriptions\": [\"vendor1\", \"vendor2\"],\n            \"subscription_ids\": [1, 2],\n            \"potential_savings\": 0.00,\n            \"recommendation\": \"Specific action to take\",\n            \"reasoning\": \"Why this saves money\",\n            \"priority\": \"high\" | \"medium\" | \"low\"\n        }\n    ],\n    \"total_potential_savings\": 0.00,\n    \"savings_percentage\": 0,\n    \"summary\": \"Brief overview of findings\"\n}",
+      "response": "```json\n{\n  \"duplicates\": [\n    {\n      \"type\": \"duplicate_vendor\",\n      \"subscriptions\": [\"ESET\", \"ESET\"],\n      \"subscription_ids\": [1, 16],\n      \"potential_savings\": 4648.0,\n      \"recommendation\": \"Consolidate ESET subscriptions. Evaluate if 'ESET PROTECT Complete' fully replaces 'ESET PROTECT Advanced'. If so, cancel 'ESET PROTECT Advanced'.\",\n      \"reasoning\": \"Having two overlapping security solutions from the same vendor is redundant. Consolidating to the more comprehensive plan (if appropriate) or cancelling one will reduce costs.\",\n      \"priority\": \"high\"\n    },\n    {\n      \"type\": \"overlapping_service\",\n      \"subscriptions\": [\"ESET\", \"Malwarebytes\", \"Cloudflare\"],\n      \"subscription_ids\": [1, 6, 2],\n      \"potential_savings\": 658.23,\n      \"recommendation\": \"Evaluate if Malwarebytes and Cloudflare provide unique value beyond ESET. Consider consolidating to a single robust security solution.\",\n      \"reasoning\": \"Multiple antivirus/security solutions can cause conflicts and are often unnecessary. A thorough assessment can identify redundancies.\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"type\": \"downgrade_opportunity\",\n      \"subscriptions\": [\"HubSpot\"],\n      \"subscription_ids\": [8],\n      \"potential_savings\": 500.0,\n      \"recommendation\": \"Assess HubSpot usage. If not fully utilizing 'Marketing Hub Professional', consider downgrading to a lower tier.\",\n      \"reasoning\": \"Paying for features not used represents wasted expenditure. A usage review can identify opportunities for cost reduction.\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"type\": \"overlapping_service\",\n      \"subscriptions\": [\"Microsoft 365 E3\", \"Google Workspace Business Standard\"],\n      \"subscription_ids\": [3, 7],\n      \"potential_savings\": 48.0,\n      \"recommendation\": \"Evaluate if both productivity suites are necessary. Consolidate to one to avoid redundant features and costs.\",\n      \"reasoning\": \"Both provide similar functionality (email, office apps, collaboration tools). Choosing one can simplify IT management and reduce expenses.\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"type\": \"bundle_available\",\n      \"subscriptions\": [\"QuickBooks Online Advanced\", \"QuickBooks Online Plus\"],\n      \"subscription_ids\": [4, 14],\n      \"potential_savings\": 90.0,\n      \"recommendation\": \"Determine if the features of 'QuickBooks Online Advanced' justify the cost difference over 'QuickBooks Online Plus'. If not, downgrade to the Plus plan.\",\n      \"reasoning\": \"If the advanced features aren't being utilized, the cost difference is unnecessary.\",\n      \"priority\": \"low\"\n    }\n  ],\n  \"total_potential_savings\": 5736.23,\n  \"savings_percentage\": 47.78,\n  \"summary\": \"Significant savings opportunities exist, primarily through consolidating redundant security subscriptions from ESET and evaluating overlapping services. Further analysis of HubSpot and productivity suites could yield additional cost reductions. A detailed usage review of all subscriptions is recommended to confirm these findings and identify further optimization possibilities.\"\n}\n```",
+      "tokens_used": 0,
+      "hit_count": 1,
+      "created_at": "2026-01-11T00:27:16.803030",
+      "expires_at": "2026-01-12T00:27:16.803030"
+    },
+    {
+      "id": 6,
+      "request_hash": "8fd645dd64df42a699e72557d48005b1be91cb03757a01cf21e93bd03fbef5ab",
+      "request_type": "renewal_forecaster",
+      "prompt": "Analyze this 12-month subscription forecast:\n\nTotal Yearly Cost: $144629.76\nAverage Monthly: $12052.48\nPeak Month: June 2026 ($14824.24)\nLowest Month: January 2026 ($11525.24)\nTotal Subscriptions: 19\n\nMonthly Breakdown:\n[\n  {\n    \"month\": \"2026-01\",\n    \"month_name\": \"January 2026\",\n    \"cost\": 11525.24,\n    \"subscriptions\": [\n      {\n        \"vendor\": \"Cloudflare\",\n        \"cost\": 200.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"cost\": 36.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Intuit\",\n        \"cost\": 180.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Salesforce\",\n        \"cost\": 75.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Google\",\n        \"cost\": 12.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"HubSpot\",\n        \"cost\": 890.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Adobe\",\n        \"cost\": 54.99,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"GitHub\",\n        \"cost\": 21.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Amazon Web Services\",\n        \"cost\": 2500.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Square\",\n        \"cost\": 60.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Intuit\",\n        \"cost\": 90.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Slack\",\n        \"cost\": 7.25,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Cisco\",\n        \"cost\": 399.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Bloomberg\",\n        \"cost\": 2000.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Microsoft Azure\",\n        \"cost\": 5000.0,\n        \"cycle\": \"monthly\"\n      }\n    ],\n    \"renewal_count\": 12\n  },\n  {\n    \"month\": \"2026-02\",\n    \"month_name\": \"February 2026\",\n    \"cost\": 11525.24,\n    \"subscriptions\": [\n      {\n        \"vendor\": \"Cloudflare\",\n        \"cost\": 200.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"cost\": 36.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Intuit\",\n        \"cost\": 180.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Salesforce\",\n        \"cost\": 75.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Google\",\n        \"cost\": 12.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"HubSpot\",\n        \"cost\": 890.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Adobe\",\n        \"cost\": 54.99,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"GitHub\",\n        \"cost\": 21.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Amazon Web Services\",\n        \"cost\": 2500.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Square\",\n        \"cost\": 60.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Intuit\",\n        \"cost\": 90.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Slack\",\n        \"cost\": 7.25,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Cisco\",\n        \"cost\": 399.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Bloomberg\",\n        \"cost\": 2000.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Microsoft Azure\",\n        \"cost\": 5000.0,\n        \"cycle\": \"monthly\"\n      }\n    ],\n    \"renewal_count\": 3\n  },\n  {\n    \"month\": \"2026-03\",\n    \"month_name\": \"March 2026\",\n    \"cost\": 11525.24,\n    \"subscriptions\": [\n      {\n        \"vendor\": \"Cloudflare\",\n        \"cost\": 200.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"cost\": 36.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Intuit\",\n        \"cost\": 180.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Salesforce\",\n        \"cost\": 75.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Google\",\n        \"cost\": 12.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"HubSpot\",\n        \"cost\": 890.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Adobe\",\n        \"cost\": 54.99,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"GitHub\",\n        \"cost\": 21.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Amazon Web Services\",\n        \"cost\": 2500.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Square\",\n        \"cost\": 60.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Intuit\",\n        \"cost\": 90.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Slack\",\n        \"cost\": 7.25,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Cisco\",\n        \"cost\": 399.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Bloomberg\",\n        \"cost\": 2000.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Microsoft Azure\",\n        \"cost\": 5000.0,\n        \"cycle\": \"monthly\"\n      }\n    ],\n    \"renewal_count\": 0\n  },\n  {\n    \"month\": \"2026-04\",\n    \"month_name\": \"April 2026\",\n    \"cost\": 11525.24,\n    \"subscriptions\": [\n      {\n        \"vendor\": \"Cloudflare\",\n        \"cost\": 200.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"cost\": 36.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Intuit\",\n        \"cost\": 180.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Salesforce\",\n        \"cost\": 75.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Google\",\n        \"cost\": 12.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"HubSpot\",\n        \"cost\": 890.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Adobe\",\n        \"cost\": 54.99,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"GitHub\",\n        \"cost\": 21.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Amazon Web Services\",\n        \"cost\": 2500.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Square\",\n        \"cost\": 60.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Intuit\",\n        \"cost\": 90.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Slack\",\n        \"cost\": 7.25,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Cisco\",\n        \"cost\": 399.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Bloomberg\",\n        \"cost\": 2000.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Microsoft Azure\",\n        \"cost\": 5000.0,\n        \"cycle\": \"monthly\"\n      }\n    ],\n    \"renewal_count\": 0\n  },\n  {\n    \"month\": \"2026-05\",\n    \"month_name\": \"May 2026\",\n    \"cost\": 11525.24,\n    \"subscriptions\": [\n      {\n        \"vendor\": \"Cloudflare\",\n        \"cost\": 200.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"cost\": 36.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Intuit\",\n        \"cost\": 180.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Salesforce\",\n        \"cost\": 75.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Google\",\n        \"cost\": 12.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"HubSpot\",\n        \"cost\": 890.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Adobe\",\n        \"cost\": 54.99,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"GitHub\",\n        \"cost\": 21.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Amazon Web Services\",\n        \"cost\": 2500.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Square\",\n        \"cost\": 60.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Intuit\",\n        \"cost\": 90.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Slack\",\n        \"cost\": 7.25,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Cisco\",\n        \"cost\": 399.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Bloomberg\",\n        \"cost\": 2000.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Microsoft Azure\",\n        \"cost\": 5000.0,\n        \"cycle\": \"monthly\"\n      }\n    ],\n    \"renewal_count\": 0\n  },\n  {\n    \"month\": \"2026-06\",\n    \"month_name\": \"June 2026\",\n    \"cost\": 14824.24,\n    \"subscriptions\": [\n      {\n        \"vendor\": \"Cloudflare\",\n        \"cost\": 200.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"cost\": 36.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Intuit\",\n        \"cost\": 180.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Salesforce\",\n        \"cost\": 75.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Google\",\n        \"cost\": 12.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"HubSpot\",\n        \"cost\": 890.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Adobe\",\n        \"cost\": 54.99,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"GitHub\",\n        \"cost\": 21.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Amazon Web Services\",\n        \"cost\": 2500.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Square\",\n        \"cost\": 60.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Intuit\",\n        \"cost\": 90.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Slack\",\n        \"cost\": 7.25,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"ESET\",\n        \"cost\": 3299.0,\n        \"cycle\": \"yearly\"\n      },\n      {\n        \"vendor\": \"Cisco\",\n        \"cost\": 399.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Bloomberg\",\n        \"cost\": 2000.0,\n        \"cycle\": \"monthly\"\n      },\n      {\n        \"vendor\": \"Microsoft Azure\",\n        \"cost\": 5000.0,\n        \"cycle\": \"monthly\"\n      }\n    ],\n    \"renewal_count\": 1\n  }\n]\n\nProvide insights in JSON:\n{\n    \"insights\": [\"key observation 1\", \"key observation 2\"],\n    \"recommendations\": [\"actionable recommendation 1\", \"recommendation 2\"],\n    \"spending_pattern\": \"consistent\" | \"variable\" | \"seasonal\",\n    \"risk_level\": \"low\" | \"medium\" | \"high\",\n    \"optimization_tip\": \"One key tip to optimize spending\"\n}",
+      "response": "```json\n{\n  \"insights\": [\n    \"Subscription costs are remarkably consistent across January, February, March, April, and May, representing 83.3% of the total yearly cost.\",\n    \"Amazon Web Services and Microsoft Azure consistently contribute the largest portion of monthly expenses, accounting for approximately 62.5% of the base monthly spend.\",\n    \"June exhibits a significant cost spike due to the addition of a yearly ESET subscription ($3299), increasing the monthly cost by 23.8%.\",\n    \"The majority of subscriptions are billed monthly, providing flexibility but potentially missing out on annual discount opportunities.\",\n    \"Renewal counts are low, suggesting a lack of proactive management around subscription lifecycles.\"\n  ],\n  \"recommendations\": [\n    \"Negotiate pricing with AWS and Microsoft Azure, exploring commitment-based discounts or rightsizing instances to reduce cloud spending.\",\n    \"Evaluate the necessity of all subscriptions, particularly those with low individual costs, to identify potential redundancies.\",\n    \"Centralize subscription management to improve visibility and control over spending, including tracking renewal dates and automating cancellation of unused services.\",\n    \"Investigate annual billing options for monthly subscriptions to potentially unlock cost savings.\",\n    \"Develop a subscription governance policy to standardize procurement and usage of cloud services.\"\n  ],\n  \"spending_pattern\": \"seasonal\",\n  \"risk_level\": \"medium\",\n  \"optimization_tip\": \"Consolidate vendors where possible to leverage volume discounts and simplify management. Focus on AWS and Azure as primary targets for optimization.\"\n}\n```",
+      "tokens_used": 0,
+      "hit_count": 3,
+      "created_at": "2026-01-11T00:27:24.599360",
+      "expires_at": "2026-01-12T00:27:24.598415"
+    },
+    {
+      "id": 7,
+      "request_hash": "75e34dee41ba5c2f0a0c13b8a55f552491593c2e4386dec6a1dbe35fd7bd3fa9",
+      "request_type": "budget_surgeon",
+      "prompt": "Analyze these subscriptions for cost-saving opportunities:\n\nCurrent Monthly Total: $12052.48\n\nSubscriptions:\n[\n  {\n    \"id\": 1,\n    \"vendor\": \"ESET\",\n    \"plan\": \"ESET PROTECT Advanced\",\n    \"cost\": 1899.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 158.25,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 2,\n    \"vendor\": \"Cloudflare\",\n    \"plan\": \"Business Plan\",\n    \"cost\": 200.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 200.0,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 3,\n    \"vendor\": \"Microsoft\",\n    \"plan\": \"Microsoft 365 E3\",\n    \"cost\": 36.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 36.0,\n    \"category\": \"Productivity & Collaboration\"\n  },\n  {\n    \"id\": 4,\n    \"vendor\": \"Intuit\",\n    \"plan\": \"QuickBooks Online Advanced\",\n    \"cost\": 180.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 180.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 5,\n    \"vendor\": \"Salesforce\",\n    \"plan\": \"Professional Edition\",\n    \"cost\": 75.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 75.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 6,\n    \"vendor\": \"Malwarebytes\",\n    \"plan\": \"Endpoint Protection\",\n    \"cost\": 479.88,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 39.99,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 7,\n    \"vendor\": \"Google\",\n    \"plan\": \"Google Workspace Business Standard\",\n    \"cost\": 12.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 12.0,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 8,\n    \"vendor\": \"HubSpot\",\n    \"plan\": \"Marketing Hub Professional\",\n    \"cost\": 890.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 890.0,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 9,\n    \"vendor\": \"Adobe\",\n    \"plan\": \"Creative Cloud All Apps\",\n    \"cost\": 54.99,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 54.99,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 10,\n    \"vendor\": \"GitHub\",\n    \"plan\": \"Enterprise Cloud\",\n    \"cost\": 21.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 21.0,\n    \"category\": \"Development Tools\"\n  },\n  {\n    \"id\": 11,\n    \"vendor\": \"Amazon Web Services\",\n    \"plan\": \"Business Support\",\n    \"cost\": 2500.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 2500.0,\n    \"category\": \"Cloud & Infrastructure\"\n  },\n  {\n    \"id\": 12,\n    \"vendor\": \"JetBrains\",\n    \"plan\": \"All Products Pack\",\n    \"cost\": 649.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 54.08,\n    \"category\": \"Development Tools\"\n  },\n  {\n    \"id\": 13,\n    \"vendor\": \"Square\",\n    \"plan\": \"Square for Retail Plus\",\n    \"cost\": 60.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 60.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 14,\n    \"vendor\": \"Intuit\",\n    \"plan\": \"QuickBooks Online Plus\",\n    \"cost\": 90.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 90.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 15,\n    \"vendor\": \"Slack\",\n    \"plan\": \"Pro Plan\",\n    \"cost\": 7.25,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 7.25,\n    \"category\": \"Productivity & Collaboration\"\n  },\n  {\n    \"id\": 16,\n    \"vendor\": \"ESET\",\n    \"plan\": \"ESET PROTECT Complete\",\n    \"cost\": 3299.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 274.92,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 17,\n    \"vendor\": \"Cisco\",\n    \"plan\": \"Cisco Umbrella\",\n    \"cost\": 399.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 399.0,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 18,\n    \"vendor\": \"Bloomberg\",\n    \"plan\": \"Bloomberg Terminal\",\n    \"cost\": 2000.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 2000.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 19,\n    \"vendor\": \"Microsoft Azure\",\n    \"plan\": \"Enterprise Agreement\",\n    \"cost\": 5000.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 5000.0,\n    \"category\": \"Cloud & Infrastructure\"\n  }\n]\n\nFind:\n1. Duplicate vendors (same company, multiple subscriptions)\n2. Overlapping services (different vendors, similar functionality)\n3. Downgrade opportunities (premium plans that could be basic)\n4. Bundle opportunities (services that could be combined)\n\nRespond with JSON only:\n{\n    \"duplicates\": [\n        {\n            \"type\": \"duplicate_vendor\" | \"overlapping_service\" | \"downgrade_opportunity\" | \"bundle_available\",\n            \"subscriptions\": [\"vendor1\", \"vendor2\"],\n            \"subscription_ids\": [1, 2],\n            \"potential_savings\": 0.00,\n            \"recommendation\": \"Specific action to take\",\n            \"reasoning\": \"Why this saves money\",\n            \"priority\": \"high\" | \"medium\" | \"low\"\n        }\n    ],\n    \"total_potential_savings\": 0.00,\n    \"savings_percentage\": 0,\n    \"summary\": \"Brief overview of findings\"\n}",
+      "response": "```json\n{\n  \"duplicates\": [\n    {\n      \"type\": \"duplicate_vendor\",\n      \"subscriptions\": [\"ESET\", \"ESET\"],\n      \"subscription_ids\": [1, 16],\n      \"potential_savings\": 4648.0,\n      \"recommendation\": \"Consolidate ESET subscriptions. Evaluate if 'ESET PROTECT Complete' fully replaces 'ESET PROTECT Advanced'. If so, cancel 'ESET PROTECT Advanced'.\",\n      \"reasoning\": \"Having two overlapping security solutions from the same vendor is redundant. Consolidating to the more comprehensive plan (if appropriate) or cancelling one will reduce costs.\",\n      \"priority\": \"high\"\n    },\n    {\n      \"type\": \"overlapping_service\",\n      \"subscriptions\": [\"ESET\", \"Malwarebytes\", \"Cloudflare\"],\n      \"subscription_ids\": [1, 6, 2],\n      \"potential_savings\": 658.23,\n      \"recommendation\": \"Evaluate if Malwarebytes and Cloudflare provide unique value beyond ESET. Consider consolidating to a single robust security solution.\",\n      \"reasoning\": \"Multiple antivirus/security solutions can cause conflicts and are often unnecessary. A thorough assessment can identify redundancies.\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"type\": \"downgrade_opportunity\",\n      \"subscriptions\": [\"HubSpot\"],\n      \"subscription_ids\": [8],\n      \"potential_savings\": 500.0,\n      \"recommendation\": \"Assess HubSpot usage. If not fully utilizing 'Marketing Hub Professional', consider downgrading to a lower tier.\",\n      \"reasoning\": \"Paying for features not used represents wasted expenditure. A usage review can identify opportunities for cost reduction.\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"type\": \"overlapping_service\",\n      \"subscriptions\": [\"Microsoft 365 E3\", \"Google Workspace Business Standard\"],\n      \"subscription_ids\": [3, 7],\n      \"potential_savings\": 48.0,\n      \"recommendation\": \"Evaluate if both productivity suites are necessary. Consolidate to one to avoid redundant features and costs.\",\n      \"reasoning\": \"Both provide similar functionality (email, office apps, collaboration tools). Choosing one can simplify IT management and reduce expenses.\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"type\": \"bundle_available\",\n      \"subscriptions\": [\"QuickBooks Online Advanced\", \"QuickBooks Online Plus\"],\n      \"subscription_ids\": [4, 14],\n      \"potential_savings\": 90.0,\n      \"recommendation\": \"Determine if the features of 'QuickBooks Online Advanced' justify the cost difference over 'QuickBooks Online Plus'. If not, downgrade to the Plus plan.\",\n      \"reasoning\": \"Avoid paying for features that aren't actively used. A feature-by-feature comparison will reveal if the advanced plan is truly necessary.\",\n      \"priority\": \"low\"\n    }\n  ],\n  \"total_potential_savings\": 6034.23,\n  \"savings_percentage\": 50.32,\n  \"summary\": \"Significant savings opportunities exist, primarily through consolidating redundant security subscriptions from ESET and evaluating overlapping services. Further analysis of HubSpot and productivity suites could yield additional cost reductions. A detailed usage review of all subscriptions is recommended.\"\n}\n```",
+      "tokens_used": 0,
+      "hit_count": 1,
+      "created_at": "2026-01-11T00:28:01.193064",
+      "expires_at": "2026-01-12T00:28:01.192058"
+    },
+    {
+      "id": 8,
+      "request_hash": "fe26a1e664c13c58be646db3e7c40c4551e5082bf6ebdc8cfdf8dbc6ec9c115d",
+      "request_type": "budget_surgeon",
+      "prompt": "Analyze these subscriptions for cost-saving opportunities:\n\nCurrent Monthly Total: $12052.48\n\nSubscriptions:\n[\n  {\n    \"id\": 1,\n    \"vendor\": \"ESET\",\n    \"plan\": \"ESET PROTECT Advanced\",\n    \"cost\": 1899.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 158.25,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 2,\n    \"vendor\": \"Cloudflare\",\n    \"plan\": \"Business Plan\",\n    \"cost\": 200.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 200.0,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 3,\n    \"vendor\": \"Microsoft\",\n    \"plan\": \"Microsoft 365 E3\",\n    \"cost\": 36.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 36.0,\n    \"category\": \"Productivity & Collaboration\"\n  },\n  {\n    \"id\": 4,\n    \"vendor\": \"Intuit\",\n    \"plan\": \"QuickBooks Online Advanced\",\n    \"cost\": 180.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 180.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 5,\n    \"vendor\": \"Salesforce\",\n    \"plan\": \"Professional Edition\",\n    \"cost\": 75.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 75.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 6,\n    \"vendor\": \"Malwarebytes\",\n    \"plan\": \"Endpoint Protection\",\n    \"cost\": 479.88,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 39.99,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 7,\n    \"vendor\": \"Google\",\n    \"plan\": \"Google Workspace Business Standard\",\n    \"cost\": 12.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 12.0,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 8,\n    \"vendor\": \"HubSpot\",\n    \"plan\": \"Marketing Hub Professional\",\n    \"cost\": 890.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 890.0,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 9,\n    \"vendor\": \"Adobe\",\n    \"plan\": \"Creative Cloud All Apps\",\n    \"cost\": 54.99,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 54.99,\n    \"category\": \"Marketing & Analytics\"\n  },\n  {\n    \"id\": 10,\n    \"vendor\": \"GitHub\",\n    \"plan\": \"Enterprise Cloud\",\n    \"cost\": 21.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 21.0,\n    \"category\": \"Development Tools\"\n  },\n  {\n    \"id\": 11,\n    \"vendor\": \"Amazon Web Services\",\n    \"plan\": \"Business Support\",\n    \"cost\": 2500.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 2500.0,\n    \"category\": \"Cloud & Infrastructure\"\n  },\n  {\n    \"id\": 12,\n    \"vendor\": \"JetBrains\",\n    \"plan\": \"All Products Pack\",\n    \"cost\": 649.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 54.08,\n    \"category\": \"Development Tools\"\n  },\n  {\n    \"id\": 13,\n    \"vendor\": \"Square\",\n    \"plan\": \"Square for Retail Plus\",\n    \"cost\": 60.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 60.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 14,\n    \"vendor\": \"Intuit\",\n    \"plan\": \"QuickBooks Online Plus\",\n    \"cost\": 90.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 90.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 15,\n    \"vendor\": \"Slack\",\n    \"plan\": \"Pro Plan\",\n    \"cost\": 7.25,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 7.25,\n    \"category\": \"Productivity & Collaboration\"\n  },\n  {\n    \"id\": 16,\n    \"vendor\": \"ESET\",\n    \"plan\": \"ESET PROTECT Complete\",\n    \"cost\": 3299.0,\n    \"cycle\": \"yearly\",\n    \"monthly_cost\": 274.92,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 17,\n    \"vendor\": \"Cisco\",\n    \"plan\": \"Cisco Umbrella\",\n    \"cost\": 399.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 399.0,\n    \"category\": \"Security & Antivirus\"\n  },\n  {\n    \"id\": 18,\n    \"vendor\": \"Bloomberg\",\n    \"plan\": \"Bloomberg Terminal\",\n    \"cost\": 2000.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 2000.0,\n    \"category\": \"Business Software\"\n  },\n  {\n    \"id\": 19,\n    \"vendor\": \"Microsoft Azure\",\n    \"plan\": \"Enterprise Agreement\",\n    \"cost\": 5000.0,\n    \"cycle\": \"monthly\",\n    \"monthly_cost\": 5000.0,\n    \"category\": \"Cloud & Infrastructure\"\n  }\n]\n\nFind:\n1. Duplicate vendors (same company, multiple subscriptions)\n2. Overlapping services (different vendors, similar functionality)\n3. Downgrade opportunities (premium plans that could be basic)\n4. Bundle opportunities (services that could be combined)\n\nRespond with JSON only:\n{\n    \"duplicates\": [\n        {\n            \"type\": \"duplicate_vendor\" | \"overlapping_service\" | \"downgrade_opportunity\" | \"bundle_available\",\n            \"subscriptions\": [\"vendor1\", \"vendor2\"],\n            \"subscription_ids\": [1, 2],\n            \"potential_savings\": 0.00,\n            \"recommendation\": \"Specific action to take\",\n            \"reasoning\": \"Why this saves money\",\n            \"priority\": \"high\" | \"medium\" | \"low\"\n        }\n    ],\n    \"total_potential_savings\": 0.00,\n    \"savings_percentage\": 0,\n    \"summary\": \"Brief overview of findings\"\n}",
+      "response": "```json\n{\n  \"duplicates\": [\n    {\n      \"type\": \"duplicate_vendor\",\n      \"subscriptions\": [\"ESET\", \"ESET\"],\n      \"subscription_ids\": [1, 16],\n      \"potential_savings\": 4648.0,\n      \"recommendation\": \"Consolidate ESET subscriptions. Evaluate if 'ESET PROTECT Complete' fully justifies the higher cost. If not, cancel 'ESET PROTECT Complete' and continue with 'ESET PROTECT Advanced'.\",\n      \"reasoning\": \"Having two overlapping security solutions from the same vendor is redundant. Consolidating reduces cost and administrative overhead.\",\n      \"priority\": \"high\"\n    },\n    {\n      \"type\": \"overlapping_service\",\n      \"subscriptions\": [\"ESET\", \"Malwarebytes\", \"Cloudflare\"],\n      \"subscription_ids\": [1, 6, 2],\n      \"potential_savings\": 658.23,\n      \"recommendation\": \"Evaluate if 'ESET PROTECT Advanced' and 'Malwarebytes Endpoint Protection' provide sufficient security coverage. Consider cancelling 'Cloudflare Business Plan' if redundant features exist. Prioritize the most comprehensive solution.\",\n      \"reasoning\": \"Multiple antivirus/security solutions can overlap in functionality, leading to unnecessary costs. A thorough assessment is needed to determine the optimal coverage.\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"type\": \"downgrade_opportunity\",\n      \"subscriptions\": [\"QuickBooks Online Advanced\", \"QuickBooks Online Plus\"],\n      \"subscription_ids\": [4, 14],\n      \"potential_savings\": 90.0,\n      \"recommendation\": \"Assess if the advanced features of 'QuickBooks Online Advanced' are fully utilized. If not, downgrade to 'QuickBooks Online Plus' to save costs.\",\n      \"reasoning\": \"Paying for features that aren't used represents wasted expenditure.\",\n      \"priority\": \"medium\"\n    },\n    {\n      \"type\": \"bundle_available\",\n      \"subscriptions\": [\"Microsoft 365 E3\", \"Slack Pro Plan\"],\n      \"subscription_ids\": [3, 15],\n      \"potential_savings\": 36.0,\n      \"recommendation\": \"Explore Microsoft 365 plans that include team collaboration features similar to Slack. Bundling could eliminate the need for a separate Slack subscription.\",\n      \"reasoning\": \"Microsoft 365 offers integrated communication tools that may replace the functionality of Slack.\",\n      \"priority\": \"low\"\n    }\n  ],\n  \"total_potential_savings\": 5432.23,\n  \"savings_percentage\": 45.32,\n  \"summary\": \"Significant savings opportunities exist by consolidating ESET subscriptions, evaluating overlapping security services, and optimizing QuickBooks and collaboration tools. A detailed review of feature utilization is recommended to maximize cost efficiency.\"\n}\n```",
+      "tokens_used": 0,
+      "hit_count": 1,
+      "created_at": "2026-01-11T00:28:32.970452",
+      "expires_at": "2026-01-12T00:28:32.968439"
+    }
+  ],
   "many_to_many": {
     "subscription_categories": [
       {
