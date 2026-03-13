@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-03-13T12:52:38.697600",
+  "exported_at": "2026-03-13T12:58:09.456722",
   "users": [
     {
       "id": 1,
@@ -219,308 +219,7 @@
       "country": null
     }
   ],
-  "subscriptions": [
-    {
-      "id": 1,
-      "customer_id": 1,
-      "category_id": 1,
-      "vendor_name": "ESET",
-      "plan_name": "ESET PROTECT Advanced",
-      "cost": 1899.0,
-      "currency": "USD",
-      "billing_cycle": "YEARLY",
-      "start_date": "2025-09-12",
-      "next_renewal_date": "2026-09-12",
-      "status": "ACTIVE",
-      "notes": "200 device licenses - comprehensive endpoint protection with cloud sandboxing",
-      "country": null
-    },
-    {
-      "id": 2,
-      "customer_id": 1,
-      "category_id": 1,
-      "vendor_name": "Cloudflare",
-      "plan_name": "Business Plan",
-      "cost": 200.0,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2025-07-14",
-      "next_renewal_date": "2026-01-30",
-      "status": "ACTIVE",
-      "notes": "DDoS protection and web application firewall",
-      "country": null
-    },
-    {
-      "id": 3,
-      "customer_id": 1,
-      "category_id": 4,
-      "vendor_name": "Microsoft",
-      "plan_name": "Microsoft 365 E3",
-      "cost": 36.0,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2024-12-06",
-      "next_renewal_date": "2026-01-20",
-      "status": "ACTIVE",
-      "notes": "Per user - 200 licenses for full office suite and enterprise features",
-      "country": null
-    },
-    {
-      "id": 4,
-      "customer_id": 2,
-      "category_id": 2,
-      "vendor_name": "Intuit",
-      "plan_name": "QuickBooks Online Advanced",
-      "cost": 180.0,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2024-08-28",
-      "next_renewal_date": "2026-01-18",
-      "status": "ACTIVE",
-      "notes": "Advanced accounting features with dedicated support",
-      "country": null
-    },
-    {
-      "id": 5,
-      "customer_id": 2,
-      "category_id": 2,
-      "vendor_name": "Salesforce",
-      "plan_name": "Professional Edition",
-      "cost": 75.0,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2025-06-24",
-      "next_renewal_date": "2026-01-25",
-      "status": "ACTIVE",
-      "notes": "CRM for client management - 15 user licenses",
-      "country": null
-    },
-    {
-      "id": 6,
-      "customer_id": 2,
-      "category_id": 1,
-      "vendor_name": "Malwarebytes",
-      "plan_name": "Endpoint Protection",
-      "cost": 479.88,
-      "currency": "USD",
-      "billing_cycle": "YEARLY",
-      "start_date": "2025-10-12",
-      "next_renewal_date": "2026-10-12",
-      "status": "ACTIVE",
-      "notes": "15 devices - anti-malware protection",
-      "country": null
-    },
-    {
-      "id": 7,
-      "customer_id": 3,
-      "category_id": 6,
-      "vendor_name": "Google",
-      "plan_name": "Google Workspace Business Standard",
-      "cost": 12.0,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2024-05-20",
-      "next_renewal_date": "2026-01-15",
-      "status": "ACTIVE",
-      "notes": "Per user - 30 licenses for email and productivity",
-      "country": null
-    },
-    {
-      "id": 8,
-      "customer_id": 3,
-      "category_id": 6,
-      "vendor_name": "HubSpot",
-      "plan_name": "Marketing Hub Professional",
-      "cost": 890.0,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2025-05-05",
-      "next_renewal_date": "2026-01-22",
-      "status": "ACTIVE",
-      "notes": "Complete marketing automation platform",
-      "country": null
-    },
-    {
-      "id": 9,
-      "customer_id": 3,
-      "category_id": 6,
-      "vendor_name": "Adobe",
-      "plan_name": "Creative Cloud All Apps",
-      "cost": 54.99,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2025-08-13",
-      "next_renewal_date": "2026-01-28",
-      "status": "ACTIVE",
-      "notes": "Per user - 20 licenses for design team",
-      "country": null
-    },
-    {
-      "id": 10,
-      "customer_id": 4,
-      "category_id": 5,
-      "vendor_name": "GitHub",
-      "plan_name": "Enterprise Cloud",
-      "cost": 21.0,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2025-01-10",
-      "next_renewal_date": "2026-02-04",
-      "status": "ACTIVE",
-      "notes": "Per user - 50 developer seats with advanced security",
-      "country": null
-    },
-    {
-      "id": 11,
-      "customer_id": 4,
-      "category_id": 3,
-      "vendor_name": "Amazon Web Services",
-      "plan_name": "Business Support",
-      "cost": 2500.0,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2023-11-02",
-      "next_renewal_date": "2026-01-17",
-      "status": "ACTIVE",
-      "notes": "Cloud infrastructure and 24/7 technical support",
-      "country": null
-    },
-    {
-      "id": 12,
-      "customer_id": 4,
-      "category_id": 5,
-      "vendor_name": "JetBrains",
-      "plan_name": "All Products Pack",
-      "cost": 649.0,
-      "currency": "USD",
-      "billing_cycle": "YEARLY",
-      "start_date": "2025-10-02",
-      "next_renewal_date": "2026-10-02",
-      "status": "ACTIVE",
-      "notes": "50 licenses - IDE suite for development team",
-      "country": null
-    },
-    {
-      "id": 13,
-      "customer_id": 5,
-      "category_id": 2,
-      "vendor_name": "Square",
-      "plan_name": "Square for Retail Plus",
-      "cost": 60.0,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2025-03-16",
-      "next_renewal_date": "2026-02-01",
-      "status": "ACTIVE",
-      "notes": "POS system for 8 retail locations",
-      "country": null
-    },
-    {
-      "id": 14,
-      "customer_id": 5,
-      "category_id": 2,
-      "vendor_name": "Intuit",
-      "plan_name": "QuickBooks Online Plus",
-      "cost": 90.0,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2024-10-17",
-      "next_renewal_date": "2026-01-24",
-      "status": "ACTIVE",
-      "notes": "Multi-store accounting and inventory management",
-      "country": null
-    },
-    {
-      "id": 15,
-      "customer_id": 5,
-      "category_id": 4,
-      "vendor_name": "Slack",
-      "plan_name": "Pro Plan",
-      "cost": 7.25,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2025-06-04",
-      "next_renewal_date": "2026-01-19",
-      "status": "ACTIVE",
-      "notes": "Per user - 40 licenses for team communication across locations",
-      "country": null
-    },
-    {
-      "id": 16,
-      "customer_id": 6,
-      "category_id": 1,
-      "vendor_name": "ESET",
-      "plan_name": "ESET PROTECT Complete",
-      "cost": 3299.0,
-      "currency": "USD",
-      "billing_cycle": "YEARLY",
-      "start_date": "2025-06-24",
-      "next_renewal_date": "2026-06-24",
-      "status": "ACTIVE",
-      "notes": "150 devices - full encryption and multi-factor authentication",
-      "country": null
-    },
-    {
-      "id": 17,
-      "customer_id": 6,
-      "category_id": 1,
-      "vendor_name": "Cisco",
-      "plan_name": "Cisco Umbrella",
-      "cost": 399.0,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2025-04-05",
-      "next_renewal_date": "2026-01-21",
-      "status": "ACTIVE",
-      "notes": "Cloud-delivered security service - DNS filtering and threat intelligence",
-      "country": null
-    },
-    {
-      "id": 18,
-      "customer_id": 6,
-      "category_id": 2,
-      "vendor_name": "Bloomberg",
-      "plan_name": "Bloomberg Terminal",
-      "cost": 2000.0,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2023-07-25",
-      "next_renewal_date": "2026-01-26",
-      "status": "ACTIVE",
-      "notes": "5 terminals for financial data and analytics",
-      "country": null
-    },
-    {
-      "id": 19,
-      "customer_id": 6,
-      "category_id": 3,
-      "vendor_name": "Microsoft Azure",
-      "plan_name": "Enterprise Agreement",
-      "cost": 5000.0,
-      "currency": "USD",
-      "billing_cycle": "MONTHLY",
-      "start_date": "2024-02-10",
-      "next_renewal_date": "2026-02-07",
-      "status": "ACTIVE",
-      "notes": "Cloud infrastructure with compliance and security features",
-      "country": null
-    },
-    {
-      "id": 20,
-      "customer_id": 1,
-      "category_id": 1,
-      "vendor_name": "Test Vendor",
-      "plan_name": "",
-      "cost": 99.99,
-      "currency": "USD",
-      "billing_cycle": "CUSTOM",
-      "start_date": "2026-02-27",
-      "next_renewal_date": "2026-04-27",
-      "status": "ACTIVE",
-      "notes": "",
-      "country": null
-    }
-  ],
+  "subscriptions": [],
   "links": [],
   "saved_reports": [],
   "activity_logs": [
@@ -741,6 +440,306 @@
       "user_id": null,
       "entity_name": "Test Vendor",
       "icon": "\u270f\ufe0f"
+    },
+    {
+      "id": 15,
+      "created_at": "2026-03-13T16:58:06.683864",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 1,
+      "description": "Deleted subscription 'ESET' from TechCorp Industries",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "TechCorp Industries"
+      },
+      "user_id": null,
+      "entity_name": "ESET",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 16,
+      "created_at": "2026-03-13T16:58:06.825964",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 2,
+      "description": "Deleted subscription 'Cloudflare' from TechCorp Industries",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "TechCorp Industries"
+      },
+      "user_id": null,
+      "entity_name": "Cloudflare",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 17,
+      "created_at": "2026-03-13T16:58:07.268075",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 3,
+      "description": "Deleted subscription 'Microsoft' from TechCorp Industries",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "TechCorp Industries"
+      },
+      "user_id": null,
+      "entity_name": "Microsoft",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 18,
+      "created_at": "2026-03-13T16:58:07.609264",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 7,
+      "description": "Deleted subscription 'Google' from Digital Marketing Pro",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "Digital Marketing Pro"
+      },
+      "user_id": null,
+      "entity_name": "Google",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 19,
+      "created_at": "2026-03-13T16:58:07.674277",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 8,
+      "description": "Deleted subscription 'HubSpot' from Digital Marketing Pro",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "Digital Marketing Pro"
+      },
+      "user_id": null,
+      "entity_name": "HubSpot",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 20,
+      "created_at": "2026-03-13T16:58:07.635835",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 5,
+      "description": "Deleted subscription 'Salesforce' from Green Valley Consulting",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "Green Valley Consulting"
+      },
+      "user_id": null,
+      "entity_name": "Salesforce",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 21,
+      "created_at": "2026-03-13T16:58:07.976367",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 4,
+      "description": "Deleted subscription 'Intuit' from Green Valley Consulting",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "Green Valley Consulting"
+      },
+      "user_id": null,
+      "entity_name": "Intuit",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 22,
+      "created_at": "2026-03-13T16:58:07.908116",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 6,
+      "description": "Deleted subscription 'Malwarebytes' from Green Valley Consulting",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "Green Valley Consulting"
+      },
+      "user_id": null,
+      "entity_name": "Malwarebytes",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 23,
+      "created_at": "2026-03-13T16:58:08.356684",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 9,
+      "description": "Deleted subscription 'Adobe' from Digital Marketing Pro",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "Digital Marketing Pro"
+      },
+      "user_id": null,
+      "entity_name": "Adobe",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 24,
+      "created_at": "2026-03-13T16:58:08.478197",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 10,
+      "description": "Deleted subscription 'GitHub' from CloudDev Solutions",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "CloudDev Solutions"
+      },
+      "user_id": null,
+      "entity_name": "GitHub",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 25,
+      "created_at": "2026-03-13T16:58:08.610125",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 12,
+      "description": "Deleted subscription 'JetBrains' from CloudDev Solutions",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "CloudDev Solutions"
+      },
+      "user_id": null,
+      "entity_name": "JetBrains",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 26,
+      "created_at": "2026-03-13T16:58:08.761297",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 14,
+      "description": "Deleted subscription 'Intuit' from Retail Plus Stores",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "Retail Plus Stores"
+      },
+      "user_id": null,
+      "entity_name": "Intuit",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 27,
+      "created_at": "2026-03-13T16:58:08.899316",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 13,
+      "description": "Deleted subscription 'Square' from Retail Plus Stores",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "Retail Plus Stores"
+      },
+      "user_id": null,
+      "entity_name": "Square",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 28,
+      "created_at": "2026-03-13T16:58:08.836372",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 15,
+      "description": "Deleted subscription 'Slack' from Retail Plus Stores",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "Retail Plus Stores"
+      },
+      "user_id": null,
+      "entity_name": "Slack",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 29,
+      "created_at": "2026-03-13T16:58:09.191244",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 16,
+      "description": "Deleted subscription 'ESET' from SecureFinance Corp",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "SecureFinance Corp"
+      },
+      "user_id": null,
+      "entity_name": "ESET",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 30,
+      "created_at": "2026-03-13T16:58:09.303045",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 17,
+      "description": "Deleted subscription 'Cisco' from SecureFinance Corp",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "SecureFinance Corp"
+      },
+      "user_id": null,
+      "entity_name": "Cisco",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 31,
+      "created_at": "2026-03-13T16:58:09.273135",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 11,
+      "description": "Deleted subscription 'Amazon Web Services' from CloudDev Solutions",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "CloudDev Solutions"
+      },
+      "user_id": null,
+      "entity_name": "Amazon Web Services",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 32,
+      "created_at": "2026-03-13T16:58:09.557382",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 19,
+      "description": "Deleted subscription 'Microsoft Azure' from SecureFinance Corp",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "SecureFinance Corp"
+      },
+      "user_id": null,
+      "entity_name": "Microsoft Azure",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 33,
+      "created_at": "2026-03-13T16:58:09.848968",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 18,
+      "description": "Deleted subscription 'Bloomberg' from SecureFinance Corp",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "SecureFinance Corp"
+      },
+      "user_id": null,
+      "entity_name": "Bloomberg",
+      "icon": "\ud83d\uddd1\ufe0f"
+    },
+    {
+      "id": 34,
+      "created_at": "2026-03-13T16:58:10.050343",
+      "action_type": "deleted",
+      "entity_type": "subscription",
+      "entity_id": 20,
+      "description": "Deleted subscription 'Test Vendor' from TechCorp Industries",
+      "changes": null,
+      "extra_data": {
+        "customer_name": "TechCorp Industries"
+      },
+      "user_id": null,
+      "entity_name": "Test Vendor",
+      "icon": "\ud83d\uddd1\ufe0f"
     }
   ],
   "renewal_notices": [],
@@ -852,12 +851,7 @@
     }
   ],
   "many_to_many": {
-    "subscription_categories": [
-      {
-        "subscription_id": 20,
-        "category_id": 1
-      }
-    ],
+    "subscription_categories": [],
     "customer_categories": [],
     "customer_groups": []
   }
