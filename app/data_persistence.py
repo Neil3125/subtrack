@@ -99,68 +99,46 @@ def export_all_data(db: Session) -> dict:
     except Exception as e:
         print(f"[DataPersistence] Error exporting groups: {e}")
     
-    # Export customers - use raw SQL to handle missing columns
+    # Export customers - use ORM to be dialect-agnostic
     try:
-        # First check which columns exist
-        result = db.execute(text("PRAGMA table_info(customers)")).fetchall()
-        columns = [row[1] for row in result]
-        has_country = 'country' in columns
-        
-        # Build column list dynamically
-        base_cols = "id, category_id, group_id, name, email, phone, tags, notes"
-        if has_country:
-            base_cols += ", country"
-        
-        rows = db.execute(text(f"SELECT {base_cols} FROM customers")).fetchall()
-        for row in rows:
+        customers = db.query(Customer).all()
+        for customer in customers:
             customer_data = {
-                "id": row[0],
-                "category_id": row[1],
-                "group_id": row[2],
-                "name": row[3],
-                "email": row[4],
-                "phone": row[5],
-                "tags": row[6],
-                "notes": row[7]
+                "id": customer.id,
+                "category_id": customer.category_id,
+                "group_id": customer.group_id,
+                "name": customer.name,
+                "email": customer.email,
+                "phone": customer.phone,
+                "tags": customer.tags,
+                "notes": customer.notes
             }
-            # Include country if column exists
-            if has_country:
-                customer_data["country"] = row[8] if len(row) > 8 else None
+            if hasattr(customer, 'country'):
+                customer_data["country"] = customer.country
             data["customers"].append(customer_data)
     except Exception as e:
         print(f"[DataPersistence] Error exporting customers: {e}")
     
-    # Export subscriptions - use raw SQL to handle missing columns
+    # Export subscriptions - use ORM to be dialect-agnostic
     try:
-        # First check which columns exist
-        result = db.execute(text("PRAGMA table_info(subscriptions)")).fetchall()
-        columns = [row[1] for row in result]
-        has_country = 'country' in columns
-        
-        # Build column list dynamically
-        base_cols = "id, customer_id, category_id, vendor_name, plan_name, cost, currency, billing_cycle, start_date, next_renewal_date, status, notes"
-        if has_country:
-            base_cols += ", country"
-        
-        rows = db.execute(text(f"SELECT {base_cols} FROM subscriptions")).fetchall()
-        for row in rows:
+        subscriptions = db.query(Subscription).all()
+        for sub in subscriptions:
             sub_data = {
-                "id": row[0],
-                "customer_id": row[1],
-                "category_id": row[2],
-                "vendor_name": row[3],
-                "plan_name": row[4],
-                "cost": float(row[5]) if row[5] else 0,
-                "currency": row[6],
-                "billing_cycle": row[7] if row[7] else "monthly",
-                "start_date": row[8] if row[8] else None,
-                "next_renewal_date": row[9] if row[9] else None,
-                "status": row[10] if row[10] else "active",
-                "notes": row[11]
+                "id": sub.id,
+                "customer_id": sub.customer_id,
+                "category_id": sub.category_id,
+                "vendor_name": sub.vendor_name,
+                "plan_name": sub.plan_name,
+                "cost": float(sub.cost) if sub.cost else 0,
+                "currency": sub.currency,
+                "billing_cycle": sub.billing_cycle.value if hasattr(sub.billing_cycle, 'value') else sub.billing_cycle,
+                "start_date": sub.start_date.isoformat() if sub.start_date else None,
+                "next_renewal_date": sub.next_renewal_date.isoformat() if sub.next_renewal_date else None,
+                "status": sub.status.value if hasattr(sub.status, 'value') else sub.status,
+                "notes": sub.notes
             }
-            # Include country if column exists
-            if has_country:
-                sub_data["country"] = row[12] if len(row) > 12 else None
+            if hasattr(sub, 'country'):
+                sub_data["country"] = sub.country
             data["subscriptions"].append(sub_data)
     except Exception as e:
         print(f"[DataPersistence] Error exporting subscriptions: {e}")
