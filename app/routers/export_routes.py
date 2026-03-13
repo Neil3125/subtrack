@@ -710,8 +710,8 @@ async def import_data_json(payload: dict, db: Session = Depends(get_db)):
     import traceback
     
     # Check if payload has the expected structure
-    if not any(key in payload for key in ["categories", "customers", "subscriptions", "groups"]):
-        return {"error": "Invalid data format. Expected JSON with categories, customers, subscriptions, or groups."}
+    if not any(key in payload for key in ["categories", "customers", "subscriptions", "groups", "users"]):
+        return {"error": "Invalid data format. Expected JSON with categories, customers, subscriptions, groups, or users."}
     
     try:
         print(f"[ImportAPI] Starting import... Categories: {len(payload.get('categories', []))}, "
@@ -751,8 +751,8 @@ async def import_data_file(file: UploadFile = File(...), db: Session = Depends(g
     except Exception as e:
         return {"error": f"Invalid JSON file: {str(e)}"}
     
-    if not any(key in payload for key in ["categories", "customers", "subscriptions", "groups"]):
-        return {"error": "Invalid data format. Expected JSON with categories, customers, subscriptions, or groups."}
+    if not any(key in payload for key in ["categories", "customers", "subscriptions", "groups", "users"]):
+        return {"error": "Invalid data format. Expected JSON with categories, customers, subscriptions, groups, or users."}
     
     try:
         print(f"[ImportAPI] File upload import: {file.filename}")
@@ -775,106 +775,67 @@ async def import_data_file(file: UploadFile = File(...), db: Session = Depends(g
 async def clear_all_records(db: Session = Depends(get_db)):
     """
     Clear all records from the database.
-    
-    WARNING: This will delete ALL data including:
-    - All subscriptions
-    - All customers
-    - All groups
-    - All categories
-    - All links
-    - All saved reports
-    
-    This action cannot be undone. Make sure to export your data first!
     """
     from app.models import Category, Group, Customer, Subscription, Link
     from app.models.saved_report import SavedReport
     from app.models.activity_log import ActivityLog
     from app.models.renewal_notice import RenewalNotice
+    from app.models.user import User
+    from app.models.log_entry import LogEntry
+    from app.models.check_category import CheckCategory
+    from app.models.subscription_template import SubscriptionTemplate
+    from app.models.ai_cache import AIRequestCache
     
     try:
-        # Count records before deletion
         counts = {
             "subscriptions": db.query(Subscription).count(),
             "customers": db.query(Customer).count(),
             "groups": db.query(Group).count(),
             "categories": db.query(Category).count(),
-            "links": 0,
-            "saved_reports": 0,
-            "activity_logs": 0,
-            "renewal_notices": 0
+            "users": db.query(User).count(),
         }
         
-        # Try to count optional tables
-        try:
-            counts["links"] = db.query(Link).count()
-        except Exception:
-            pass
+        try: db.query(RenewalNotice).delete()
+        except Exception: pass
+        try: db.query(ActivityLog).delete()
+        except Exception: pass
+        try: db.query(SavedReport).delete()
+        except Exception: pass
+        try: db.query(Link).delete()
+        except Exception: pass
+        try: db.query(LogEntry).delete()
+        except Exception: pass
+        try: db.query(CheckCategory).delete()
+        except Exception: pass
+        try: db.query(AIRequestCache).delete()
+        except Exception: pass
+        try: db.query(SubscriptionTemplate).delete()
+        except Exception: pass
         
-        try:
-            counts["saved_reports"] = db.query(SavedReport).count()
-        except Exception:
-            pass
-            
-        try:
-            counts["activity_logs"] = db.query(ActivityLog).count()
-        except Exception:
-            pass
-            
-        try:
-            counts["renewal_notices"] = db.query(RenewalNotice).count()
-        except Exception:
-            pass
-        
-        # Delete in correct order (respecting foreign keys)
-        # Delete renewal notices first
-        try:
-            db.query(RenewalNotice).delete()
-        except Exception:
-            pass
-        
-        # Delete activity logs
-        try:
-            db.query(ActivityLog).delete()
-        except Exception:
-            pass
-        
-        # Delete saved reports
-        try:
-            db.query(SavedReport).delete()
-        except Exception:
-            pass
-        
-        # Delete links
-        try:
-            db.query(Link).delete()
-        except Exception:
-            pass
-        
-        # Delete subscriptions (has foreign keys to customers and categories)
         db.query(Subscription).delete()
-        
-        # Delete customers (has foreign keys to groups and categories)
         db.query(Customer).delete()
-        
-        # Delete groups (has foreign key to categories)
         db.query(Group).delete()
-        
-        # Delete categories (no foreign keys)
         db.query(Category).delete()
+        db.query(User).delete()
         
-        # Commit all deletions
         db.commit()
         
-        # Clear the auto-save file
         from app.data_persistence import save_data_to_file
         save_data_to_file({
             "exported_at": datetime.now().isoformat(),
+            "users": [],
             "categories": [],
             "groups": [],
             "customers": [],
             "subscriptions": [],
             "links": [],
-            "saved_reports": []
+            "saved_reports": [],
+            "activity_logs": [],
+            "renewal_notices": [],
+            "log_entries": [],
+            "check_categories": [],
+            "subscription_templates": [],
+            "ai_request_caches": []
         })
         
         return {

@@ -45,16 +45,30 @@ def export_all_data(db: Session) -> dict:
     """Export all data from database to a dictionary."""
     from app.models import Category, Group, Customer, Subscription, Link
     from app.models.saved_report import SavedReport
+    from app.models.user import User
+    from app.models.activity_log import ActivityLog
+    from app.models.renewal_notice import RenewalNotice
+    from app.models.log_entry import LogEntry
+    from app.models.check_category import CheckCategory
+    from app.models.subscription_template import SubscriptionTemplate
+    from app.models.ai_cache import AIRequestCache
     from sqlalchemy import text
     
     data = {
         "exported_at": datetime.now().isoformat(),
+        "users": [],
         "categories": [],
         "groups": [],
         "customers": [],
         "subscriptions": [],
         "links": [],
         "saved_reports": [],
+        "activity_logs": [],
+        "renewal_notices": [],
+        "log_entries": [],
+        "check_categories": [],
+        "subscription_templates": [],
+        "ai_request_caches": [],
         "many_to_many": {
             "subscription_categories": [],
             "customer_categories": [],
@@ -180,6 +194,125 @@ def export_all_data(db: Session) -> dict:
         # SavedReport table might not exist
         pass
     
+    # Export Users
+    try:
+        for user in db.query(User).all():
+            data["users"].append({
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "password_hash": user.password_hash,
+                "is_active": user.is_active,
+                "is_admin": user.is_admin,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                "updated_at": user.updated_at.isoformat() if user.updated_at else None
+            })
+    except Exception as e:
+        print(f"[DataPersistence] Error exporting users: {e}")
+
+    # Export Activity Logs
+    try:
+        for log in db.query(ActivityLog).all():
+            data["activity_logs"].append({
+                "id": log.id,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
+                "action_type": log.action_type,
+                "entity_type": log.entity_type,
+                "entity_id": log.entity_id,
+                "description": log.description,
+                "changes": log.changes,
+                "extra_data": log.extra_data,
+                "user_id": log.user_id,
+                "entity_name": log.entity_name,
+                "icon": log.icon
+            })
+    except Exception as e:
+        print(f"[DataPersistence] Error exporting activity logs: {e}")
+
+    # Export Renewal Notices
+    try:
+        for rn in db.query(RenewalNotice).all():
+            data["renewal_notices"].append({
+                "id": rn.id,
+                "subscription_id": rn.subscription_id,
+                "customer_id": rn.customer_id,
+                "recipient_email": rn.recipient_email,
+                "subject": rn.subject,
+                "sent_at": rn.sent_at.isoformat() if rn.sent_at else None,
+                "success": rn.success,
+                "error_message": rn.error_message,
+                "notice_type": rn.notice_type,
+                "renewal_date_at_send": rn.renewal_date_at_send.isoformat() if rn.renewal_date_at_send else None
+            })
+    except Exception as e:
+        print(f"[DataPersistence] Error exporting renewal notices: {e}")
+
+    # Export Log Entries
+    try:
+        for le in db.query(LogEntry).all():
+            data["log_entries"].append({
+                "id": le.id,
+                "user_id": le.user_id,
+                "created_at": le.created_at.isoformat() if le.created_at else None,
+                "date_str": le.date_str,
+                "start_time": le.start_time,
+                "end_time": le.end_time,
+                "duration_minutes": le.duration_minutes,
+                "check_type": le.check_type,
+                "category_name": le.category_name,
+                "message": le.message,
+                "full_entry": le.full_entry
+            })
+    except Exception as e:
+        print(f"[DataPersistence] Error exporting log entries: {e}")
+
+    # Export Check Categories
+    try:
+        for cc in db.query(CheckCategory).all():
+            data["check_categories"].append({
+                "id": cc.id,
+                "user_id": cc.user_id,
+                "name": cc.name,
+                "description": cc.description,
+                "created_at": cc.created_at.isoformat() if cc.created_at else None
+            })
+    except Exception as e:
+        print(f"[DataPersistence] Error exporting check categories: {e}")
+
+    # Export Subscription Templates
+    try:
+        for st in db.query(SubscriptionTemplate).all():
+            data["subscription_templates"].append({
+                "id": st.id,
+                "vendor_name": st.vendor_name,
+                "plan_name": st.plan_name,
+                "cost": st.cost,
+                "currency": st.currency,
+                "billing_cycle": st.billing_cycle.value if hasattr(st.billing_cycle, 'value') else st.billing_cycle,
+                "category_id": st.category_id,
+                "created_at": st.created_at.isoformat() if st.created_at else None,
+                "updated_at": st.updated_at.isoformat() if st.updated_at else None
+            })
+    except Exception as e:
+        print(f"[DataPersistence] Error exporting subscription templates: {e}")
+
+    # Export AI Caches
+    try:
+        for aic in db.query(AIRequestCache).all():
+            data["ai_request_caches"].append({
+                "id": aic.id,
+                "request_hash": aic.request_hash,
+                "request_type": aic.request_type,
+                "prompt": aic.prompt,
+                "response": aic.response,
+                "tokens_used": aic.tokens_used,
+                "hit_count": aic.hit_count,
+                "created_at": aic.created_at.isoformat() if aic.created_at else None,
+                "expires_at": aic.expires_at.isoformat() if aic.expires_at else None
+            })
+    except Exception as e:
+        print(f"[DataPersistence] Error exporting AI caches: {e}")
+
     # Export many-to-many relationships
     try:
         # Subscription-Category relationships
@@ -325,6 +458,13 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
     from app.models import Category, Group, Customer, Subscription, Link
     from app.models.subscription import BillingCycle, SubscriptionStatus
     from app.models.saved_report import SavedReport
+    from app.models.user import User
+    from app.models.activity_log import ActivityLog
+    from app.models.renewal_notice import RenewalNotice
+    from app.models.log_entry import LogEntry
+    from app.models.check_category import CheckCategory
+    from app.models.subscription_template import SubscriptionTemplate
+    from app.models.ai_cache import AIRequestCache
     from sqlalchemy.exc import IntegrityError
     
     _importing = True
@@ -332,21 +472,66 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
     try:
         # Import categories
         imported_counts = {
+            "users": 0,
             "categories": 0,
             "groups": 0,
             "customers": 0,
             "subscriptions": 0,
             "links": 0,
-            "saved_reports": 0
+            "saved_reports": 0,
+            "activity_logs": 0,
+            "renewal_notices": 0,
+            "log_entries": 0,
+            "check_categories": 0,
+            "subscription_templates": 0,
+            "ai_request_caches": 0
         }
         warnings = []
         
         id_map = {
+            "users": {},
             "categories": {},
             "groups": {},
             "customers": {}
         }
         
+        # Import users
+        for user_data in data.get("users", []):
+            try:
+                existing = db.query(User).filter(User.id == user_data["id"]).first()
+                if existing:
+                    id_map["users"][user_data["id"]] = existing.id
+                    continue
+                # Check by username
+                existing_by_username = db.query(User).filter(User.username == user_data.get("username")).first()
+                if existing_by_username:
+                    id_map["users"][user_data["id"]] = existing_by_username.id
+                    warnings.append(f"User '{user_data.get('username')}' already exists. Using existing ID.")
+                    continue
+                # Add
+                user = User(
+                    username=user_data["username"],
+                    email=user_data.get("email"),
+                    password_hash=user_data["password_hash"], # Warning: preserving exact hash
+                    is_active=user_data.get("is_active", True),
+                    is_admin=user_data.get("is_admin", False)
+                )
+                if user_data.get("created_at"):
+                    user.created_at = datetime.fromisoformat(user_data["created_at"])
+                if user_data.get("updated_at"):
+                    user.updated_at = datetime.fromisoformat(user_data["updated_at"])
+                db.add(user)
+                db.flush()
+                imported_counts["users"] += 1
+                id_map["users"][user_data["id"]] = user.id
+                db.commit()
+            except IntegrityError as e:
+                warnings.append(f"User {user_data.get('id')} skipped: {str(e)}")
+                db.rollback()
+            except Exception as e:
+                warnings.append(f"User {user_data.get('id')} error: {str(e)}")
+                db.rollback()
+
         for cat_data in data.get("categories", []):
             try:
                 existing = db.query(Category).filter(Category.id == cat_data["id"]).first()
@@ -552,6 +737,161 @@ def import_data_to_db(db: Session, data: dict, return_details: bool = False):
             except Exception:
                 db.rollback()
         
+        # Import Subscription Templates
+        for st_data in data.get("subscription_templates", []):
+            try:
+                existing = db.query(SubscriptionTemplate).filter(SubscriptionTemplate.id == st_data["id"]).first()
+                if not existing:
+                    mapped_cat_id = id_map["categories"].get(st_data.get("category_id"), st_data.get("category_id"))
+                    
+                    try:
+                        billing_cycle_enum = BillingCycle(st_data.get("billing_cycle", "monthly").lower())
+                    except Exception:
+                        billing_cycle_enum = BillingCycle.MONTHLY
+
+                    st = SubscriptionTemplate(
+                        id=st_data["id"],
+                        vendor_name=st_data["vendor_name"],
+                        plan_name=st_data.get("plan_name"),
+                        cost=st_data.get("cost", 0),
+                        currency=st_data.get("currency", "USD"),
+                        billing_cycle=billing_cycle_enum,
+                        category_id=mapped_cat_id
+                    )
+                    db.add(st)
+                    imported_counts["subscription_templates"] += 1
+                    db.commit()
+            except Exception as e:
+                warnings.append(f"SubscriptionTemplate {st_data.get('id')} skipped: {str(e)}")
+                db.rollback()
+
+        # Import Check Categories
+        for cc_data in data.get("check_categories", []):
+            try:
+                existing = db.query(CheckCategory).filter(CheckCategory.id == cc_data["id"]).first()
+                if not existing:
+                    mapped_user_id = id_map["users"].get(cc_data.get("user_id"), cc_data.get("user_id"))
+                    cc = CheckCategory(
+                        id=cc_data["id"],
+                        user_id=mapped_user_id,
+                        name=cc_data["name"],
+                        description=cc_data.get("description")
+                    )
+                    if cc_data.get("created_at"):
+                        cc.created_at = datetime.fromisoformat(cc_data["created_at"])
+                    db.add(cc)
+                    imported_counts["check_categories"] += 1
+                    db.commit()
+            except Exception as e:
+                warnings.append(f"CheckCategory {cc_data.get('id')} skipped: {str(e)}")
+                db.rollback()
+
+        # Import Log Entries
+        for le_data in data.get("log_entries", []):
+            try:
+                existing = db.query(LogEntry).filter(LogEntry.id == le_data["id"]).first()
+                if not existing:
+                    mapped_user_id = id_map["users"].get(le_data.get("user_id"), le_data.get("user_id"))
+                    le = LogEntry(
+                        id=le_data["id"],
+                        user_id=mapped_user_id,
+                        date_str=le_data["date_str"],
+                        start_time=le_data["start_time"],
+                        end_time=le_data["end_time"],
+                        duration_minutes=le_data.get("duration_minutes", 0),
+                        check_type=le_data["check_type"],
+                        category_name=le_data.get("category_name"),
+                        message=le_data["message"],
+                        full_entry=le_data["full_entry"]
+                    )
+                    if le_data.get("created_at"):
+                        le.created_at = datetime.fromisoformat(le_data["created_at"])
+                    db.add(le)
+                    imported_counts["log_entries"] += 1
+                    db.commit()
+            except Exception as e:
+                warnings.append(f"LogEntry {le_data.get('id')} skipped: {str(e)}")
+                db.rollback()
+
+        # Import Renewal Notices
+        for rn_data in data.get("renewal_notices", []):
+            try:
+                existing = db.query(RenewalNotice).filter(RenewalNotice.id == rn_data["id"]).first()
+                if not existing:
+                    mapped_cust_id = id_map["customers"].get(rn_data.get("customer_id"), rn_data.get("customer_id"))
+                    rn = RenewalNotice(
+                        id=rn_data["id"],
+                        subscription_id=rn_data["subscription_id"],
+                        customer_id=mapped_cust_id,
+                        recipient_email=rn_data.get("recipient_email"),
+                        subject=rn_data.get("subject"),
+                        success=rn_data.get("success", False),
+                        error_message=rn_data.get("error_message"),
+                        notice_type=rn_data.get("notice_type", "manual")
+                    )
+                    if rn_data.get("sent_at"):
+                        rn.sent_at = datetime.fromisoformat(rn_data["sent_at"])
+                    if rn_data.get("renewal_date_at_send"):
+                        rn.renewal_date_at_send = datetime.fromisoformat(rn_data["renewal_date_at_send"])
+                    db.add(rn)
+                    imported_counts["renewal_notices"] += 1
+                    db.commit()
+            except Exception as e:
+                warnings.append(f"RenewalNotice {rn_data.get('id')} skipped: {str(e)}")
+                db.rollback()
+
+        # Import Activity Logs
+        for log_data in data.get("activity_logs", []):
+            try:
+                existing = db.query(ActivityLog).filter(ActivityLog.id == log_data["id"]).first()
+                if not existing:
+                    mapped_user_id = id_map["users"].get(log_data.get("user_id"), log_data.get("user_id"))
+                    al = ActivityLog(
+                        id=log_data["id"],
+                        action_type=log_data["action_type"],
+                        entity_type=log_data["entity_type"],
+                        entity_id=log_data.get("entity_id"),
+                        description=log_data["description"],
+                        changes=log_data.get("changes"),
+                        extra_data=log_data.get("extra_data"),
+                        user_id=mapped_user_id,
+                        entity_name=log_data.get("entity_name"),
+                        icon=log_data.get("icon")
+                    )
+                    if log_data.get("created_at"):
+                        al.created_at = datetime.fromisoformat(log_data["created_at"])
+                    db.add(al)
+                    imported_counts["activity_logs"] += 1
+                    db.commit()
+            except Exception as e:
+                warnings.append(f"ActivityLog {log_data.get('id')} skipped: {str(e)}")
+                db.rollback()
+
+        # Import AI Request Caches
+        for aic_data in data.get("ai_request_caches", []):
+            try:
+                existing = db.query(AIRequestCache).filter(AIRequestCache.id == aic_data["id"]).first()
+                if not existing:
+                    aic = AIRequestCache(
+                        id=aic_data["id"],
+                        request_hash=aic_data["request_hash"],
+                        request_type=aic_data["request_type"],
+                        prompt=aic_data["prompt"],
+                        response=aic_data["response"],
+                        tokens_used=aic_data.get("tokens_used", 0),
+                        hit_count=aic_data.get("hit_count", 0)
+                    )
+                    if aic_data.get("created_at"):
+                        aic.created_at = datetime.fromisoformat(aic_data["created_at"])
+                    if aic_data.get("expires_at"):
+                        aic.expires_at = datetime.fromisoformat(aic_data["expires_at"])
+                    db.add(aic)
+                    imported_counts["ai_request_caches"] += 1
+                    db.commit()
+            except Exception as e:
+                warnings.append(f"AIRequestCache {aic_data.get('id')} skipped: {str(e)}")
+                db.rollback()
+
         # Import many-to-many relationships
         from sqlalchemy import text
         many_to_many = data.get("many_to_many", {})
